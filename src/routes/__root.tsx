@@ -115,8 +115,26 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
+      <SidebarProvider>
+        <div className="flex min-h-screen w-full bg-background">
+          <AppSidebar />
+          <div className="flex min-w-0 flex-1 flex-col">
+            <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-border/60 bg-background/80 px-4 backdrop-blur">
+              <SidebarTrigger className="text-muted-foreground hover:text-foreground" />
+              <div className="text-xs text-muted-foreground">
+                <span className="text-foreground">SilvaCore</span> · ERP industrial · demo
+              </div>
+              <div className="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
+                <span className="hidden sm:inline">Usuário:</span>
+                <span className="rounded-full bg-secondary px-2 py-0.5 text-foreground">Admin</span>
+              </div>
+            </header>
+            <main className="flex-1 px-4 py-6 sm:px-8 sm:py-8">
+              <Outlet />
+            </main>
+          </div>
+        </div>
+      </SidebarProvider>
     </QueryClientProvider>
   );
 }
