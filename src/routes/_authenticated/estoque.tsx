@@ -5,7 +5,7 @@ import { KpiCard } from "@/components/KpiCard";
 import { Boxes, Package, DollarSign, Warehouse } from "lucide-react";
 import { produtos } from "@/lib/mock-data";
 
-export const Route = createFileRoute("/estoque")({
+export const Route = createFileRoute("/_authenticated/estoque")({
   head: () => ({ meta: [{ title: "Estoque · SilvaCore" }] }),
   component: Estoque,
 });

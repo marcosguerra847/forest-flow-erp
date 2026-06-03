@@ -5,7 +5,7 @@ import { KpiCard } from "@/components/KpiCard";
 import { Users, ShoppingCart, DollarSign, FileText } from "lucide-react";
 import { clientes, pedidos } from "@/lib/mock-data";
 
-export const Route = createFileRoute("/comercial")({
+export const Route = createFileRoute("/_authenticated/comercial")({
   head: () => ({ meta: [{ title: "Comercial · SilvaCore" }] }),
   component: Comercial,
 });

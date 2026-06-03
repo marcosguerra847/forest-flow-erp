@@ -5,7 +5,7 @@ import { KpiCard } from "@/components/KpiCard";
 import { Truck, MapPin, Package, Clock } from "lucide-react";
 import { entregas } from "@/lib/mock-data";
 
-export const Route = createFileRoute("/logistica")({
+export const Route = createFileRoute("/_authenticated/logistica")({
   head: () => ({ meta: [{ title: "Logística · SilvaCore" }] }),
   component: Logistica,
 });

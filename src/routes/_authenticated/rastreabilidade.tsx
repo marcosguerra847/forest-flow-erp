@@ -3,7 +3,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { QrCode, Search, ArrowDown } from "lucide-react";
 import { rastreio } from "@/lib/mock-data";
 
-export const Route = createFileRoute("/rastreabilidade")({
+export const Route = createFileRoute("/_authenticated/rastreabilidade")({
   head: () => ({ meta: [{ title: "Rastreabilidade · SilvaCore" }] }),
   component: Rastreabilidade,
 });

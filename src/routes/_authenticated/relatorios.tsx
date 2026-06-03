@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { PageHeader } from "@/components/PageHeader";
 import { FileBarChart, TrendingUp, Trees, Factory, Wallet, Truck, ChevronRight } from "lucide-react";
 
-export const Route = createFileRoute("/relatorios")({
+export const Route = createFileRoute("/_authenticated/relatorios")({
   head: () => ({ meta: [{ title: "Relatórios · SilvaCore" }] }),
   component: Relatorios,
 });
