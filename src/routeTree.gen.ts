@@ -9,6 +9,8 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedTorasRouteImport } from './routes/_authenticated/toras'
 import { Route as AuthenticatedRelatoriosRouteImport } from './routes/_authenticated/relatorios'
@@ -20,59 +22,70 @@ import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authentic
 import { Route as AuthenticatedEstoqueRouteImport } from './routes/_authenticated/estoque'
 import { Route as AuthenticatedComercialRouteImport } from './routes/_authenticated/comercial'
 
-const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
-  id: '/_authenticated/',
-  path: '/',
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedTorasRoute = AuthenticatedTorasRouteImport.update({
-  id: '/_authenticated/toras',
+  id: '/toras',
   path: '/toras',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedRelatoriosRoute = AuthenticatedRelatoriosRouteImport.update({
-  id: '/_authenticated/relatorios',
+  id: '/relatorios',
   path: '/relatorios',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedRastreabilidadeRoute =
   AuthenticatedRastreabilidadeRouteImport.update({
-    id: '/_authenticated/rastreabilidade',
+    id: '/rastreabilidade',
     path: '/rastreabilidade',
-    getParentRoute: () => rootRouteImport,
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedProducaoRoute = AuthenticatedProducaoRouteImport.update({
-  id: '/_authenticated/producao',
+  id: '/producao',
   path: '/producao',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedLogisticaRoute = AuthenticatedLogisticaRouteImport.update({
-  id: '/_authenticated/logistica',
+  id: '/logistica',
   path: '/logistica',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedFlorestalRoute = AuthenticatedFlorestalRouteImport.update({
-  id: '/_authenticated/florestal',
+  id: '/florestal',
   path: '/florestal',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedFinanceiroRoute = AuthenticatedFinanceiroRouteImport.update({
-  id: '/_authenticated/financeiro',
+  id: '/financeiro',
   path: '/financeiro',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedEstoqueRoute = AuthenticatedEstoqueRouteImport.update({
-  id: '/_authenticated/estoque',
+  id: '/estoque',
   path: '/estoque',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedComercialRoute = AuthenticatedComercialRouteImport.update({
-  id: '/_authenticated/comercial',
+  id: '/comercial',
   path: '/comercial',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
+  '/': typeof AuthenticatedIndexRoute
+  '/auth': typeof AuthRoute
   '/comercial': typeof AuthenticatedComercialRoute
   '/estoque': typeof AuthenticatedEstoqueRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
@@ -82,9 +95,9 @@ export interface FileRoutesByFullPath {
   '/rastreabilidade': typeof AuthenticatedRastreabilidadeRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
   '/toras': typeof AuthenticatedTorasRoute
-  '/': typeof AuthenticatedIndexRoute
 }
 export interface FileRoutesByTo {
+  '/auth': typeof AuthRoute
   '/comercial': typeof AuthenticatedComercialRoute
   '/estoque': typeof AuthenticatedEstoqueRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
@@ -98,6 +111,8 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
   '/_authenticated/comercial': typeof AuthenticatedComercialRoute
   '/_authenticated/estoque': typeof AuthenticatedEstoqueRoute
   '/_authenticated/financeiro': typeof AuthenticatedFinanceiroRoute
@@ -112,6 +127,8 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/'
+    | '/auth'
     | '/comercial'
     | '/estoque'
     | '/financeiro'
@@ -121,9 +138,9 @@ export interface FileRouteTypes {
     | '/rastreabilidade'
     | '/relatorios'
     | '/toras'
-    | '/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/auth'
     | '/comercial'
     | '/estoque'
     | '/financeiro'
@@ -136,6 +153,8 @@ export interface FileRouteTypes {
     | '/'
   id:
     | '__root__'
+    | '/_authenticated'
+    | '/auth'
     | '/_authenticated/comercial'
     | '/_authenticated/estoque'
     | '/_authenticated/financeiro'
@@ -149,6 +168,100 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
+}
+
+declare module '@tanstack/react-router' {
+  interface FileRoutesByPath {
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/': {
+      id: '/_authenticated/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/toras': {
+      id: '/_authenticated/toras'
+      path: '/toras'
+      fullPath: '/toras'
+      preLoaderRoute: typeof AuthenticatedTorasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/relatorios': {
+      id: '/_authenticated/relatorios'
+      path: '/relatorios'
+      fullPath: '/relatorios'
+      preLoaderRoute: typeof AuthenticatedRelatoriosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/rastreabilidade': {
+      id: '/_authenticated/rastreabilidade'
+      path: '/rastreabilidade'
+      fullPath: '/rastreabilidade'
+      preLoaderRoute: typeof AuthenticatedRastreabilidadeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/producao': {
+      id: '/_authenticated/producao'
+      path: '/producao'
+      fullPath: '/producao'
+      preLoaderRoute: typeof AuthenticatedProducaoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/logistica': {
+      id: '/_authenticated/logistica'
+      path: '/logistica'
+      fullPath: '/logistica'
+      preLoaderRoute: typeof AuthenticatedLogisticaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/florestal': {
+      id: '/_authenticated/florestal'
+      path: '/florestal'
+      fullPath: '/florestal'
+      preLoaderRoute: typeof AuthenticatedFlorestalRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/financeiro': {
+      id: '/_authenticated/financeiro'
+      path: '/financeiro'
+      fullPath: '/financeiro'
+      preLoaderRoute: typeof AuthenticatedFinanceiroRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/estoque': {
+      id: '/_authenticated/estoque'
+      path: '/estoque'
+      fullPath: '/estoque'
+      preLoaderRoute: typeof AuthenticatedEstoqueRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/comercial': {
+      id: '/_authenticated/comercial'
+      path: '/comercial'
+      fullPath: '/comercial'
+      preLoaderRoute: typeof AuthenticatedComercialRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+  }
+}
+
+interface AuthenticatedRouteRouteChildren {
   AuthenticatedComercialRoute: typeof AuthenticatedComercialRoute
   AuthenticatedEstoqueRoute: typeof AuthenticatedEstoqueRoute
   AuthenticatedFinanceiroRoute: typeof AuthenticatedFinanceiroRoute
@@ -161,82 +274,7 @@ export interface RootRouteChildren {
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
 }
 
-declare module '@tanstack/react-router' {
-  interface FileRoutesByPath {
-    '/_authenticated/': {
-      id: '/_authenticated/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/toras': {
-      id: '/_authenticated/toras'
-      path: '/toras'
-      fullPath: '/toras'
-      preLoaderRoute: typeof AuthenticatedTorasRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/relatorios': {
-      id: '/_authenticated/relatorios'
-      path: '/relatorios'
-      fullPath: '/relatorios'
-      preLoaderRoute: typeof AuthenticatedRelatoriosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/rastreabilidade': {
-      id: '/_authenticated/rastreabilidade'
-      path: '/rastreabilidade'
-      fullPath: '/rastreabilidade'
-      preLoaderRoute: typeof AuthenticatedRastreabilidadeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/producao': {
-      id: '/_authenticated/producao'
-      path: '/producao'
-      fullPath: '/producao'
-      preLoaderRoute: typeof AuthenticatedProducaoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/logistica': {
-      id: '/_authenticated/logistica'
-      path: '/logistica'
-      fullPath: '/logistica'
-      preLoaderRoute: typeof AuthenticatedLogisticaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/florestal': {
-      id: '/_authenticated/florestal'
-      path: '/florestal'
-      fullPath: '/florestal'
-      preLoaderRoute: typeof AuthenticatedFlorestalRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/financeiro': {
-      id: '/_authenticated/financeiro'
-      path: '/financeiro'
-      fullPath: '/financeiro'
-      preLoaderRoute: typeof AuthenticatedFinanceiroRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/estoque': {
-      id: '/_authenticated/estoque'
-      path: '/estoque'
-      fullPath: '/estoque'
-      preLoaderRoute: typeof AuthenticatedEstoqueRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/comercial': {
-      id: '/_authenticated/comercial'
-      path: '/comercial'
-      fullPath: '/comercial'
-      preLoaderRoute: typeof AuthenticatedComercialRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-  }
-}
-
-const rootRouteChildren: RootRouteChildren = {
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedComercialRoute: AuthenticatedComercialRoute,
   AuthenticatedEstoqueRoute: AuthenticatedEstoqueRoute,
   AuthenticatedFinanceiroRoute: AuthenticatedFinanceiroRoute,
@@ -247,6 +285,14 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRelatoriosRoute: AuthenticatedRelatoriosRoute,
   AuthenticatedTorasRoute: AuthenticatedTorasRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
+const rootRouteChildren: RootRouteChildren = {
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
