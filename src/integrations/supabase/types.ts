@@ -14,16 +14,276 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      audit_log: {
+        Row: {
+          acao: string
+          criado_em: string
+          id: number
+          payload: Json | null
+          registro_id: string
+          tabela: string
+          usuario_id: string | null
+        }
+        Insert: {
+          acao: string
+          criado_em?: string
+          id?: number
+          payload?: Json | null
+          registro_id: string
+          tabela: string
+          usuario_id?: string | null
+        }
+        Update: {
+          acao?: string
+          criado_em?: string
+          id?: number
+          payload?: Json | null
+          registro_id?: string
+          tabela?: string
+          usuario_id?: string | null
+        }
+        Relationships: []
+      }
+      fazendas: {
+        Row: {
+          area_ha: number
+          atualizado_em: string
+          car: string | null
+          criado_em: string
+          criado_por: string | null
+          id: string
+          local: string | null
+          nome: string
+          observacoes: string | null
+          proprietario: string | null
+          status: Database["public"]["Enums"]["fazenda_status"]
+        }
+        Insert: {
+          area_ha?: number
+          atualizado_em?: string
+          car?: string | null
+          criado_em?: string
+          criado_por?: string | null
+          id?: string
+          local?: string | null
+          nome: string
+          observacoes?: string | null
+          proprietario?: string | null
+          status?: Database["public"]["Enums"]["fazenda_status"]
+        }
+        Update: {
+          area_ha?: number
+          atualizado_em?: string
+          car?: string | null
+          criado_em?: string
+          criado_por?: string | null
+          id?: string
+          local?: string | null
+          nome?: string
+          observacoes?: string | null
+          proprietario?: string | null
+          status?: Database["public"]["Enums"]["fazenda_status"]
+        }
+        Relationships: []
+      }
+      inventario_parcelas: {
+        Row: {
+          altura_media_m: number | null
+          area_m2: number
+          arvores_por_ha: number | null
+          criado_em: string
+          dap_medio_cm: number | null
+          data: string
+          fotos: string[] | null
+          id: string
+          numero: string
+          observacoes: string | null
+          qtd_arvores: number
+          responsavel_id: string | null
+          talhao_id: string
+          volume_arvore_m3: number | null
+        }
+        Insert: {
+          altura_media_m?: number | null
+          area_m2: number
+          arvores_por_ha?: number | null
+          criado_em?: string
+          dap_medio_cm?: number | null
+          data?: string
+          fotos?: string[] | null
+          id?: string
+          numero: string
+          observacoes?: string | null
+          qtd_arvores: number
+          responsavel_id?: string | null
+          talhao_id: string
+          volume_arvore_m3?: number | null
+        }
+        Update: {
+          altura_media_m?: number | null
+          area_m2?: number
+          arvores_por_ha?: number | null
+          criado_em?: string
+          dap_medio_cm?: number | null
+          data?: string
+          fotos?: string[] | null
+          id?: string
+          numero?: string
+          observacoes?: string | null
+          qtd_arvores?: number
+          responsavel_id?: string | null
+          talhao_id?: string
+          volume_arvore_m3?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventario_parcelas_talhao_id_fkey"
+            columns: ["talhao_id"]
+            isOneToOne: false
+            referencedRelation: "talhoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          atualizado_em: string
+          criado_em: string
+          email: string
+          id: string
+          nome: string
+          telefone: string | null
+        }
+        Insert: {
+          atualizado_em?: string
+          criado_em?: string
+          email: string
+          id: string
+          nome: string
+          telefone?: string | null
+        }
+        Update: {
+          atualizado_em?: string
+          criado_em?: string
+          email?: string
+          id?: string
+          nome?: string
+          telefone?: string | null
+        }
+        Relationships: []
+      }
+      talhoes: {
+        Row: {
+          ano_plantio: number | null
+          area_ha: number
+          atualizado_em: string
+          codigo: string
+          criado_em: string
+          criado_por: string | null
+          espacamento: string | null
+          especie: string
+          fazenda_id: string
+          id: string
+          observacoes: string | null
+          status: Database["public"]["Enums"]["talhao_status"]
+          volume_estimado_m3: number
+        }
+        Insert: {
+          ano_plantio?: number | null
+          area_ha?: number
+          atualizado_em?: string
+          codigo: string
+          criado_em?: string
+          criado_por?: string | null
+          espacamento?: string | null
+          especie: string
+          fazenda_id: string
+          id?: string
+          observacoes?: string | null
+          status?: Database["public"]["Enums"]["talhao_status"]
+          volume_estimado_m3?: number
+        }
+        Update: {
+          ano_plantio?: number | null
+          area_ha?: number
+          atualizado_em?: string
+          codigo?: string
+          criado_em?: string
+          criado_por?: string | null
+          espacamento?: string | null
+          especie?: string
+          fazenda_id?: string
+          id?: string
+          observacoes?: string | null
+          status?: Database["public"]["Enums"]["talhao_status"]
+          volume_estimado_m3?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "talhoes_fazenda_id_fkey"
+            columns: ["fazenda_id"]
+            isOneToOne: false
+            referencedRelation: "fazendas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          criado_em: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          criado_em?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          criado_em?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_any_role: {
+        Args: {
+          _roles: Database["public"]["Enums"]["app_role"][]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role:
+        | "admin"
+        | "gestor"
+        | "campo"
+        | "patio"
+        | "serraria"
+        | "comercial"
+      fazenda_status: "ativa" | "inativa" | "manejo"
+      talhao_status:
+        | "em_crescimento"
+        | "pronto_corte"
+        | "em_corte"
+        | "cortado"
+        | "finalizado"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +410,16 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "gestor", "campo", "patio", "serraria", "comercial"],
+      fazenda_status: ["ativa", "inativa", "manejo"],
+      talhao_status: [
+        "em_crescimento",
+        "pronto_corte",
+        "em_corte",
+        "cortado",
+        "finalizado",
+      ],
+    },
   },
 } as const
