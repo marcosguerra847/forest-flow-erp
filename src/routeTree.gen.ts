@@ -14,11 +14,11 @@ import { Route as RelatoriosRouteImport } from './routes/relatorios'
 import { Route as RastreabilidadeRouteImport } from './routes/rastreabilidade'
 import { Route as ProducaoRouteImport } from './routes/producao'
 import { Route as LogisticaRouteImport } from './routes/logistica'
-import { Route as FlorestalRouteImport } from './routes/florestal'
 import { Route as FinanceiroRouteImport } from './routes/financeiro'
 import { Route as EstoqueRouteImport } from './routes/estoque'
 import { Route as ComercialRouteImport } from './routes/comercial'
-import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedFlorestalRouteImport } from './routes/_authenticated/florestal'
 
 const TorasRoute = TorasRouteImport.update({
   id: '/toras',
@@ -45,11 +45,6 @@ const LogisticaRoute = LogisticaRouteImport.update({
   path: '/logistica',
   getParentRoute: () => rootRouteImport,
 } as any)
-const FlorestalRoute = FlorestalRouteImport.update({
-  id: '/florestal',
-  path: '/florestal',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const FinanceiroRoute = FinanceiroRouteImport.update({
   id: '/financeiro',
   path: '/financeiro',
@@ -65,99 +60,104 @@ const ComercialRoute = ComercialRouteImport.update({
   path: '/comercial',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
+const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
+  id: '/_authenticated/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedFlorestalRoute = AuthenticatedFlorestalRouteImport.update({
+  id: '/_authenticated/florestal',
+  path: '/florestal',
   getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
   '/comercial': typeof ComercialRoute
   '/estoque': typeof EstoqueRoute
   '/financeiro': typeof FinanceiroRoute
-  '/florestal': typeof FlorestalRoute
   '/logistica': typeof LogisticaRoute
   '/producao': typeof ProducaoRoute
   '/rastreabilidade': typeof RastreabilidadeRoute
   '/relatorios': typeof RelatoriosRoute
   '/toras': typeof TorasRoute
+  '/florestal': typeof AuthenticatedFlorestalRoute
+  '/': typeof AuthenticatedIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
   '/comercial': typeof ComercialRoute
   '/estoque': typeof EstoqueRoute
   '/financeiro': typeof FinanceiroRoute
-  '/florestal': typeof FlorestalRoute
   '/logistica': typeof LogisticaRoute
   '/producao': typeof ProducaoRoute
   '/rastreabilidade': typeof RastreabilidadeRoute
   '/relatorios': typeof RelatoriosRoute
   '/toras': typeof TorasRoute
+  '/florestal': typeof AuthenticatedFlorestalRoute
+  '/': typeof AuthenticatedIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
   '/comercial': typeof ComercialRoute
   '/estoque': typeof EstoqueRoute
   '/financeiro': typeof FinanceiroRoute
-  '/florestal': typeof FlorestalRoute
   '/logistica': typeof LogisticaRoute
   '/producao': typeof ProducaoRoute
   '/rastreabilidade': typeof RastreabilidadeRoute
   '/relatorios': typeof RelatoriosRoute
   '/toras': typeof TorasRoute
+  '/_authenticated/florestal': typeof AuthenticatedFlorestalRoute
+  '/_authenticated/': typeof AuthenticatedIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/'
     | '/comercial'
     | '/estoque'
     | '/financeiro'
-    | '/florestal'
     | '/logistica'
     | '/producao'
     | '/rastreabilidade'
     | '/relatorios'
     | '/toras'
+    | '/florestal'
+    | '/'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
     | '/comercial'
     | '/estoque'
     | '/financeiro'
-    | '/florestal'
     | '/logistica'
     | '/producao'
     | '/rastreabilidade'
     | '/relatorios'
     | '/toras'
+    | '/florestal'
+    | '/'
   id:
     | '__root__'
-    | '/'
     | '/comercial'
     | '/estoque'
     | '/financeiro'
-    | '/florestal'
     | '/logistica'
     | '/producao'
     | '/rastreabilidade'
     | '/relatorios'
     | '/toras'
+    | '/_authenticated/florestal'
+    | '/_authenticated/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
   ComercialRoute: typeof ComercialRoute
   EstoqueRoute: typeof EstoqueRoute
   FinanceiroRoute: typeof FinanceiroRoute
-  FlorestalRoute: typeof FlorestalRoute
   LogisticaRoute: typeof LogisticaRoute
   ProducaoRoute: typeof ProducaoRoute
   RastreabilidadeRoute: typeof RastreabilidadeRoute
   RelatoriosRoute: typeof RelatoriosRoute
   TorasRoute: typeof TorasRoute
+  AuthenticatedFlorestalRoute: typeof AuthenticatedFlorestalRoute
+  AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -197,13 +197,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LogisticaRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/florestal': {
-      id: '/florestal'
-      path: '/florestal'
-      fullPath: '/florestal'
-      preLoaderRoute: typeof FlorestalRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/financeiro': {
       id: '/financeiro'
       path: '/financeiro'
@@ -225,27 +218,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ComercialRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
+    '/_authenticated/': {
+      id: '/_authenticated/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+      preLoaderRoute: typeof AuthenticatedIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/florestal': {
+      id: '/_authenticated/florestal'
+      path: '/florestal'
+      fullPath: '/florestal'
+      preLoaderRoute: typeof AuthenticatedFlorestalRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
   ComercialRoute: ComercialRoute,
   EstoqueRoute: EstoqueRoute,
   FinanceiroRoute: FinanceiroRoute,
-  FlorestalRoute: FlorestalRoute,
   LogisticaRoute: LogisticaRoute,
   ProducaoRoute: ProducaoRoute,
   RastreabilidadeRoute: RastreabilidadeRoute,
   RelatoriosRoute: RelatoriosRoute,
   TorasRoute: TorasRoute,
+  AuthenticatedFlorestalRoute: AuthenticatedFlorestalRoute,
+  AuthenticatedIndexRoute: AuthenticatedIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

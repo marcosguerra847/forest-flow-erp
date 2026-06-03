@@ -5,7 +5,7 @@ import { KpiCard } from "@/components/KpiCard";
 import { Package, Layers, DollarSign, Warehouse } from "lucide-react";
 import { toras } from "@/lib/mock-data";
 
-export const Route = createFileRoute("/toras")({
+export const Route = createFileRoute("/_authenticated/toras")({
   head: () => ({ meta: [{ title: "Entrada de Toras · SilvaCore" }] }),
   component: Toras,
 });

@@ -5,7 +5,7 @@ import { KpiCard } from "@/components/KpiCard";
 import { Trees, MapPin, Sprout, Axe } from "lucide-react";
 import { fazendas, talhoes } from "@/lib/mock-data";
 
-export const Route = createFileRoute("/florestal")({
+export const Route = createFileRoute("/_authenticated/florestal")({
   head: () => ({ meta: [{ title: "Florestal · SilvaCore" }] }),
   component: Florestal,
 });

@@ -5,7 +5,7 @@ import { KpiCard } from "@/components/KpiCard";
 import { Factory, Percent, Activity, Hammer } from "lucide-react";
 import { ordensProducao } from "@/lib/mock-data";
 
-export const Route = createFileRoute("/producao")({
+export const Route = createFileRoute("/_authenticated/producao")({
   head: () => ({ meta: [{ title: "Produção · SilvaCore" }] }),
   component: Producao,
 });

@@ -6,7 +6,7 @@ import { ArrowDownCircle, ArrowUpCircle, Wallet, TrendingUp } from "lucide-react
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { financeiro, fluxoCaixa } from "@/lib/mock-data";
 
-export const Route = createFileRoute("/financeiro")({
+export const Route = createFileRoute("/_authenticated/financeiro")({
   head: () => ({ meta: [{ title: "Financeiro · SilvaCore" }] }),
   component: Financeiro,
 });

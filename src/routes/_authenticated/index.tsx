@@ -5,7 +5,7 @@ import { KpiCard } from "@/components/KpiCard";
 import { PageHeader } from "@/components/PageHeader";
 import { kpis, producaoSerie, estoqueEspecie, fluxoCaixa } from "@/lib/mock-data";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/_authenticated/")({
   head: () => ({ meta: [{ title: "Dashboard · SilvaCore" }] }),
   component: Dashboard,
 });
