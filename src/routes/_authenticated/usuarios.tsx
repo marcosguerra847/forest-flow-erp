@@ -48,7 +48,7 @@ function UsuariosPage() {
 
   const addRole = useMutation({
     mutationFn: async ({ userId, role }: { userId: string; role: AppRole }) => {
-      const { error } = await supabase.from("user_roles").insert({ user_id: userId, role: role as AppRole });
+      const { error } = await supabase.from("user_roles").insert({ user_id: userId, role });
       if (error) throw error;
     },
     onSuccess: () => { toast.success("Papel atribuído"); qc.invalidateQueries({ queryKey: ["users-roles"] }); },
