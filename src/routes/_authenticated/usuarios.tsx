@@ -94,7 +94,7 @@ function UsuariosPage() {
                   <Badge key={r} variant="secondary" className="gap-1">
                     {r}
                     {meIsAdmin && (
-                      <button onClick={() => removeRole.mutate({ userId: u.id, role: r })} className="ml-0.5 hover:text-destructive">
+                      <button onClick={() => removeRole.mutate({ userId: u.id, role: r as AppRole })} className="ml-0.5 hover:text-destructive">
                         <X className="h-2.5 w-2.5" />
                       </button>
                     )}
