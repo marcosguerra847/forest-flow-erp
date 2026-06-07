@@ -8,7 +8,7 @@ export function KpiCard({
   value: string | number;
   delta?: string;
   icon: LucideIcon;
-  tone?: "default" | "success" | "warning";
+  tone?: "default" | "success" | "warning" | "danger";
 }) {
   return (
     <div className="group relative overflow-hidden rounded-xl border border-border/60 bg-card p-5 shadow-[var(--shadow-elegant)] transition-colors hover:border-primary/40">
@@ -22,6 +22,7 @@ export function KpiCard({
               "mt-1 text-xs",
               tone === "success" && "text-success",
               tone === "warning" && "text-warning",
+              tone === "danger" && "text-destructive",
               tone === "default" && "text-muted-foreground",
             )}>{delta}</div>
           )}
