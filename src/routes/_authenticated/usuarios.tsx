@@ -48,7 +48,7 @@ function UsuariosPage() {
 
   const addRole = useMutation({
     mutationFn: async ({ userId, role }: { userId: string; role: AppRole }) => {
-      const { error } = await supabase.from("user_roles").insert({ user_id: userId, role: role as AppRole });
+      const { error } = await supabase.from("user_roles").insert({ user_id: userId, role });
       if (error) throw error;
     },
     onSuccess: () => { toast.success("Papel atribuído"); qc.invalidateQueries({ queryKey: ["users-roles"] }); },
@@ -56,7 +56,7 @@ function UsuariosPage() {
   });
 
   const removeRole = useMutation({
-    mutationFn: async ({ userId, role }: { userId: string; role: string }) => {
+    mutationFn: async ({ userId, role }: { userId: string; role: AppRole }) => {
       const { error } = await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", role);
       if (error) throw error;
     },
@@ -94,7 +94,7 @@ function UsuariosPage() {
                   <Badge key={r} variant="secondary" className="gap-1">
                     {r}
                     {meIsAdmin && (
-                      <button onClick={() => removeRole.mutate({ userId: u.id, role: r })} className="ml-0.5 hover:text-destructive">
+                      <button onClick={() => removeRole.mutate({ userId: u.id, role: r as AppRole })} className="ml-0.5 hover:text-destructive">
                         <X className="h-2.5 w-2.5" />
                       </button>
                     )}
