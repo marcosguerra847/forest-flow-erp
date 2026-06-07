@@ -1,7 +1,8 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
-  LayoutDashboard, Trees, Package, Factory, Boxes, ShoppingCart,
-  Truck, Wallet, FileBarChart, QrCode, TreePine, MapPinned, Sprout, Users,
+  LayoutDashboard, Trees, Factory, Boxes, Truck,
+  FileBarChart, QrCode, TreePine, MapPinned, Sprout, Users,
+  Scissors, ClipboardCheck, Package2, AlertTriangle,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -15,17 +16,17 @@ const cadastros = [
   { title: "Inventário Florestal", url: "/inventario", icon: Sprout },
 ];
 
-const operacional = [
-  { title: "Florestal (mock)", url: "/florestal", icon: Trees },
-  { title: "Entrada de Toras", url: "/toras", icon: Package },
-  { title: "Produção", url: "/producao", icon: Factory },
-  { title: "Estoque", url: "/estoque", icon: Boxes },
+const antifurto = [
+  { title: "Ordens de Colheita", url: "/ordens-colheita", icon: Scissors },
+  { title: "Cargas (QR)", url: "/cargas", icon: Truck },
+  { title: "Recebimento no Pátio", url: "/recebimento", icon: ClipboardCheck },
+  { title: "Lotes do Pátio", url: "/lotes", icon: Boxes },
+  { title: "Divergências", url: "/divergencias", icon: AlertTriangle },
 ];
 
-const negocio = [
-  { title: "Comercial", url: "/comercial", icon: ShoppingCart },
-  { title: "Logística", url: "/logistica", icon: Truck },
-  { title: "Financeiro", url: "/financeiro", icon: Wallet },
+const serraria = [
+  { title: "Ordens de Produção", url: "/ordens-producao", icon: Factory },
+  { title: "Produtos Acabados", url: "/produtos-acabados", icon: Package2 },
 ];
 
 const inteligencia = [
@@ -75,13 +76,13 @@ export function AppSidebar() {
       </SidebarHeader>
       <SidebarContent>
         {renderGroup("Cadastros", cadastros)}
-        {renderGroup("Operacional", operacional)}
-        {renderGroup("Negócio", negocio)}
+        {renderGroup("Antifurto", antifurto)}
+        {renderGroup("Serraria", serraria)}
         {renderGroup("Inteligência", inteligencia)}
       </SidebarContent>
       <SidebarFooter className="border-t border-sidebar-border">
         <div className="px-2 py-2 text-[10px] text-sidebar-foreground/40">
-          Fase 1 · Fundação
+          Fase 1 · Operação completa
         </div>
       </SidebarFooter>
     </Sidebar>
