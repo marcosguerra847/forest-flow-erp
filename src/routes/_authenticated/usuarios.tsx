@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/PageHeader";
@@ -23,14 +23,14 @@ function UsuariosPage() {
   const qc = useQueryClient();
   const [meIsAdmin, setMeIsAdmin] = useState<boolean | null>(null);
 
-  useState(() => {
+  useEffect(() => {
     (async () => {
       const { data: u } = await supabase.auth.getUser();
-      if (!u.user) return;
+      if (!u.user) { setMeIsAdmin(false); return; }
       const { data } = await supabase.rpc("has_role", { _user_id: u.user.id, _role: "admin" });
       setMeIsAdmin(Boolean(data));
     })();
-  });
+  }, []);
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ["users-roles"],
