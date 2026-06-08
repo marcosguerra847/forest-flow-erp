@@ -56,7 +56,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "SilvaCore — ERP Madeireira & Silvicultura" },
+      { title: "Fazenda Bela Vista — Rastreabilidade Florestal" },
       { name: "description", content: "ERP industrial completo com rastreabilidade antifurto da madeira: florestal, serraria, estoque, comercial, logística." },
     ],
     links: [
