@@ -81,7 +81,7 @@ function LotesPage() {
       <Dialog open={!!showQr} onOpenChange={(o) => !o && setShowQr(null)}>
         <DialogContent>
           <DialogHeader><DialogTitle>QR do lote {showQr?.codigo}</DialogTitle></DialogHeader>
-          <div className="flex justify-center py-4">{showQr && <QrDisplay value={`LP:${showQr.codigo}`} size={220} />}</div>
+          <div className="flex justify-center py-4">{showQr && <QrDisplay tipo="lp" codigo={showQr.codigo} size={220} label={`${showQr.especie ?? ""} · ${Number(showQr.volume_m3).toFixed(1)} m³ · ${showQr.qtd_toras} toras`} />}</div>
         </DialogContent>
       </Dialog>
     </div>

@@ -62,7 +62,7 @@ function PAPage() {
         <DialogContent>
           <DialogHeader><DialogTitle>{showQr?.codigo}</DialogTitle></DialogHeader>
           <div className="flex flex-col items-center gap-3 py-4">
-            {showQr && <QrDisplay value={`PA:${showQr.codigo}`} size={220} />}
+            {showQr && <QrDisplay tipo="pa" codigo={showQr.codigo} size={220} label={`${showQr.descricao} · ${showQr.dimensoes ?? ""}`} />}
             <p className="text-xs text-muted-foreground text-center max-w-xs">{showQr?.descricao} · {showQr?.dimensoes}</p>
           </div>
         </DialogContent>
