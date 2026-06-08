@@ -103,7 +103,7 @@ function CargasPage() {
         <DialogContent>
           <DialogHeader><DialogTitle>QR da carga {showQr?.codigo}</DialogTitle></DialogHeader>
           <div className="flex flex-col items-center gap-3 py-4">
-            {showQr && <QrDisplay value={`CG:${showQr.codigo}`} size={220} />}
+            {showQr && <QrDisplay tipo="cg" codigo={showQr.codigo} size={220} label={`Carga · ${showQr.placa_veiculo ?? ""} · ${Number(showQr.volume_carregado_m3).toFixed(1)} m³`} />}
             <p className="text-center text-xs text-muted-foreground max-w-xs">
               Apresente este QR Code na portaria do pátio para conferência. Ele identifica a carga, placa e volume declarado.
             </p>
