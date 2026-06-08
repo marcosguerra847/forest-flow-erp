@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Boxes, MoveRight, QrCode } from "lucide-react";
+import { Boxes, MoveRight, QrCode, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { QrDisplay } from "@/components/QrDisplay";
 
@@ -70,6 +70,11 @@ function LotesPage() {
               <div className="flex justify-end gap-1">
                 <Button size="icon" variant="ghost" onClick={() => setShowQr(r)}><QrCode className="h-4 w-4" /></Button>
                 <Button size="icon" variant="ghost" onClick={() => setMoving(r)}><MoveRight className="h-4 w-4" /></Button>
+                <Button size="icon" variant="ghost" className="text-destructive hover:text-destructive" onClick={async () => {
+                  if (!confirm(`Excluir lote ${r.codigo}?`)) return;
+                  const { error } = await supabase.from("lotes_patio").delete().eq("id", r.id);
+                  if (error) toast.error(error.message); else { toast.success("Lote excluído"); qc.invalidateQueries({ queryKey: ["lotes"] }); }
+                }}><Trash2 className="h-4 w-4" /></Button>
               </div>
             ) },
           ]}
@@ -81,7 +86,7 @@ function LotesPage() {
       <Dialog open={!!showQr} onOpenChange={(o) => !o && setShowQr(null)}>
         <DialogContent>
           <DialogHeader><DialogTitle>QR do lote {showQr?.codigo}</DialogTitle></DialogHeader>
-          <div className="flex justify-center py-4">{showQr && <QrDisplay value={`LP:${showQr.codigo}`} size={220} />}</div>
+          <div className="flex justify-center py-4">{showQr && <QrDisplay tipo="lp" codigo={showQr.codigo} size={220} label={`${showQr.especie ?? ""} · ${Number(showQr.volume_m3).toFixed(1)} m³ · ${showQr.qtd_toras} toras`} />}</div>
         </DialogContent>
       </Dialog>
     </div>

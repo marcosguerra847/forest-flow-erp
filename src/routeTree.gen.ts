@@ -32,6 +32,7 @@ import { Route as AuthenticatedEstoqueRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedDivergenciasRouteImport } from './routes/_authenticated/divergencias'
 import { Route as AuthenticatedComercialRouteImport } from './routes/_authenticated/comercial'
 import { Route as AuthenticatedCargasRouteImport } from './routes/_authenticated/cargas'
+import { Route as AuthenticatedQrTipoCodigoRouteImport } from './routes/_authenticated/qr.$tipo.$codigo'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -153,6 +154,12 @@ const AuthenticatedCargasRoute = AuthenticatedCargasRouteImport.update({
   path: '/cargas',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedQrTipoCodigoRoute =
+  AuthenticatedQrTipoCodigoRouteImport.update({
+    id: '/qr/$tipo/$codigo',
+    path: '/qr/$tipo/$codigo',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
@@ -177,6 +184,7 @@ export interface FileRoutesByFullPath {
   '/talhoes': typeof AuthenticatedTalhoesRoute
   '/toras': typeof AuthenticatedTorasRoute
   '/usuarios': typeof AuthenticatedUsuariosRoute
+  '/qr/$tipo/$codigo': typeof AuthenticatedQrTipoCodigoRoute
 }
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
@@ -201,6 +209,7 @@ export interface FileRoutesByTo {
   '/toras': typeof AuthenticatedTorasRoute
   '/usuarios': typeof AuthenticatedUsuariosRoute
   '/': typeof AuthenticatedIndexRoute
+  '/qr/$tipo/$codigo': typeof AuthenticatedQrTipoCodigoRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -227,6 +236,7 @@ export interface FileRoutesById {
   '/_authenticated/toras': typeof AuthenticatedTorasRoute
   '/_authenticated/usuarios': typeof AuthenticatedUsuariosRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/qr/$tipo/$codigo': typeof AuthenticatedQrTipoCodigoRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -253,6 +263,7 @@ export interface FileRouteTypes {
     | '/talhoes'
     | '/toras'
     | '/usuarios'
+    | '/qr/$tipo/$codigo'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/auth'
@@ -277,6 +288,7 @@ export interface FileRouteTypes {
     | '/toras'
     | '/usuarios'
     | '/'
+    | '/qr/$tipo/$codigo'
   id:
     | '__root__'
     | '/_authenticated'
@@ -302,6 +314,7 @@ export interface FileRouteTypes {
     | '/_authenticated/toras'
     | '/_authenticated/usuarios'
     | '/_authenticated/'
+    | '/_authenticated/qr/$tipo/$codigo'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -472,6 +485,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCargasRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/qr/$tipo/$codigo': {
+      id: '/_authenticated/qr/$tipo/$codigo'
+      path: '/qr/$tipo/$codigo'
+      fullPath: '/qr/$tipo/$codigo'
+      preLoaderRoute: typeof AuthenticatedQrTipoCodigoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -497,6 +517,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedTorasRoute: typeof AuthenticatedTorasRoute
   AuthenticatedUsuariosRoute: typeof AuthenticatedUsuariosRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedQrTipoCodigoRoute: typeof AuthenticatedQrTipoCodigoRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -521,6 +542,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedTorasRoute: AuthenticatedTorasRoute,
   AuthenticatedUsuariosRoute: AuthenticatedUsuariosRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedQrTipoCodigoRoute: AuthenticatedQrTipoCodigoRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -533,3 +555,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
