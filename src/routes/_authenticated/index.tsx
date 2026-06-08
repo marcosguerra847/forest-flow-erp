@@ -7,7 +7,7 @@ import { KpiCard } from "@/components/KpiCard";
 import { PageHeader } from "@/components/PageHeader";
 
 export const Route = createFileRoute("/_authenticated/")({
-  head: () => ({ meta: [{ title: "Dashboard · SilvaCore" }] }),
+  head: () => ({ meta: [{ title: "Dashboard · Fazenda Bela Vista" }] }),
   component: Dashboard,
 });
 
