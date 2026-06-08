@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { TreePine, Truck, Boxes, Package2, Scissors, Factory, ExternalLink } from "lucide-react";
 
-export const Route = createFileRoute("/qr/$tipo/$codigo")({
+export const Route = createFileRoute("/_authenticated/qr/$tipo/$codigo")({
   ssr: false,
   component: QrLanding,
 });
