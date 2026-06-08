@@ -42,7 +42,7 @@ export function QrDisplay({ tipo, codigo, value, size = 200, label }: Props) {
       .code{font-family:ui-monospace,monospace;font-size:18px;margin:8px 0 16px}
       .lbl{font-size:12px;color:#444;margin-top:12px;max-width:320px;text-align:center}
       img{width:320px;height:320px}</style></head>
-      <body><h1>SilvaCore · Rastreio</h1><div class="code">${codigo}</div>
+      <body><h1>Fazenda Bela Vista · Rastreabilidade</h1><div class="code">${codigo}</div>
       <img src="${dataUrl}" /><div class="lbl">${label ?? ""}</div>
       <script>window.onload=()=>{setTimeout(()=>window.print(),250)}</script></body></html>`);
     w.document.close();
