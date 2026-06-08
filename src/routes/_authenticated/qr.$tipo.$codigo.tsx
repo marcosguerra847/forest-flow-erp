@@ -90,7 +90,7 @@ function QrLanding() {
             <TreePine className="h-5 w-5 text-primary-foreground" />
           </div>
           <div>
-            <div className="font-display text-sm font-semibold">SilvaCore · Rastreio</div>
+            <div className="font-display text-sm font-semibold">Fazenda Bela Vista</div>
             <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Leitura de QR Code</div>
           </div>
         </header>
