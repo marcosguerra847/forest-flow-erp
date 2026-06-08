@@ -1,14 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/PageHeader";
 import { DataTable, StatusBadge } from "@/components/DataTable";
 import { KpiCard } from "@/components/KpiCard";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Package2, QrCode } from "lucide-react";
+import { Package2, QrCode, Trash2 } from "lucide-react";
 import { QrDisplay } from "@/components/QrDisplay";
+import { toast } from "sonner";
 
 type PA = {
   id: string; codigo: string; descricao: string; dimensoes: string | null;
@@ -18,7 +19,16 @@ type PA = {
 export const Route = createFileRoute("/_authenticated/produtos-acabados")({ component: PAPage });
 
 function PAPage() {
+  const qc = useQueryClient();
   const [showQr, setShowQr] = useState<PA | null>(null);
+  const del = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("produtos_acabados").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success("Produto removido"); qc.invalidateQueries({ queryKey: ["produtos-acabados"] }); },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   const { data: pas = [] } = useQuery({
     queryKey: ["produtos-acabados"],
@@ -54,7 +64,12 @@ function PAPage() {
           { key: "volume_m3", label: "Vol (m³)", align: "right", render: (r) => Number(r.volume_m3).toFixed(2) },
           { key: "criado_em", label: "Criado em", render: (r) => new Date(r.criado_em).toLocaleDateString("pt-BR") },
           { key: "status", label: "Status", render: (r) => <StatusBadge tone={r.status === "em_estoque" ? "success" : "default"}>{r.status.replace("_", " ")}</StatusBadge> },
-          { key: "qr", label: "", render: (r) => <div className="flex justify-end"><Button size="icon" variant="ghost" onClick={() => setShowQr(r)}><QrCode className="h-4 w-4" /></Button></div> },
+          { key: "qr", label: "", render: (r) => (
+            <div className="flex justify-end gap-1">
+              <Button size="icon" variant="ghost" onClick={() => setShowQr(r)}><QrCode className="h-4 w-4" /></Button>
+              <Button size="icon" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => { if (confirm(`Excluir ${r.codigo}?`)) del.mutate(r.id); }}><Trash2 className="h-4 w-4" /></Button>
+            </div>
+          ) },
         ]}
       />
 

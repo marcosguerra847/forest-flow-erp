@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
-import { Scissors, Plus, CheckCircle2 } from "lucide-react";
+import { Scissors, Plus, CheckCircle2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { proximoCodigo } from "@/lib/codigo";
 
@@ -106,6 +106,11 @@ function OCPage() {
                     <SelectItem value="cancelada">Cancelada</SelectItem>
                   </SelectContent>
                 </Select>
+                <Button size="icon" variant="ghost" className="text-destructive hover:text-destructive" onClick={async () => {
+                  if (!confirm(`Excluir OC ${r.codigo}?`)) return;
+                  const { error } = await supabase.from("ordens_colheita").delete().eq("id", r.id);
+                  if (error) toast.error(error.message); else { toast.success("OC excluída"); qc.invalidateQueries({ queryKey: ["ocs"] }); }
+                }}><Trash2 className="h-4 w-4" /></Button>
               </div>
             ) },
           ]}

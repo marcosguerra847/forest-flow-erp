@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
-import { Factory, Plus, Gauge } from "lucide-react";
+import { Factory, Plus, Gauge, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { proximoCodigo } from "@/lib/codigo";
 
@@ -84,10 +84,18 @@ function OPPage() {
           { key: "status", label: "Status", render: (r) => (
             <StatusBadge tone={r.status === "concluida" ? "success" : r.status === "cancelada" ? "danger" : "warning"}>{r.status.replace("_", " ")}</StatusBadge>
           ) },
-          { key: "acoes", label: "", render: (r) => r.status !== "concluida" && r.status !== "cancelada"
-              ? <div className="flex justify-end"><Button size="sm" variant="outline" onClick={() => setApontando(r)}>Apontar</Button></div>
-              : null,
-          },
+          { key: "acoes", label: "", render: (r) => (
+            <div className="flex justify-end gap-1">
+              {r.status !== "concluida" && r.status !== "cancelada" && (
+                <Button size="sm" variant="outline" onClick={() => setApontando(r)}>Apontar</Button>
+              )}
+              <Button size="icon" variant="ghost" className="text-destructive hover:text-destructive" onClick={async () => {
+                if (!confirm(`Excluir OP ${r.codigo}?`)) return;
+                const { error } = await supabase.from("ordens_producao").delete().eq("id", r.id);
+                if (error) toast.error(error.message); else { toast.success("OP excluída"); qc.invalidateQueries({ queryKey: ["ops"] }); }
+              }}><Trash2 className="h-4 w-4" /></Button>
+            </div>
+          ) },
         ]}
       />
 

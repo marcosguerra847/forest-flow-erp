@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
-import { Truck, Plus, QrCode, MapPin } from "lucide-react";
+import { Truck, Plus, QrCode, MapPin, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { proximoCodigo } from "@/lib/codigo";
 import { QrDisplay } from "@/components/QrDisplay";
@@ -91,8 +91,13 @@ function CargasPage() {
               </StatusBadge>
             ) },
             { key: "qr", label: "", render: (r) => (
-              <div className="flex justify-end">
+              <div className="flex justify-end gap-1">
                 <Button size="icon" variant="ghost" onClick={() => setShowQr(r)}><QrCode className="h-4 w-4" /></Button>
+                <Button size="icon" variant="ghost" className="text-destructive hover:text-destructive" onClick={async () => {
+                  if (!confirm(`Excluir carga ${r.codigo}?`)) return;
+                  const { error } = await supabase.from("cargas").delete().eq("id", r.id);
+                  if (error) toast.error(error.message); else { toast.success("Carga excluída"); qc.invalidateQueries({ queryKey: ["cargas"] }); }
+                }}><Trash2 className="h-4 w-4" /></Button>
               </div>
             ) },
           ]}
