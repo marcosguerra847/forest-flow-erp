@@ -73,8 +73,8 @@ export function AppSidebar() {
             <TreePine className="h-5 w-5 text-primary-foreground" />
           </div>
           <div className="leading-tight">
-            <div className="font-display text-sm font-semibold text-sidebar-foreground">SilvaCore</div>
-            <div className="text-[10px] uppercase tracking-widest text-sidebar-foreground/50">Antifurto · v1</div>
+            <div className="font-display text-sm font-semibold text-sidebar-foreground">Fazenda Bela Vistae</div>
+            <div className="text-[10px] uppercase tracking-widest text-sidebar-foreground/50">Madeira de Reflorestamento</div>
           </div>
         </div>
       </SidebarHeader>
