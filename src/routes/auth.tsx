@@ -57,7 +57,7 @@ function AuthPage() {
           </div>
           <div>
             <div className="font-display text-lg font-semibold">SilvaCore</div>
-            <div className="text-[10px] uppercase tracking-widest text-muted-foreground">ERP Madeireira & Silvicultura</div>
+            <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Madeira de Reflorestamento</div>
           </div>
         </div>
         <div className="space-y-6">
@@ -82,7 +82,7 @@ function AuthPage() {
             <div className="mb-3 grid h-12 w-12 mx-auto place-items-center rounded-md bg-[image:var(--gradient-accent)]">
               <TreePine className="h-6 w-6 text-primary-foreground" />
             </div>
-            <h1 className="font-display text-2xl font-semibold">SilvaCore</h1>
+            <h1 className="font-display text-2xl font-semibold">Fazenda Bela Vista</h1>
           </div>
 
           <Tabs value={tab} onValueChange={(v) => setTab(v as "login" | "signup")}>
