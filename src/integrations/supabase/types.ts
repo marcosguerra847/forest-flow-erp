@@ -109,6 +109,57 @@ export type Database = {
           },
         ]
       }
+      clientes: {
+        Row: {
+          ativo: boolean
+          atualizado_em: string
+          cidade: string | null
+          criado_em: string
+          criado_por: string | null
+          documento: string | null
+          email: string | null
+          endereco: string | null
+          id: string
+          limite_credito: number
+          nome: string
+          observacoes: string | null
+          telefone: string | null
+          uf: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          atualizado_em?: string
+          cidade?: string | null
+          criado_em?: string
+          criado_por?: string | null
+          documento?: string | null
+          email?: string | null
+          endereco?: string | null
+          id?: string
+          limite_credito?: number
+          nome: string
+          observacoes?: string | null
+          telefone?: string | null
+          uf?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          atualizado_em?: string
+          cidade?: string | null
+          criado_em?: string
+          criado_por?: string | null
+          documento?: string | null
+          email?: string | null
+          endereco?: string | null
+          id?: string
+          limite_credito?: number
+          nome?: string
+          observacoes?: string | null
+          telefone?: string | null
+          uf?: string | null
+        }
+        Relationships: []
+      }
       codigos_seq: {
         Row: {
           ano: number
@@ -490,6 +541,62 @@ export type Database = {
             columns: ["lote_patio_id"]
             isOneToOne: false
             referencedRelation: "lotes_patio"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pedidos: {
+        Row: {
+          atualizado_em: string
+          cliente_id: string
+          codigo: string
+          criado_em: string
+          criado_por: string | null
+          data: string
+          descricao: string | null
+          id: string
+          observacoes: string | null
+          pagamento: string | null
+          qtd_itens: number
+          status: string
+          valor_total: number
+        }
+        Insert: {
+          atualizado_em?: string
+          cliente_id: string
+          codigo: string
+          criado_em?: string
+          criado_por?: string | null
+          data?: string
+          descricao?: string | null
+          id?: string
+          observacoes?: string | null
+          pagamento?: string | null
+          qtd_itens?: number
+          status?: string
+          valor_total?: number
+        }
+        Update: {
+          atualizado_em?: string
+          cliente_id?: string
+          codigo?: string
+          criado_em?: string
+          criado_por?: string | null
+          data?: string
+          descricao?: string | null
+          id?: string
+          observacoes?: string | null
+          pagamento?: string | null
+          qtd_itens?: number
+          status?: string
+          valor_total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pedidos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
             referencedColumns: ["id"]
           },
         ]

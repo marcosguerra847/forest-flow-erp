@@ -1,13 +1,14 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
   LayoutDashboard, Trees, Factory, Boxes, Truck,
-  FileBarChart, QrCode, TreePine, MapPinned, Sprout, Users,
+  FileBarChart, QrCode, MapPinned, Sprout, Users,
   Scissors, ClipboardCheck, Package2, AlertTriangle, ShoppingCart,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter,
 } from "@/components/ui/sidebar";
+import logoAsset from "@/assets/logo-bela-vista.png.asset.json";
 
 const cadastros = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
@@ -69,11 +70,9 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border">
         <div className="flex items-center gap-2 px-2 py-3">
-          <div className="grid h-9 w-9 place-items-center rounded-md bg-[image:var(--gradient-accent)] shadow-[var(--shadow-glow)]">
-            <TreePine className="h-5 w-5 text-primary-foreground" />
-          </div>
+          <img src={logoAsset.url} alt="Fazenda Bela Vista" className="h-10 w-10 rounded-md object-cover shadow-[var(--shadow-glow)]" />
           <div className="leading-tight">
-            <div className="font-display text-sm font-semibold text-sidebar-foreground">Fazenda Bela Vistae</div>
+            <div className="font-display text-sm font-semibold text-sidebar-foreground">Fazenda Bela Vista</div>
             <div className="text-[10px] uppercase tracking-widest text-sidebar-foreground/50">Madeira de Reflorestamento</div>
           </div>
         </div>

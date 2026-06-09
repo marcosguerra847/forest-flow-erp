@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { TreePine, ShieldCheck, QrCode, Activity } from "lucide-react";
+import { ShieldCheck, QrCode, Activity } from "lucide-react";
 import { toast } from "sonner";
+import logoAsset from "@/assets/logo-bela-vista.png.asset.json";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
@@ -80,11 +81,8 @@ function AuthPage() {
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
       <div className="relative hidden flex-col justify-between bg-[image:var(--gradient-forest)] p-12 lg:flex">
-        <div className="flex items-center gap-2">
-          <div className="grid h-10 w-10 place-items-center rounded-md bg-[image:var(--gradient-accent)] shadow-[var(--shadow-glow)]">
-            <TreePine className="h-6 w-6 text-primary-foreground" />
-          </div>
-
+        <div className="flex items-center gap-3">
+          <img src={logoAsset.url} alt="Fazenda Bela Vista" className="h-12 w-12 rounded-md object-cover shadow-[var(--shadow-glow)]" />
           <div>
             <div className="font-display text-lg font-semibold">
               Fazenda Bela Vista
@@ -124,10 +122,7 @@ function AuthPage() {
       <div className="flex items-center justify-center bg-background p-6">
         <div className="w-full max-w-sm">
           <div className="mb-8 text-center lg:hidden">
-            <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-md bg-[image:var(--gradient-accent)]">
-              <TreePine className="h-6 w-6 text-primary-foreground" />
-            </div>
-
+            <img src={logoAsset.url} alt="Fazenda Bela Vista" className="mx-auto mb-3 h-14 w-14 rounded-md object-cover" />
             <h1 className="font-display text-2xl font-semibold">
               Fazenda Bela Vista
             </h1>
