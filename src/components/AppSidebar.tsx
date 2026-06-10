@@ -2,7 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import {
   LayoutDashboard, Trees, Factory, Boxes, Truck,
   FileBarChart, QrCode, MapPinned, Sprout, Users,
-  Scissors, ClipboardCheck, Package2, AlertTriangle, ShoppingCart,
+  Scissors, ClipboardCheck, Package2, AlertTriangle, ShoppingCart, Wallet,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
