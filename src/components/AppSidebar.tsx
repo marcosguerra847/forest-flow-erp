@@ -80,7 +80,7 @@ export function AppSidebar() {
       </SidebarHeader>
       <SidebarContent>
         {renderGroup("Cadastros", cadastros)}
-        {renderGroup("Antifurto", antifurto)}
+        {renderGroup("Operação", operacao)}
         {renderGroup("Serraria", serraria)}
         {renderGroup("Comercial", comercial)}
         {renderGroup("Inteligência", inteligencia)}
