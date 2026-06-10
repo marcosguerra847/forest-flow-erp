@@ -56,7 +56,7 @@ function CargasPage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        eyebrow="Operação Antifurto"
+        eyebrow="Operação"
         title="Cargas em trânsito"
         description="Cada caminhão sai da fazenda com QR Code único. Compare no pátio com Recebimento."
         actions={

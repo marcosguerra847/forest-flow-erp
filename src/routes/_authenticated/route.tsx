@@ -48,7 +48,7 @@ function AuthLayout() {
           <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-border/60 bg-background/80 px-4 backdrop-blur">
             <SidebarTrigger className="text-muted-foreground hover:text-foreground" />
             <div className="text-xs text-muted-foreground">
-              <span className="text-foreground">SilvaCore</span> · Rastreabilidade Antifurto
+              <span className="text-foreground">SilvaCore</span> · Gestão da Fazenda
             </div>
             <div className="ml-auto flex items-center gap-3 text-xs">
               <Link to="/_authenticated/usuarios" className="hidden sm:inline text-muted-foreground hover:text-foreground">{nome}</Link>
