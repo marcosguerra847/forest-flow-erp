@@ -25,6 +25,15 @@ export const Route = createFileRoute("/_authenticated/produtos-acabados")({ comp
 function PAPage() {
   const qc = useQueryClient();
   const [showQr, setShowQr] = useState<PA | null>(null);
+  const [novo, setNovo] = useState(false);
+  const { data: ops = [] } = useQuery({
+    queryKey: ["ops-para-pa"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("ordens_producao").select("id,codigo").order("codigo", { ascending: false });
+      if (error) throw error;
+      return data as { id: string; codigo: string }[];
+    },
+  });
   const del = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("produtos_acabados").delete().eq("id", id);
