@@ -96,26 +96,25 @@ function AuthPage() {
 
         <div className="space-y-6">
           <h1 className="font-display text-4xl font-semibold leading-tight">
-            Rastreabilidade total
+            Gestão completa
             <br />
             da fazenda à venda.
           </h1>
 
           <p className="max-w-md text-muted-foreground">
-            Controle antifurto da madeira: QR Code por carga,
-            conferência no pátio, alertas automáticos de divergência
-            e auditoria completa.
+            Controle florestal, serraria, pátio, comercial e financeiro
+            da Fazenda Bela Vista em uma única plataforma.
           </p>
 
           <div className="grid grid-cols-3 gap-4 pt-4">
             <Feature icon={QrCode} title="QR por carga" />
-            <Feature icon={ShieldCheck} title="Antifurto" />
+            <Feature icon={ShieldCheck} title="Rastreio" />
             <Feature icon={Activity} title="Auditoria" />
           </div>
         </div>
 
         <div className="text-[11px] text-muted-foreground">
-          Fazenda Bela Vista · Rastreabilidade Florestal
+          Fazenda Bela Vista · Madeira de Reflorestamento
         </div>
       </div>
 
