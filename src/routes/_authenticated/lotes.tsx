@@ -130,3 +130,36 @@ function MoverLote({ lote, onClose, onDone }: { lote: Lote; onClose: () => void;
     </Dialog>
   );
 }
+
+function NovoLoteForm({ onSaved }: { onSaved: () => void }) {
+  const [form, setForm] = useState({ especie: "", volume_m3: "", qtd_toras: "", localizacao: "" });
+  const [saving, setSaving] = useState(false);
+  const save = async () => {
+    if (!form.volume_m3 || !form.qtd_toras) return toast.error("Volume e qtd. toras são obrigatórios");
+    setSaving(true);
+    try {
+      const codigo = await proximoCodigo("LP");
+      const { error } = await supabase.from("lotes_patio").insert({
+        codigo, especie: form.especie || null,
+        volume_m3: Number(form.volume_m3), qtd_toras: Number(form.qtd_toras),
+        localizacao: form.localizacao || null, status: "disponivel",
+      });
+      if (error) throw error;
+      toast.success(`Lote ${codigo} criado`);
+      onSaved();
+    } catch (e) { toast.error((e as Error).message); }
+    setSaving(false);
+  };
+  return (
+    <DialogContent>
+      <DialogHeader><DialogTitle>Novo lote de toras</DialogTitle></DialogHeader>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-1.5 sm:col-span-2"><Label>Espécie</Label><Input value={form.especie} onChange={(e) => setForm({ ...form, especie: e.target.value })} placeholder="Ex.: Eucalipto" /></div>
+        <div className="space-y-1.5"><Label>Volume (m³) *</Label><Input type="number" step="0.01" value={form.volume_m3} onChange={(e) => setForm({ ...form, volume_m3: e.target.value })} /></div>
+        <div className="space-y-1.5"><Label>Qtd. toras *</Label><Input type="number" value={form.qtd_toras} onChange={(e) => setForm({ ...form, qtd_toras: e.target.value })} /></div>
+        <div className="space-y-1.5 sm:col-span-2"><Label>Localização</Label><Input value={form.localizacao} onChange={(e) => setForm({ ...form, localizacao: e.target.value })} placeholder="Box 1 · Fileira A" /></div>
+      </div>
+      <DialogFooter><Button onClick={save} disabled={saving}>{saving ? "Salvando..." : "Criar lote"}</Button></DialogFooter>
+    </DialogContent>
+  );
+}
