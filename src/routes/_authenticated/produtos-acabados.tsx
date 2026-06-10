@@ -58,7 +58,12 @@ function PAPage() {
 
   return (
     <div className="space-y-8">
-      <PageHeader eyebrow="Serraria" title="Produtos acabados" description="Lotes de produto acabado com QR Code para rastreabilidade até a venda." />
+      <PageHeader eyebrow="Serraria" title="Produtos acabados" description="Lotes de produto acabado com QR Code para rastreabilidade até a venda." actions={
+        <Dialog open={novo} onOpenChange={setNovo}>
+          <DialogTrigger asChild><Button><Plus className="mr-1 h-4 w-4" /> Novo produto</Button></DialogTrigger>
+          <NovoPAForm ops={ops} onSaved={() => { setNovo(false); qc.invalidateQueries({ queryKey: ["produtos-acabados"] }); }} />
+        </Dialog>
+      } />
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <KpiCard label="Lotes produto" value={pas.length} icon={Package2} />
