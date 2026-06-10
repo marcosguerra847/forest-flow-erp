@@ -8,10 +8,11 @@ import { KpiCard } from "@/components/KpiCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Boxes, MoveRight, QrCode, Trash2 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
+import { Boxes, MoveRight, QrCode, Trash2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { QrDisplay } from "@/components/QrDisplay";
+import { proximoCodigo } from "@/lib/codigo";
 
 type Lote = {
   id: string; codigo: string; volume_m3: number; qtd_toras: number;
@@ -25,6 +26,7 @@ function LotesPage() {
   const qc = useQueryClient();
   const [moving, setMoving] = useState<Lote | null>(null);
   const [showQr, setShowQr] = useState<Lote | null>(null);
+  const [novo, setNovo] = useState(false);
 
   const { data: lotes = [], isLoading } = useQuery({
     queryKey: ["lotes"],
@@ -41,7 +43,12 @@ function LotesPage() {
 
   return (
     <div className="space-y-8">
-      <PageHeader eyebrow="Pátio" title="Estoque de toras" description="Lotes recebidos sem divergência. Cada lote tem QR próprio para entrar na serraria." />
+      <PageHeader eyebrow="Pátio" title="Estoque de toras" description="Lotes recebidos sem divergência. Cada lote tem QR próprio para entrar na serraria." actions={
+        <Dialog open={novo} onOpenChange={setNovo}>
+          <DialogTrigger asChild><Button><Plus className="mr-1 h-4 w-4" /> Novo lote</Button></DialogTrigger>
+          <NovoLoteForm onSaved={() => { setNovo(false); qc.invalidateQueries({ queryKey: ["lotes"] }); }} />
+        </Dialog>
+      } />
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <KpiCard label="Lotes" value={lotes.length} icon={Boxes} />
@@ -121,5 +128,38 @@ function MoverLote({ lote, onClose, onDone }: { lote: Lote; onClose: () => void;
         <DialogFooter><Button onClick={save} disabled={saving}>Salvar</Button></DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function NovoLoteForm({ onSaved }: { onSaved: () => void }) {
+  const [form, setForm] = useState({ especie: "", volume_m3: "", qtd_toras: "", localizacao: "" });
+  const [saving, setSaving] = useState(false);
+  const save = async () => {
+    if (!form.volume_m3 || !form.qtd_toras) return toast.error("Volume e qtd. toras são obrigatórios");
+    setSaving(true);
+    try {
+      const codigo = await proximoCodigo("LP");
+      const { error } = await supabase.from("lotes_patio").insert({
+        codigo, especie: form.especie || null,
+        volume_m3: Number(form.volume_m3), qtd_toras: Number(form.qtd_toras),
+        localizacao: form.localizacao || null, status: "disponivel",
+      });
+      if (error) throw error;
+      toast.success(`Lote ${codigo} criado`);
+      onSaved();
+    } catch (e) { toast.error((e as Error).message); }
+    setSaving(false);
+  };
+  return (
+    <DialogContent>
+      <DialogHeader><DialogTitle>Novo lote de toras</DialogTitle></DialogHeader>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-1.5 sm:col-span-2"><Label>Espécie</Label><Input value={form.especie} onChange={(e) => setForm({ ...form, especie: e.target.value })} placeholder="Ex.: Eucalipto" /></div>
+        <div className="space-y-1.5"><Label>Volume (m³) *</Label><Input type="number" step="0.01" value={form.volume_m3} onChange={(e) => setForm({ ...form, volume_m3: e.target.value })} /></div>
+        <div className="space-y-1.5"><Label>Qtd. toras *</Label><Input type="number" value={form.qtd_toras} onChange={(e) => setForm({ ...form, qtd_toras: e.target.value })} /></div>
+        <div className="space-y-1.5 sm:col-span-2"><Label>Localização</Label><Input value={form.localizacao} onChange={(e) => setForm({ ...form, localizacao: e.target.value })} placeholder="Box 1 · Fileira A" /></div>
+      </div>
+      <DialogFooter><Button onClick={save} disabled={saving}>{saving ? "Salvando..." : "Criar lote"}</Button></DialogFooter>
+    </DialogContent>
   );
 }
