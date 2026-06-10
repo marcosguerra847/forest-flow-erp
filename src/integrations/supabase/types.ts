@@ -178,6 +178,72 @@ export type Database = {
         }
         Relationships: []
       }
+      contas_financeiras: {
+        Row: {
+          atualizado_em: string
+          categoria: string | null
+          cliente_id: string | null
+          criado_em: string
+          data_pagamento: string | null
+          descricao: string
+          fornecedor: string | null
+          id: string
+          nf_id: string | null
+          observacoes: string | null
+          status: string
+          tipo: string
+          valor: number
+          vencimento: string
+        }
+        Insert: {
+          atualizado_em?: string
+          categoria?: string | null
+          cliente_id?: string | null
+          criado_em?: string
+          data_pagamento?: string | null
+          descricao: string
+          fornecedor?: string | null
+          id?: string
+          nf_id?: string | null
+          observacoes?: string | null
+          status?: string
+          tipo: string
+          valor?: number
+          vencimento: string
+        }
+        Update: {
+          atualizado_em?: string
+          categoria?: string | null
+          cliente_id?: string | null
+          criado_em?: string
+          data_pagamento?: string | null
+          descricao?: string
+          fornecedor?: string | null
+          id?: string
+          nf_id?: string | null
+          observacoes?: string | null
+          status?: string
+          tipo?: string
+          valor?: number
+          vencimento?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contas_financeiras_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contas_financeiras_nf_id_fkey"
+            columns: ["nf_id"]
+            isOneToOne: false
+            referencedRelation: "notas_fiscais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       divergencias: {
         Row: {
           carga_id: string | null
@@ -426,6 +492,122 @@ export type Database = {
             columns: ["lote_patio_id"]
             isOneToOne: false
             referencedRelation: "lotes_patio"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      movimentacoes_caixa: {
+        Row: {
+          atualizado_em: string
+          categoria: string | null
+          conta_id: string | null
+          criado_em: string
+          data: string
+          descricao: string
+          forma_pagamento: string | null
+          id: string
+          observacoes: string | null
+          tipo: string
+          valor: number
+        }
+        Insert: {
+          atualizado_em?: string
+          categoria?: string | null
+          conta_id?: string | null
+          criado_em?: string
+          data?: string
+          descricao: string
+          forma_pagamento?: string | null
+          id?: string
+          observacoes?: string | null
+          tipo: string
+          valor?: number
+        }
+        Update: {
+          atualizado_em?: string
+          categoria?: string | null
+          conta_id?: string | null
+          criado_em?: string
+          data?: string
+          descricao?: string
+          forma_pagamento?: string | null
+          id?: string
+          observacoes?: string | null
+          tipo?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "movimentacoes_caixa_conta_id_fkey"
+            columns: ["conta_id"]
+            isOneToOne: false
+            referencedRelation: "contas_financeiras"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notas_fiscais: {
+        Row: {
+          atualizado_em: string
+          carga_id: string | null
+          chave_acesso: string | null
+          cliente_id: string | null
+          criado_em: string
+          data_emissao: string
+          fornecedor: string | null
+          id: string
+          numero: string
+          observacoes: string | null
+          serie: string | null
+          status: string
+          tipo: string
+          valor: number
+        }
+        Insert: {
+          atualizado_em?: string
+          carga_id?: string | null
+          chave_acesso?: string | null
+          cliente_id?: string | null
+          criado_em?: string
+          data_emissao?: string
+          fornecedor?: string | null
+          id?: string
+          numero: string
+          observacoes?: string | null
+          serie?: string | null
+          status?: string
+          tipo: string
+          valor?: number
+        }
+        Update: {
+          atualizado_em?: string
+          carga_id?: string | null
+          chave_acesso?: string | null
+          cliente_id?: string | null
+          criado_em?: string
+          data_emissao?: string
+          fornecedor?: string | null
+          id?: string
+          numero?: string
+          observacoes?: string | null
+          serie?: string | null
+          status?: string
+          tipo?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notas_fiscais_carga_id_fkey"
+            columns: ["carga_id"]
+            isOneToOne: false
+            referencedRelation: "cargas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notas_fiscais_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
             referencedColumns: ["id"]
           },
         ]
