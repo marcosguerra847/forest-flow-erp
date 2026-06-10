@@ -8,10 +8,11 @@ import { KpiCard } from "@/components/KpiCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Boxes, MoveRight, QrCode, Trash2 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
+import { Boxes, MoveRight, QrCode, Trash2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { QrDisplay } from "@/components/QrDisplay";
+import { proximoCodigo } from "@/lib/codigo";
 
 type Lote = {
   id: string; codigo: string; volume_m3: number; qtd_toras: number;
