@@ -43,7 +43,12 @@ function LotesPage() {
 
   return (
     <div className="space-y-8">
-      <PageHeader eyebrow="Pátio" title="Estoque de toras" description="Lotes recebidos sem divergência. Cada lote tem QR próprio para entrar na serraria." />
+      <PageHeader eyebrow="Pátio" title="Estoque de toras" description="Lotes recebidos sem divergência. Cada lote tem QR próprio para entrar na serraria." actions={
+        <Dialog open={novo} onOpenChange={setNovo}>
+          <DialogTrigger asChild><Button><Plus className="mr-1 h-4 w-4" /> Novo lote</Button></DialogTrigger>
+          <NovoLoteForm onSaved={() => { setNovo(false); qc.invalidateQueries({ queryKey: ["lotes"] }); }} />
+        </Dialog>
+      } />
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <KpiCard label="Lotes" value={lotes.length} icon={Boxes} />
