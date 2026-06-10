@@ -26,6 +26,7 @@ function LotesPage() {
   const qc = useQueryClient();
   const [moving, setMoving] = useState<Lote | null>(null);
   const [showQr, setShowQr] = useState<Lote | null>(null);
+  const [novo, setNovo] = useState(false);
 
   const { data: lotes = [], isLoading } = useQuery({
     queryKey: ["lotes"],
