@@ -126,7 +126,7 @@ function QrLanding() {
           </div>
         </div>
 
-        <p className="text-center text-[10px] text-muted-foreground">SilvaCore · Rastreabilidade Florestal Antifurto</p>
+        <p className="text-center text-[10px] text-muted-foreground">SilvaCore · Fazenda Bela Vista</p>
       </div>
     </main>
   );

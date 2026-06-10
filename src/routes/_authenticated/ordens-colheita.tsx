@@ -65,7 +65,7 @@ function OCPage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        eyebrow="Operação Antifurto"
+        eyebrow="Operação"
         title="Ordens de Colheita"
         description="Abertura formal do corte em um talhão. Toda carga deve estar vinculada a uma OC ativa."
         actions={

@@ -18,7 +18,7 @@ const RELATORIOS: { key: RelKey; titulo: string; descricao: string; icon: typeof
   { key: "rendimento", titulo: "Rendimento da serraria", descricao: "Volume entrada × produzido × perda por OP", icon: Factory },
   { key: "estoque", titulo: "Estoque do pátio", descricao: "Lotes disponíveis com volume e localização", icon: Boxes },
   { key: "ocs", titulo: "Ordens de Colheita", descricao: "Previsto vs colhido por OC", icon: Scissors },
-  { key: "divergencias", titulo: "Divergências antifurto", descricao: "Histórico completo de alertas", icon: AlertTriangle },
+  { key: "divergencias", titulo: "Divergências de carga", descricao: "Histórico completo de alertas", icon: AlertTriangle },
   { key: "produtos", titulo: "Produtos acabados", descricao: "Lotes de PA com volume e peças", icon: Package2 },
 ];
 

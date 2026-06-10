@@ -57,7 +57,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Fazenda Bela Vista — Rastreabilidade Florestal" },
-      { name: "description", content: "ERP industrial completo com rastreabilidade antifurto da madeira: florestal, serraria, estoque, comercial, logística." },
+      { name: "description", content: "ERP industrial completo com florestal, serraria, estoque, comercial, logística." },
     ],
     links: [
       { rel: "stylesheet", href: appCss },

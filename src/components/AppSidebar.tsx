@@ -2,7 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import {
   LayoutDashboard, Trees, Factory, Boxes, Truck,
   FileBarChart, QrCode, MapPinned, Sprout, Users,
-  Scissors, ClipboardCheck, Package2, AlertTriangle, ShoppingCart,
+  Scissors, ClipboardCheck, Package2, AlertTriangle, ShoppingCart, Wallet,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -17,7 +17,7 @@ const cadastros = [
   { title: "Inventário Florestal", url: "/inventario", icon: Sprout },
 ];
 
-const antifurto = [
+const operacao = [
   { title: "Ordens de Colheita", url: "/ordens-colheita", icon: Scissors },
   { title: "Cargas (QR)", url: "/cargas", icon: Truck },
   { title: "Recebimento no Pátio", url: "/recebimento", icon: ClipboardCheck },
@@ -31,7 +31,8 @@ const serraria = [
 ];
 
 const comercial = [
-  { title: "Comercial", url: "/comercial", icon: ShoppingCart },
+  { title: "Clientes e Pedidos", url: "/comercial", icon: ShoppingCart },
+  { title: "Financeiro", url: "/financeiro", icon: Wallet },
 ];
 
 const inteligencia = [
@@ -79,7 +80,7 @@ export function AppSidebar() {
       </SidebarHeader>
       <SidebarContent>
         {renderGroup("Cadastros", cadastros)}
-        {renderGroup("Antifurto", antifurto)}
+        {renderGroup("Operação", operacao)}
         {renderGroup("Serraria", serraria)}
         {renderGroup("Comercial", comercial)}
         {renderGroup("Inteligência", inteligencia)}
