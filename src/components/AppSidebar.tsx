@@ -17,7 +17,7 @@ const cadastros = [
   { title: "Inventário Florestal", url: "/inventario", icon: Sprout },
 ];
 
-const antifurto = [
+const operacao = [
   { title: "Ordens de Colheita", url: "/ordens-colheita", icon: Scissors },
   { title: "Cargas (QR)", url: "/cargas", icon: Truck },
   { title: "Recebimento no Pátio", url: "/recebimento", icon: ClipboardCheck },
@@ -31,7 +31,8 @@ const serraria = [
 ];
 
 const comercial = [
-  { title: "Comercial", url: "/comercial", icon: ShoppingCart },
+  { title: "Clientes e Pedidos", url: "/comercial", icon: ShoppingCart },
+  { title: "Financeiro", url: "/financeiro", icon: Wallet },
 ];
 
 const inteligencia = [
