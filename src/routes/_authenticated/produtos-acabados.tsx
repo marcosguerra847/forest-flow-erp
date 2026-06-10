@@ -6,10 +6,14 @@ import { PageHeader } from "@/components/PageHeader";
 import { DataTable, StatusBadge } from "@/components/DataTable";
 import { KpiCard } from "@/components/KpiCard";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Package2, QrCode, Trash2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
+import { Package2, QrCode, Trash2, Plus } from "lucide-react";
 import { QrDisplay } from "@/components/QrDisplay";
 import { toast } from "sonner";
+import { proximoCodigo } from "@/lib/codigo";
 
 type PA = {
   id: string; codigo: string; descricao: string; dimensoes: string | null;
