@@ -109,6 +109,30 @@ export type Database = {
           },
         ]
       }
+      centros_custo: {
+        Row: {
+          ativo: boolean
+          criado_em: string
+          id: string
+          nome: string
+          tipo: string
+        }
+        Insert: {
+          ativo?: boolean
+          criado_em?: string
+          id?: string
+          nome: string
+          tipo: string
+        }
+        Update: {
+          ativo?: boolean
+          criado_em?: string
+          id?: string
+          nome?: string
+          tipo?: string
+        }
+        Relationships: []
+      }
       clientes: {
         Row: {
           ativo: boolean
@@ -178,11 +202,52 @@ export type Database = {
         }
         Relationships: []
       }
+      contas_bancarias: {
+        Row: {
+          agencia: string | null
+          ativo: boolean
+          atualizado_em: string
+          banco: string
+          conta: string | null
+          criado_em: string
+          id: string
+          observacoes: string | null
+          saldo_inicial: number
+          tipo: string
+        }
+        Insert: {
+          agencia?: string | null
+          ativo?: boolean
+          atualizado_em?: string
+          banco: string
+          conta?: string | null
+          criado_em?: string
+          id?: string
+          observacoes?: string | null
+          saldo_inicial?: number
+          tipo?: string
+        }
+        Update: {
+          agencia?: string | null
+          ativo?: boolean
+          atualizado_em?: string
+          banco?: string
+          conta?: string | null
+          criado_em?: string
+          id?: string
+          observacoes?: string | null
+          saldo_inicial?: number
+          tipo?: string
+        }
+        Relationships: []
+      }
       contas_financeiras: {
         Row: {
           atualizado_em: string
           categoria: string | null
+          centro_custo_id: string | null
           cliente_id: string | null
+          conta_bancaria_id: string | null
           criado_em: string
           data_pagamento: string | null
           descricao: string
@@ -198,7 +263,9 @@ export type Database = {
         Insert: {
           atualizado_em?: string
           categoria?: string | null
+          centro_custo_id?: string | null
           cliente_id?: string | null
+          conta_bancaria_id?: string | null
           criado_em?: string
           data_pagamento?: string | null
           descricao: string
@@ -214,7 +281,9 @@ export type Database = {
         Update: {
           atualizado_em?: string
           categoria?: string | null
+          centro_custo_id?: string | null
           cliente_id?: string | null
+          conta_bancaria_id?: string | null
           criado_em?: string
           data_pagamento?: string | null
           descricao?: string
@@ -229,10 +298,24 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "contas_financeiras_centro_custo_id_fkey"
+            columns: ["centro_custo_id"]
+            isOneToOne: false
+            referencedRelation: "centros_custo"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "contas_financeiras_cliente_id_fkey"
             columns: ["cliente_id"]
             isOneToOne: false
             referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contas_financeiras_conta_bancaria_id_fkey"
+            columns: ["conta_bancaria_id"]
+            isOneToOne: false
+            referencedRelation: "contas_bancarias"
             referencedColumns: ["id"]
           },
           {
@@ -500,6 +583,9 @@ export type Database = {
         Row: {
           atualizado_em: string
           categoria: string | null
+          centro_custo_id: string | null
+          conciliado_em: string | null
+          conta_bancaria_id: string | null
           conta_id: string | null
           criado_em: string
           data: string
@@ -513,6 +599,9 @@ export type Database = {
         Insert: {
           atualizado_em?: string
           categoria?: string | null
+          centro_custo_id?: string | null
+          conciliado_em?: string | null
+          conta_bancaria_id?: string | null
           conta_id?: string | null
           criado_em?: string
           data?: string
@@ -526,6 +615,9 @@ export type Database = {
         Update: {
           atualizado_em?: string
           categoria?: string | null
+          centro_custo_id?: string | null
+          conciliado_em?: string | null
+          conta_bancaria_id?: string | null
           conta_id?: string | null
           criado_em?: string
           data?: string
@@ -538,6 +630,20 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "movimentacoes_caixa_centro_custo_id_fkey"
+            columns: ["centro_custo_id"]
+            isOneToOne: false
+            referencedRelation: "centros_custo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "movimentacoes_caixa_conta_bancaria_id_fkey"
+            columns: ["conta_bancaria_id"]
+            isOneToOne: false
+            referencedRelation: "contas_bancarias"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "movimentacoes_caixa_conta_id_fkey"
             columns: ["conta_id"]
             isOneToOne: false
@@ -549,51 +655,75 @@ export type Database = {
       notas_fiscais: {
         Row: {
           atualizado_em: string
+          base_icms: number | null
           carga_id: string | null
+          cfop: string | null
           chave_acesso: string | null
           cliente_id: string | null
           criado_em: string
           data_emissao: string
           fornecedor: string | null
           id: string
+          natureza_operacao: string | null
           numero: string
           observacoes: string | null
+          pdf_url: string | null
+          pedido_id: string | null
           serie: string | null
           status: string
           tipo: string
           valor: number
+          valor_icms: number | null
+          valor_ipi: number | null
+          xml_url: string | null
         }
         Insert: {
           atualizado_em?: string
+          base_icms?: number | null
           carga_id?: string | null
+          cfop?: string | null
           chave_acesso?: string | null
           cliente_id?: string | null
           criado_em?: string
           data_emissao?: string
           fornecedor?: string | null
           id?: string
+          natureza_operacao?: string | null
           numero: string
           observacoes?: string | null
+          pdf_url?: string | null
+          pedido_id?: string | null
           serie?: string | null
           status?: string
           tipo: string
           valor?: number
+          valor_icms?: number | null
+          valor_ipi?: number | null
+          xml_url?: string | null
         }
         Update: {
           atualizado_em?: string
+          base_icms?: number | null
           carga_id?: string | null
+          cfop?: string | null
           chave_acesso?: string | null
           cliente_id?: string | null
           criado_em?: string
           data_emissao?: string
           fornecedor?: string | null
           id?: string
+          natureza_operacao?: string | null
           numero?: string
           observacoes?: string | null
+          pdf_url?: string | null
+          pedido_id?: string | null
           serie?: string | null
           status?: string
           tipo?: string
           valor?: number
+          valor_icms?: number | null
+          valor_ipi?: number | null
+          xml_url?: string | null
         }
         Relationships: [
           {
@@ -608,6 +738,13 @@ export type Database = {
             columns: ["cliente_id"]
             isOneToOne: false
             referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notas_fiscais_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: false
+            referencedRelation: "pedidos"
             referencedColumns: ["id"]
           },
         ]
