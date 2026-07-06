@@ -230,21 +230,23 @@ function Rastreabilidade() {
         <div className="rounded-xl border border-border/60 bg-card p-5">
           <div className="mb-3 text-sm font-medium">Últimos eventos registrados por QR Code</div>
           <ul className="divide-y divide-border/60">
-            {ultimos.slice(0, 10).map((ev) => (
-              <li key={ev.id} className="flex items-center justify-between py-2 text-sm">
-                <div className="min-w-0">
-                  <a href={`/r/${encodeURIComponent(ev.etapa && ev.foto_url ? "" : ""}` /* placeholder */} className="hidden" />
-                  <button
-                    onClick={() => { setCode(ev["codigo" as keyof EventoQr] as unknown as string ?? ""); }}
-                    className="truncate font-mono text-xs text-primary hover:underline"
-                  >
-                    {(ev as unknown as { codigo: string }).codigo}
-                  </button>
-                  <span className="ml-2 text-muted-foreground">{ev.descricao ?? ev.etapa}</span>
-                </div>
-                <div className="ml-3 shrink-0 text-[11px] text-muted-foreground">{new Date(ev.criado_em).toLocaleString("pt-BR")}</div>
-              </li>
-            ))}
+            {ultimos.slice(0, 10).map((ev) => {
+              const cod = (ev as unknown as { codigo: string }).codigo;
+              return (
+                <li key={ev.id} className="flex items-center justify-between py-2 text-sm">
+                  <div className="min-w-0">
+                    <button
+                      onClick={() => { setCode(cod); }}
+                      className="truncate font-mono text-xs text-primary hover:underline"
+                    >
+                      {cod}
+                    </button>
+                    <span className="ml-2 text-muted-foreground">{ev.descricao ?? ev.etapa}</span>
+                  </div>
+                  <div className="ml-3 shrink-0 text-[11px] text-muted-foreground">{new Date(ev.criado_em).toLocaleString("pt-BR")}</div>
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}
