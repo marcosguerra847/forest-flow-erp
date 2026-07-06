@@ -377,6 +377,54 @@ export type Database = {
           },
         ]
       }
+      eventos_qr: {
+        Row: {
+          codigo: string
+          criado_em: string
+          descricao: string | null
+          etapa: string
+          foto_url: string | null
+          id: string
+          latitude: number | null
+          longitude: number | null
+          metadata: Json | null
+          observacao: string | null
+          tipo: string
+          usuario_id: string | null
+          usuario_nome: string | null
+        }
+        Insert: {
+          codigo: string
+          criado_em?: string
+          descricao?: string | null
+          etapa: string
+          foto_url?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          metadata?: Json | null
+          observacao?: string | null
+          tipo: string
+          usuario_id?: string | null
+          usuario_nome?: string | null
+        }
+        Update: {
+          codigo?: string
+          criado_em?: string
+          descricao?: string | null
+          etapa?: string
+          foto_url?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          metadata?: Json | null
+          observacao?: string | null
+          tipo?: string
+          usuario_id?: string | null
+          usuario_nome?: string | null
+        }
+        Relationships: []
+      }
       fazendas: {
         Row: {
           area_ha: number

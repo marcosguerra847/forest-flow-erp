@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as RCodigoRouteImport } from './routes/r.$codigo'
 import { Route as AuthenticatedUsuariosRouteImport } from './routes/_authenticated/usuarios'
 import { Route as AuthenticatedTorasRouteImport } from './routes/_authenticated/toras'
 import { Route as AuthenticatedTalhoesRouteImport } from './routes/_authenticated/talhoes'
@@ -47,6 +48,11 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const RCodigoRoute = RCodigoRouteImport.update({
+  id: '/r/$codigo',
+  path: '/r/$codigo',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedUsuariosRoute = AuthenticatedUsuariosRouteImport.update({
   id: '/usuarios',
@@ -184,6 +190,7 @@ export interface FileRoutesByFullPath {
   '/talhoes': typeof AuthenticatedTalhoesRoute
   '/toras': typeof AuthenticatedTorasRoute
   '/usuarios': typeof AuthenticatedUsuariosRoute
+  '/r/$codigo': typeof RCodigoRoute
   '/qr/$tipo/$codigo': typeof AuthenticatedQrTipoCodigoRoute
 }
 export interface FileRoutesByTo {
@@ -208,6 +215,7 @@ export interface FileRoutesByTo {
   '/talhoes': typeof AuthenticatedTalhoesRoute
   '/toras': typeof AuthenticatedTorasRoute
   '/usuarios': typeof AuthenticatedUsuariosRoute
+  '/r/$codigo': typeof RCodigoRoute
   '/': typeof AuthenticatedIndexRoute
   '/qr/$tipo/$codigo': typeof AuthenticatedQrTipoCodigoRoute
 }
@@ -235,6 +243,7 @@ export interface FileRoutesById {
   '/_authenticated/talhoes': typeof AuthenticatedTalhoesRoute
   '/_authenticated/toras': typeof AuthenticatedTorasRoute
   '/_authenticated/usuarios': typeof AuthenticatedUsuariosRoute
+  '/r/$codigo': typeof RCodigoRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/qr/$tipo/$codigo': typeof AuthenticatedQrTipoCodigoRoute
 }
@@ -263,6 +272,7 @@ export interface FileRouteTypes {
     | '/talhoes'
     | '/toras'
     | '/usuarios'
+    | '/r/$codigo'
     | '/qr/$tipo/$codigo'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -287,6 +297,7 @@ export interface FileRouteTypes {
     | '/talhoes'
     | '/toras'
     | '/usuarios'
+    | '/r/$codigo'
     | '/'
     | '/qr/$tipo/$codigo'
   id:
@@ -313,6 +324,7 @@ export interface FileRouteTypes {
     | '/_authenticated/talhoes'
     | '/_authenticated/toras'
     | '/_authenticated/usuarios'
+    | '/r/$codigo'
     | '/_authenticated/'
     | '/_authenticated/qr/$tipo/$codigo'
   fileRoutesById: FileRoutesById
@@ -320,6 +332,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  RCodigoRoute: typeof RCodigoRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -344,6 +357,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/r/$codigo': {
+      id: '/r/$codigo'
+      path: '/r/$codigo'
+      fullPath: '/r/$codigo'
+      preLoaderRoute: typeof RCodigoRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/usuarios': {
       id: '/_authenticated/usuarios'
@@ -551,6 +571,7 @@ const AuthenticatedRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  RCodigoRoute: RCodigoRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
