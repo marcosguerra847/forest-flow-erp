@@ -107,15 +107,15 @@ function PublicQrPage() {
           });
         } else if (tipo === "OC") {
           const { data } = await supabase.from("ordens_colheita")
-            .select("codigo,status,volume_estimado_m3,volume_autorizado_m3,talhoes(codigo,especie,fazendas(nome,local))").eq("codigo", codigo).maybeSingle();
+            .select("codigo,status,volume_previsto_m3,volume_colhido_m3,talhoes(codigo,especie,fazendas(nome,local))").eq("codigo", codigo).maybeSingle();
           if (data) {
             const t = data.talhoes as { codigo?: string; especie?: string; fazendas?: { nome?: string; local?: string } } | null;
             setEnt({
               titulo: `Ordem de Colheita ${data.codigo}`,
               linhas: [
                 { label: "Status", value: String(data.status ?? "—") },
-                { label: "Vol. estimado", value: `${Number(data.volume_estimado_m3 ?? 0).toFixed(2)} m³` },
-                { label: "Vol. autorizado", value: `${Number(data.volume_autorizado_m3 ?? 0).toFixed(2)} m³` },
+                { label: "Vol. previsto", value: `${Number(data.volume_previsto_m3 ?? 0).toFixed(2)} m³` },
+                { label: "Vol. colhido", value: `${Number(data.volume_colhido_m3 ?? 0).toFixed(2)} m³` },
                 { label: "Fazenda", value: t?.fazendas?.nome ?? "—" },
                 { label: "Talhão", value: t?.codigo ?? "—" },
                 { label: "Espécie", value: t?.especie ?? "—" },
