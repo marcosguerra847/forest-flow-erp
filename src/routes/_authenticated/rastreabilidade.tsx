@@ -179,12 +179,73 @@ function Rastreabilidade() {
         </div>
       )}
 
+      {/* Timeline de eventos do QR Code do item pesquisado */}
+      {produto && (
+        <div className="rounded-xl border border-border/60 bg-card p-5">
+          <div className="mb-3 flex items-center gap-2 text-sm font-medium">
+            <Clock className="h-4 w-4" /> Histórico do QR Code
+          </div>
+          {eventos.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nenhum evento registrado ainda para este código.</p>
+          ) : (
+            <ol className="space-y-3">
+              {eventos.map((ev) => (
+                <li key={ev.id} className="rounded-lg border border-border/60 bg-secondary/30 p-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="text-sm font-medium">{ev.descricao ?? ev.etapa}</div>
+                    <div className="text-[11px] text-muted-foreground">{new Date(ev.criado_em).toLocaleString("pt-BR")}</div>
+                  </div>
+                  {ev.observacao && <p className="mt-1 text-xs text-muted-foreground">{ev.observacao}</p>}
+                  <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+                    {ev.usuario_nome && <span className="flex items-center gap-1"><User className="h-3 w-3" />{ev.usuario_nome}</span>}
+                    {ev.latitude != null && ev.longitude != null && (
+                      <a href={`https://www.google.com/maps?q=${ev.latitude},${ev.longitude}`} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-primary hover:underline">
+                        <MapPin className="h-3 w-3" />{ev.latitude.toFixed(4)}, {ev.longitude.toFixed(4)}
+                      </a>
+                    )}
+                    {ev.foto_url && (
+                      <a href={ev.foto_url} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-primary hover:underline">
+                        <Camera className="h-3 w-3" /> foto
+                      </a>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ol>
+          )}
+        </div>
+      )}
+
       {!produto && !loading && (
         <div className="rounded-xl border border-dashed border-border p-12 text-center text-sm text-muted-foreground">
-          Digite um código de produto, lote ou carga para ver a cadeia completa.
+          Digite um código de produto, lote, carga, OC/OP para ver a cadeia completa e o histórico.
           <div className="mt-4">
             <Link to="/produtos-acabados" className="text-primary hover:underline">Ver produtos acabados</Link>
           </div>
+        </div>
+      )}
+
+      {/* Últimos eventos registrados no sistema */}
+      {ultimos.length > 0 && (
+        <div className="rounded-xl border border-border/60 bg-card p-5">
+          <div className="mb-3 text-sm font-medium">Últimos eventos registrados por QR Code</div>
+          <ul className="divide-y divide-border/60">
+            {ultimos.slice(0, 10).map((ev) => (
+              <li key={ev.id} className="flex items-center justify-between py-2 text-sm">
+                <div className="min-w-0">
+                  <a href={`/r/${encodeURIComponent(ev.etapa && ev.foto_url ? "" : ""}` /* placeholder */} className="hidden" />
+                  <button
+                    onClick={() => { setCode(ev["codigo" as keyof EventoQr] as unknown as string ?? ""); }}
+                    className="truncate font-mono text-xs text-primary hover:underline"
+                  >
+                    {(ev as unknown as { codigo: string }).codigo}
+                  </button>
+                  <span className="ml-2 text-muted-foreground">{ev.descricao ?? ev.etapa}</span>
+                </div>
+                <div className="ml-3 shrink-0 text-[11px] text-muted-foreground">{new Date(ev.criado_em).toLocaleString("pt-BR")}</div>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
     </div>
