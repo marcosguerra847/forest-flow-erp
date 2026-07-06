@@ -124,12 +124,21 @@ function Rastreabilidade() {
             onChange={(e) => setCode(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") buscar(); }}
             className="border-0 bg-transparent p-0 focus-visible:ring-0"
-            placeholder="Ex.: PA-2026-0001, LP-2026-0003, CG-2026-0007"
+            placeholder="Ex.: PA-2026-0001, LP-2026-0003, CG-2026-0007, OC/OP/BV..."
           />
         </div>
         <Button onClick={buscar} disabled={loading}>
           <QrCode className="mr-2 h-4 w-4" /> {loading ? "Buscando..." : "Rastrear"}
         </Button>
+        {code && (
+          <a
+            href={`/r/${encodeURIComponent(code.trim().toUpperCase())}`}
+            target="_blank" rel="noreferrer"
+            className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+          >
+            Página pública <ExternalLink className="h-3 w-3" />
+          </a>
+        )}
       </div>
 
       {produto && (
