@@ -127,6 +127,8 @@ function QrLanding() {
           </div>
         </div>
 
+        <EventoQrForm codigo={codigo} />
+
         <p className="text-center text-[10px] text-muted-foreground">SilvaCore · Fazenda Bela Vista</p>
       </div>
     </main>
