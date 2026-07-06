@@ -17,11 +17,14 @@ type Props = {
 export function QrDisplay({ tipo, codigo, value, size = 200, label }: Props) {
   const ref = useRef<HTMLCanvasElement>(null);
   const [dataUrl, setDataUrl] = useState<string>("");
+  // A partir da evolução do QR: aponta para a página pública /r/<codigo>
+  // (funciona com ou sem login; o código é a identidade permanente da madeira)
   const target =
     value ??
     (typeof window !== "undefined"
-      ? `${window.location.origin}/qr/${tipo ?? "x"}/${encodeURIComponent(codigo)}`
-      : `/qr/${tipo ?? "x"}/${encodeURIComponent(codigo)}`);
+      ? `${window.location.origin}/r/${encodeURIComponent(codigo)}`
+      : `/r/${encodeURIComponent(codigo)}`);
+  void tipo;
 
   useEffect(() => {
     if (!ref.current) return;
