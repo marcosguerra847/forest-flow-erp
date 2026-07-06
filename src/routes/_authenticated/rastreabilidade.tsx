@@ -20,14 +20,27 @@ function Rastreabilidade() {
   const [loading, setLoading] = useState(false);
   const [produto, setProduto] = useState<string | null>(null);
   const [cadeia, setCadeia] = useState<Etapa[]>([]);
+  const [eventos, setEventos] = useState<EventoQr[]>([]);
+  const [ultimos, setUltimos] = useState<EventoQr[]>([]);
+
+  useEffect(() => {
+    supabase.from("eventos_qr" as never).select("*").order("criado_em", { ascending: false }).limit(20).returns<EventoQr[]>()
+      .then(({ data }) => setUltimos(data ?? []));
+  }, []);
+
+  const carregarEventos = async (c: string) => {
+    const { data } = await supabase.from("eventos_qr" as never).select("*").eq("codigo", c).order("criado_em", { ascending: true }).returns<EventoQr[]>();
+    setEventos(data ?? []);
+  };
 
   const buscar = async () => {
     if (!code.trim()) return;
     setLoading(true);
-    setCadeia([]); setProduto(null);
+    setCadeia([]); setProduto(null); setEventos([]);
     try {
       const c = code.trim().toUpperCase();
       const etapas: Etapa[] = [];
+      await carregarEventos(c);
 
       // 1) Produto Acabado
       const { data: pa } = await supabase.from("produtos_acabados")
