@@ -97,7 +97,12 @@ function Rastreabilidade() {
         setCadeia(etapas); return;
       }
 
-      toast.error("Código não encontrado");
+      // Sem entidade cadastrada mas com eventos → ainda mostra timeline
+      if (etapas.length === 0) {
+        const { data: evs } = await supabase.from("eventos_qr" as never).select("id").eq("codigo", c).limit(1).returns<{ id: string }[]>();
+        if (!evs || evs.length === 0) toast.error("Código não encontrado");
+        else setProduto(`Código ${c}`);
+      }
     } finally {
       setLoading(false);
     }
