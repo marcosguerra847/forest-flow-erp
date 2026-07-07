@@ -172,6 +172,17 @@ export function EventoQrForm({ codigo, onCreated }: Props) {
       <Button onClick={submit} disabled={saving} className="w-full">
         {saving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando…</> : "Registrar etapa"}
       </Button>
+
+      <div className="flex items-center justify-between rounded-md border border-border/60 bg-secondary/30 px-3 py-2 text-[11px]">
+        <span className={`flex items-center gap-1 ${online ? "text-primary" : "text-amber-500"}`}>
+          {online ? <CloudUpload className="h-3.5 w-3.5" /> : <WifiOff className="h-3.5 w-3.5" />}
+          {online ? "Online" : "Offline"}
+        </span>
+        <span className="text-muted-foreground">Pendentes: <b>{pendentes}</b></span>
+        <button type="button" onClick={sincronizarAgora} className="text-primary hover:underline disabled:opacity-40" disabled={pendentes === 0}>
+          Sincronizar agora
+        </button>
+      </div>
     </div>
   );
 }
