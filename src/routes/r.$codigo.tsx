@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { TreePine, MapPin, Camera, Clock, User, ExternalLink, ChevronRight } from "lucide-react";
 import { EventoQrForm } from "@/components/EventoQrForm";
+import { DeliveryConfirmForm } from "@/components/DeliveryConfirmForm";
 import { tipoFromCodigo, ETAPAS } from "@/lib/etapas";
 
 export const Route = createFileRoute("/r/$codigo")({
@@ -241,8 +242,14 @@ function PublicQrPage() {
           )}
         </section>
 
-        {/* Formulário — só aparece para usuário logado */}
+        {/* Confirmação de entrega pelo cliente (sem login) — só para cargas ainda não confirmadas */}
+        {tipo === "CG" && !etapasRegistradas.has("entregue") && (
+          <DeliveryConfirmForm codigo={codigo} onDone={carregarEventos} />
+        )}
+
+        {/* Formulário interno — só aparece para usuário logado */}
         <EventoQrForm codigo={codigo} onCreated={carregarEventos} />
+
 
         <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 text-xs">
           <div className="font-semibold text-primary">Trabalhador da fazenda?</div>
