@@ -5,9 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Camera, MapPin, Loader2, CheckCircle2 } from "lucide-react";
+import { Camera, MapPin, Loader2, CheckCircle2, WifiOff, CloudUpload } from "lucide-react";
 import { toast } from "sonner";
 import { ETAPAS, tipoFromCodigo } from "@/lib/etapas";
+import { countPendentes, enqueueEvento, flushPendentes, initSync } from "@/lib/offline-queue";
 
 type Props = {
   codigo: string;
@@ -23,6 +24,8 @@ export function EventoQrForm({ codigo, onCreated }: Props) {
   const [saving, setSaving] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [userName, setUserName] = useState<string>("");
+  const [pendentes, setPendentes] = useState(0);
+  const [online, setOnline] = useState<boolean>(typeof navigator === "undefined" ? true : navigator.onLine);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -33,7 +36,6 @@ export function EventoQrForm({ codigo, onCreated }: Props) {
       const { data: p } = await supabase.from("profiles").select("nome,email").eq("id", u.id).maybeSingle();
       setUserName(p?.nome ?? p?.email ?? u.email ?? "");
     });
-    // GPS automático — silencioso se recusado
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
         (pos) => setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
@@ -41,6 +43,13 @@ export function EventoQrForm({ codigo, onCreated }: Props) {
         { enableHighAccuracy: true, timeout: 8000 },
       );
     }
+    initSync((c) => setPendentes(c));
+    countPendentes().then(setPendentes);
+    const on = () => setOnline(true);
+    const off = () => setOnline(false);
+    window.addEventListener("online", on);
+    window.addEventListener("offline", off);
+    return () => { window.removeEventListener("online", on); window.removeEventListener("offline", off); };
   }, []);
 
   const onPickFile = (f: File | null) => {
@@ -52,7 +61,37 @@ export function EventoQrForm({ codigo, onCreated }: Props) {
   const submit = async () => {
     if (!userId) { toast.error("Faça login para registrar eventos."); return; }
     setSaving(true);
+    setSaving(true);
+    const etapaLabel = ETAPAS.find((e) => e.key === etapa)?.label ?? etapa;
+    const basePayload = {
+      codigo,
+      tipo: tipoFromCodigo(codigo),
+      etapa,
+      descricao: etapaLabel,
+      observacao: observacao || null,
+      usuario_id: userId,
+      usuario_nome: userName || null,
+      latitude: coords?.lat ?? null,
+      longitude: coords?.lng ?? null,
+      criado_em: new Date().toISOString(),
+    };
+
+    const enfileirar = async () => {
+      await enqueueEvento({
+        ...basePayload,
+        foto: foto ?? null,
+        foto_ext: foto ? (foto.name.split(".").pop() || "jpg") : null,
+      });
+      const c = await countPendentes();
+      setPendentes(c);
+      toast.success("Sem conexão — etapa salva localmente. Sincronizará ao voltar online.");
+      setObservacao(""); onPickFile(null);
+      if (fileRef.current) fileRef.current.value = "";
+      onCreated?.();
+    };
+
     try {
+      if (!navigator.onLine) { await enfileirar(); return; }
       let foto_url: string | null = null;
       if (foto) {
         const ext = foto.name.split(".").pop() || "jpg";
@@ -62,31 +101,30 @@ export function EventoQrForm({ codigo, onCreated }: Props) {
         const { data: signed } = await supabase.storage.from("qr-eventos").createSignedUrl(path, 60 * 60 * 24 * 365);
         foto_url = signed?.signedUrl ?? null;
       }
-      const etapaLabel = ETAPAS.find((e) => e.key === etapa)?.label ?? etapa;
-      const { error } = await supabase.from("eventos_qr" as never).insert({
-        codigo,
-        tipo: tipoFromCodigo(codigo),
-        etapa,
-        descricao: etapaLabel,
-        observacao: observacao || null,
-        usuario_id: userId,
-        usuario_nome: userName || null,
-        latitude: coords?.lat ?? null,
-        longitude: coords?.lng ?? null,
-        foto_url,
-      } as never);
+      const { error } = await supabase.from("eventos_qr" as never).insert({ ...basePayload, foto_url } as never);
       if (error) throw error;
       toast.success("Etapa registrada");
-      setObservacao("");
-      onPickFile(null);
+      setObservacao(""); onPickFile(null);
       if (fileRef.current) fileRef.current.value = "";
       onCreated?.();
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Erro ao salvar";
-      toast.error(msg);
+      // Falha de rede → enfileira para sincronizar depois
+      try { await enfileirar(); }
+      catch {
+        const msg = e instanceof Error ? e.message : "Erro ao salvar";
+        toast.error(msg);
+      }
     } finally {
       setSaving(false);
     }
+  };
+
+  const sincronizarAgora = async () => {
+    const r = await flushPendentes();
+    setPendentes(r.restantes);
+    if (r.enviados > 0) { toast.success(`${r.enviados} evento(s) sincronizado(s)`); onCreated?.(); }
+    else if (r.restantes > 0) toast.error("Ainda offline ou erro ao sincronizar.");
+    else toast.info("Nada pendente.");
   };
 
   if (!userId) {
@@ -134,6 +172,17 @@ export function EventoQrForm({ codigo, onCreated }: Props) {
       <Button onClick={submit} disabled={saving} className="w-full">
         {saving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando…</> : "Registrar etapa"}
       </Button>
+
+      <div className="flex items-center justify-between rounded-md border border-border/60 bg-secondary/30 px-3 py-2 text-[11px]">
+        <span className={`flex items-center gap-1 ${online ? "text-primary" : "text-amber-500"}`}>
+          {online ? <CloudUpload className="h-3.5 w-3.5" /> : <WifiOff className="h-3.5 w-3.5" />}
+          {online ? "Online" : "Offline"}
+        </span>
+        <span className="text-muted-foreground">Pendentes: <b>{pendentes}</b></span>
+        <button type="button" onClick={sincronizarAgora} className="text-primary hover:underline disabled:opacity-40" disabled={pendentes === 0}>
+          Sincronizar agora
+        </button>
+      </div>
     </div>
   );
 }
