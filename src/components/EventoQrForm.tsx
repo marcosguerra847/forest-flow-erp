@@ -5,9 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Camera, MapPin, Loader2, CheckCircle2 } from "lucide-react";
+import { Camera, MapPin, Loader2, CheckCircle2, WifiOff, CloudUpload } from "lucide-react";
 import { toast } from "sonner";
 import { ETAPAS, tipoFromCodigo } from "@/lib/etapas";
+import { countPendentes, enqueueEvento, flushPendentes, initSync } from "@/lib/offline-queue";
 
 type Props = {
   codigo: string;
@@ -23,6 +24,8 @@ export function EventoQrForm({ codigo, onCreated }: Props) {
   const [saving, setSaving] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [userName, setUserName] = useState<string>("");
+  const [pendentes, setPendentes] = useState(0);
+  const [online, setOnline] = useState<boolean>(typeof navigator === "undefined" ? true : navigator.onLine);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -33,7 +36,6 @@ export function EventoQrForm({ codigo, onCreated }: Props) {
       const { data: p } = await supabase.from("profiles").select("nome,email").eq("id", u.id).maybeSingle();
       setUserName(p?.nome ?? p?.email ?? u.email ?? "");
     });
-    // GPS automático — silencioso se recusado
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
         (pos) => setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
@@ -41,6 +43,13 @@ export function EventoQrForm({ codigo, onCreated }: Props) {
         { enableHighAccuracy: true, timeout: 8000 },
       );
     }
+    initSync((c) => setPendentes(c));
+    countPendentes().then(setPendentes);
+    const on = () => setOnline(true);
+    const off = () => setOnline(false);
+    window.addEventListener("online", on);
+    window.addEventListener("offline", off);
+    return () => { window.removeEventListener("online", on); window.removeEventListener("offline", off); };
   }, []);
 
   const onPickFile = (f: File | null) => {
