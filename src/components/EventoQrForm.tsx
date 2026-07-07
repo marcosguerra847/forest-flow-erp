@@ -61,7 +61,37 @@ export function EventoQrForm({ codigo, onCreated }: Props) {
   const submit = async () => {
     if (!userId) { toast.error("Faça login para registrar eventos."); return; }
     setSaving(true);
+    setSaving(true);
+    const etapaLabel = ETAPAS.find((e) => e.key === etapa)?.label ?? etapa;
+    const basePayload = {
+      codigo,
+      tipo: tipoFromCodigo(codigo),
+      etapa,
+      descricao: etapaLabel,
+      observacao: observacao || null,
+      usuario_id: userId,
+      usuario_nome: userName || null,
+      latitude: coords?.lat ?? null,
+      longitude: coords?.lng ?? null,
+      criado_em: new Date().toISOString(),
+    };
+
+    const enfileirar = async () => {
+      await enqueueEvento({
+        ...basePayload,
+        foto: foto ?? null,
+        foto_ext: foto ? (foto.name.split(".").pop() || "jpg") : null,
+      });
+      const c = await countPendentes();
+      setPendentes(c);
+      toast.success("Sem conexão — etapa salva localmente. Sincronizará ao voltar online.");
+      setObservacao(""); onPickFile(null);
+      if (fileRef.current) fileRef.current.value = "";
+      onCreated?.();
+    };
+
     try {
+      if (!navigator.onLine) { await enfileirar(); return; }
       let foto_url: string | null = null;
       if (foto) {
         const ext = foto.name.split(".").pop() || "jpg";
@@ -71,31 +101,30 @@ export function EventoQrForm({ codigo, onCreated }: Props) {
         const { data: signed } = await supabase.storage.from("qr-eventos").createSignedUrl(path, 60 * 60 * 24 * 365);
         foto_url = signed?.signedUrl ?? null;
       }
-      const etapaLabel = ETAPAS.find((e) => e.key === etapa)?.label ?? etapa;
-      const { error } = await supabase.from("eventos_qr" as never).insert({
-        codigo,
-        tipo: tipoFromCodigo(codigo),
-        etapa,
-        descricao: etapaLabel,
-        observacao: observacao || null,
-        usuario_id: userId,
-        usuario_nome: userName || null,
-        latitude: coords?.lat ?? null,
-        longitude: coords?.lng ?? null,
-        foto_url,
-      } as never);
+      const { error } = await supabase.from("eventos_qr" as never).insert({ ...basePayload, foto_url } as never);
       if (error) throw error;
       toast.success("Etapa registrada");
-      setObservacao("");
-      onPickFile(null);
+      setObservacao(""); onPickFile(null);
       if (fileRef.current) fileRef.current.value = "";
       onCreated?.();
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Erro ao salvar";
-      toast.error(msg);
+      // Falha de rede → enfileira para sincronizar depois
+      try { await enfileirar(); }
+      catch {
+        const msg = e instanceof Error ? e.message : "Erro ao salvar";
+        toast.error(msg);
+      }
     } finally {
       setSaving(false);
     }
+  };
+
+  const sincronizarAgora = async () => {
+    const r = await flushPendentes();
+    setPendentes(r.restantes);
+    if (r.enviados > 0) { toast.success(`${r.enviados} evento(s) sincronizado(s)`); onCreated?.(); }
+    else if (r.restantes > 0) toast.error("Ainda offline ou erro ao sincronizar.");
+    else toast.info("Nada pendente.");
   };
 
   if (!userId) {
