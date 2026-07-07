@@ -52,6 +52,7 @@ export type Database = {
           criado_por: string | null
           data_recebimento: string | null
           data_saida: string
+          entregue_em: string | null
           fotos: string[]
           gps_origem: string | null
           id: string
@@ -60,6 +61,7 @@ export type Database = {
           ordem_colheita_id: string
           placa_veiculo: string | null
           qtd_toras: number
+          recebedor_nome: string | null
           status: Database["public"]["Enums"]["carga_status"]
           volume_carregado_m3: number
         }
@@ -70,6 +72,7 @@ export type Database = {
           criado_por?: string | null
           data_recebimento?: string | null
           data_saida?: string
+          entregue_em?: string | null
           fotos?: string[]
           gps_origem?: string | null
           id?: string
@@ -78,6 +81,7 @@ export type Database = {
           ordem_colheita_id: string
           placa_veiculo?: string | null
           qtd_toras?: number
+          recebedor_nome?: string | null
           status?: Database["public"]["Enums"]["carga_status"]
           volume_carregado_m3?: number
         }
@@ -88,6 +92,7 @@ export type Database = {
           criado_por?: string | null
           data_recebimento?: string | null
           data_saida?: string
+          entregue_em?: string | null
           fotos?: string[]
           gps_origem?: string | null
           id?: string
@@ -96,6 +101,7 @@ export type Database = {
           ordem_colheita_id?: string
           placa_veiculo?: string | null
           qtd_toras?: number
+          recebedor_nome?: string | null
           status?: Database["public"]["Enums"]["carga_status"]
           volume_carregado_m3?: number
         }
