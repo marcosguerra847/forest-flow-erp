@@ -97,6 +97,8 @@ function RootComponent() {
       router.invalidate();
       queryClient.invalidateQueries();
     });
+    void registerPWA();
+    initSync();
     return () => subscription.unsubscribe();
   }, [router, queryClient]);
 
