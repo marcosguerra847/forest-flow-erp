@@ -27,7 +27,7 @@ export const confirmarEntrega = createServerFn({ method: "POST" })
       if (!carga) throw new Error("Carga não encontrada para este código.");
       if (carga.entregue_em) throw new Error("Esta carga já foi confirmada anteriormente.");
       const upd = await supabaseAdmin.from("cargas")
-        .update({ recebedor_nome: data.recebedor_nome, entregue_em: agora, status: "entregue" })
+        .update({ recebedor_nome: data.recebedor_nome, entregue_em: agora })
         .eq("id", carga.id);
       if (upd.error) throw upd.error;
     }
