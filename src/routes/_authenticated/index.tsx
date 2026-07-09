@@ -5,6 +5,7 @@ import { Activity, Boxes, Factory, Package, Truck, TrendingUp, Percent, AlertTri
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis, PieChart, Pie, Cell, Legend } from "recharts";
 import { KpiCard } from "@/components/KpiCard";
 import { PageHeader } from "@/components/PageHeader";
+import { MapaFazenda } from "@/components/MapaFazenda";
 
 export const Route = createFileRoute("/_authenticated/")({
   head: () => ({ meta: [{ title: "Dashboard · Fazenda Bela Vista" }] }),
@@ -130,6 +131,8 @@ function Dashboard() {
           )}
         </ChartCard>
       </div>
+
+      <MapaFazenda />
     </div>
   );
 }
