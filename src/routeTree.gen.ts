@@ -23,6 +23,7 @@ import { Route as AuthenticatedProdutosAcabadosRouteImport } from './routes/_aut
 import { Route as AuthenticatedProducaoRouteImport } from './routes/_authenticated/producao'
 import { Route as AuthenticatedOrdensProducaoRouteImport } from './routes/_authenticated/ordens-producao'
 import { Route as AuthenticatedOrdensColheitaRouteImport } from './routes/_authenticated/ordens-colheita'
+import { Route as AuthenticatedOrcamentosRouteImport } from './routes/_authenticated/orcamentos'
 import { Route as AuthenticatedLotesRouteImport } from './routes/_authenticated/lotes'
 import { Route as AuthenticatedLogisticaRouteImport } from './routes/_authenticated/logistica'
 import { Route as AuthenticatedInventarioRouteImport } from './routes/_authenticated/inventario'
@@ -109,6 +110,11 @@ const AuthenticatedOrdensColheitaRoute =
     path: '/ordens-colheita',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOrcamentosRoute = AuthenticatedOrcamentosRouteImport.update({
+  id: '/orcamentos',
+  path: '/orcamentos',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedLotesRoute = AuthenticatedLotesRouteImport.update({
   id: '/lotes',
   path: '/lotes',
@@ -180,6 +186,7 @@ export interface FileRoutesByFullPath {
   '/inventario': typeof AuthenticatedInventarioRoute
   '/logistica': typeof AuthenticatedLogisticaRoute
   '/lotes': typeof AuthenticatedLotesRoute
+  '/orcamentos': typeof AuthenticatedOrcamentosRoute
   '/ordens-colheita': typeof AuthenticatedOrdensColheitaRoute
   '/ordens-producao': typeof AuthenticatedOrdensProducaoRoute
   '/producao': typeof AuthenticatedProducaoRoute
@@ -205,6 +212,7 @@ export interface FileRoutesByTo {
   '/inventario': typeof AuthenticatedInventarioRoute
   '/logistica': typeof AuthenticatedLogisticaRoute
   '/lotes': typeof AuthenticatedLotesRoute
+  '/orcamentos': typeof AuthenticatedOrcamentosRoute
   '/ordens-colheita': typeof AuthenticatedOrdensColheitaRoute
   '/ordens-producao': typeof AuthenticatedOrdensProducaoRoute
   '/producao': typeof AuthenticatedProducaoRoute
@@ -233,6 +241,7 @@ export interface FileRoutesById {
   '/_authenticated/inventario': typeof AuthenticatedInventarioRoute
   '/_authenticated/logistica': typeof AuthenticatedLogisticaRoute
   '/_authenticated/lotes': typeof AuthenticatedLotesRoute
+  '/_authenticated/orcamentos': typeof AuthenticatedOrcamentosRoute
   '/_authenticated/ordens-colheita': typeof AuthenticatedOrdensColheitaRoute
   '/_authenticated/ordens-producao': typeof AuthenticatedOrdensProducaoRoute
   '/_authenticated/producao': typeof AuthenticatedProducaoRoute
@@ -262,6 +271,7 @@ export interface FileRouteTypes {
     | '/inventario'
     | '/logistica'
     | '/lotes'
+    | '/orcamentos'
     | '/ordens-colheita'
     | '/ordens-producao'
     | '/producao'
@@ -287,6 +297,7 @@ export interface FileRouteTypes {
     | '/inventario'
     | '/logistica'
     | '/lotes'
+    | '/orcamentos'
     | '/ordens-colheita'
     | '/ordens-producao'
     | '/producao'
@@ -314,6 +325,7 @@ export interface FileRouteTypes {
     | '/_authenticated/inventario'
     | '/_authenticated/logistica'
     | '/_authenticated/lotes'
+    | '/_authenticated/orcamentos'
     | '/_authenticated/ordens-colheita'
     | '/_authenticated/ordens-producao'
     | '/_authenticated/producao'
@@ -435,6 +447,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOrdensColheitaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/orcamentos': {
+      id: '/_authenticated/orcamentos'
+      path: '/orcamentos'
+      fullPath: '/orcamentos'
+      preLoaderRoute: typeof AuthenticatedOrcamentosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/lotes': {
       id: '/_authenticated/lotes'
       path: '/lotes'
@@ -526,6 +545,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedInventarioRoute: typeof AuthenticatedInventarioRoute
   AuthenticatedLogisticaRoute: typeof AuthenticatedLogisticaRoute
   AuthenticatedLotesRoute: typeof AuthenticatedLotesRoute
+  AuthenticatedOrcamentosRoute: typeof AuthenticatedOrcamentosRoute
   AuthenticatedOrdensColheitaRoute: typeof AuthenticatedOrdensColheitaRoute
   AuthenticatedOrdensProducaoRoute: typeof AuthenticatedOrdensProducaoRoute
   AuthenticatedProducaoRoute: typeof AuthenticatedProducaoRoute
@@ -551,6 +571,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedInventarioRoute: AuthenticatedInventarioRoute,
   AuthenticatedLogisticaRoute: AuthenticatedLogisticaRoute,
   AuthenticatedLotesRoute: AuthenticatedLotesRoute,
+  AuthenticatedOrcamentosRoute: AuthenticatedOrcamentosRoute,
   AuthenticatedOrdensColheitaRoute: AuthenticatedOrdensColheitaRoute,
   AuthenticatedOrdensProducaoRoute: AuthenticatedOrdensProducaoRoute,
   AuthenticatedProducaoRoute: AuthenticatedProducaoRoute,
