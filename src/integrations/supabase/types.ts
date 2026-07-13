@@ -803,6 +803,92 @@ export type Database = {
           },
         ]
       }
+      orcamentos: {
+        Row: {
+          acrescimo: number
+          assinatura_cliente: string | null
+          atualizado_em: string
+          cliente_documento: string | null
+          cliente_email: string | null
+          cliente_endereco: string | null
+          cliente_id: string | null
+          cliente_nome: string
+          cliente_telefone: string | null
+          codigo: string
+          criado_em: string
+          desconto: number
+          forma_pagamento: string | null
+          frete: number
+          id: string
+          itens: Json
+          observacoes: string | null
+          parcelas: number
+          status: string
+          total_bruto: number
+          total_liquido: number
+          validade: string | null
+          valor_parcela: number
+        }
+        Insert: {
+          acrescimo?: number
+          assinatura_cliente?: string | null
+          atualizado_em?: string
+          cliente_documento?: string | null
+          cliente_email?: string | null
+          cliente_endereco?: string | null
+          cliente_id?: string | null
+          cliente_nome: string
+          cliente_telefone?: string | null
+          codigo: string
+          criado_em?: string
+          desconto?: number
+          forma_pagamento?: string | null
+          frete?: number
+          id?: string
+          itens?: Json
+          observacoes?: string | null
+          parcelas?: number
+          status?: string
+          total_bruto?: number
+          total_liquido?: number
+          validade?: string | null
+          valor_parcela?: number
+        }
+        Update: {
+          acrescimo?: number
+          assinatura_cliente?: string | null
+          atualizado_em?: string
+          cliente_documento?: string | null
+          cliente_email?: string | null
+          cliente_endereco?: string | null
+          cliente_id?: string | null
+          cliente_nome?: string
+          cliente_telefone?: string | null
+          codigo?: string
+          criado_em?: string
+          desconto?: number
+          forma_pagamento?: string | null
+          frete?: number
+          id?: string
+          itens?: Json
+          observacoes?: string | null
+          parcelas?: number
+          status?: string
+          total_bruto?: number
+          total_liquido?: number
+          validade?: string | null
+          valor_parcela?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orcamentos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ordens_colheita: {
         Row: {
           atualizado_em: string

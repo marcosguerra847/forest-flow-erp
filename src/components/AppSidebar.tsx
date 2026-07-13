@@ -2,7 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import {
   LayoutDashboard, Trees, Factory, Boxes, Truck,
   FileBarChart, QrCode, MapPinned, Sprout, Users,
-  Scissors, ClipboardCheck, Package2, AlertTriangle, ShoppingCart, Wallet,
+  Scissors, ClipboardCheck, Package2, AlertTriangle, ShoppingCart, Wallet, FileText,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -32,6 +32,7 @@ const serraria = [
 
 const comercial = [
   { title: "Clientes e Pedidos", url: "/comercial", icon: ShoppingCart },
+  { title: "Orçamentos", url: "/orcamentos", icon: FileText },
   { title: "Financeiro", url: "/financeiro", icon: Wallet },
 ];
 
