@@ -32,6 +32,7 @@ const serraria = [
 
 const comercial = [
   { title: "Clientes e Pedidos", url: "/comercial", icon: ShoppingCart },
+  { title: "Orçamentos", url: "/orcamentos", icon: FileText },
   { title: "Financeiro", url: "/financeiro", icon: Wallet },
 ];
 
