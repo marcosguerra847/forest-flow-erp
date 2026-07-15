@@ -64,7 +64,7 @@ export function MapaFazenda() {
 
   const updateStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const { error } = await supabase.from("talhoes").update({ status: status as Talhao["status"] }).eq("id", id);
+      const { error } = await supabase.from("talhoes").update({ status: status as Talhao["status"] as never }).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
