@@ -1,32 +1,35 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "@tanstack/react-router";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { MapPinned, Trees, Shield } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { MapPinned, Trees, Shield, Loader2, Filter } from "lucide-react";
+import { toast } from "sonner";
 import mapaAsset from "@/assets/map_fazenda.png.asset.json";
 
 type Hotspot = { codigo: string; x: number; y: number; tipo: "talhao" | "reserva"; label: string };
 
 // Posições (% da imagem) aproximadas a partir do mapa da Fazenda Bela Vista
 const HOTSPOTS: Hotspot[] = [
-  { codigo: "T-01", label: "T 01", x: 17, y: 63, tipo: "talhao" },
-  { codigo: "T-02", label: "T 02", x: 30, y: 63, tipo: "talhao" },
-  { codigo: "T-03", label: "T 03", x: 41, y: 60, tipo: "talhao" },
-  { codigo: "T-04", label: "T 04", x: 61, y: 62, tipo: "talhao" },
-  { codigo: "T-05", label: "T 05", x: 51, y: 57, tipo: "talhao" },
-  { codigo: "T-06", label: "T 06", x: 32, y: 47, tipo: "talhao" },
-  { codigo: "T-07", label: "T 07", x: 24, y: 47, tipo: "talhao" },
-  { codigo: "T-08", label: "T 08", x: 38, y: 30, tipo: "talhao" },
-  { codigo: "T-09", label: "T 09", x: 51, y: 27, tipo: "talhao" },
-  { codigo: "T-10", label: "T 10", x: 51, y: 39, tipo: "talhao" },
-  { codigo: "T-11", label: "T 11", x: 60, y: 43, tipo: "talhao" },
-  { codigo: "R-01", label: "R 01", x: 9, y: 74, tipo: "reserva" },
-  { codigo: "R-02", label: "R 02", x: 26, y: 30, tipo: "reserva" },
-  { codigo: "R-03", label: "R 03", x: 45, y: 15, tipo: "reserva" },
-  { codigo: "R-04", label: "R 04", x: 44, y: 74, tipo: "reserva" },
-  { codigo: "R-05", label: "R 05", x: 43, y: 47, tipo: "reserva" },
-  { codigo: "R-06", label: "R 06", x: 40, y: 39, tipo: "reserva" },
+  { codigo: "T-01", label: "T 01", x: 17.5, y: 63.5, tipo: "talhao" },
+  { codigo: "T-02", label: "T 02", x: 30.0, y: 63.5, tipo: "talhao" },
+  { codigo: "T-03", label: "T 03", x: 41.0, y: 60.0, tipo: "talhao" },
+  { codigo: "T-04", label: "T 04", x: 61.0, y: 62.0, tipo: "talhao" },
+  { codigo: "T-05", label: "T 05", x: 51.0, y: 56.0, tipo: "talhao" },
+  { codigo: "T-06", label: "T 06", x: 32.0, y: 47.0, tipo: "talhao" },
+  { codigo: "T-07", label: "T 07", x: 23.5, y: 47.0, tipo: "talhao" },
+  { codigo: "T-08", label: "T 08", x: 37.5, y: 29.5, tipo: "talhao" },
+  { codigo: "T-09", label: "T 09", x: 51.0, y: 26.5, tipo: "talhao" },
+  { codigo: "T-10", label: "T 10", x: 51.0, y: 39.0, tipo: "talhao" },
+  { codigo: "T-11", label: "T 11", x: 60.0, y: 43.0, tipo: "talhao" },
+  { codigo: "R-01", label: "R 01", x: 9.0, y: 74.0, tipo: "reserva" },
+  { codigo: "R-02", label: "R 02", x: 26.0, y: 30.0, tipo: "reserva" },
+  { codigo: "R-03", label: "R 03", x: 45.0, y: 15.0, tipo: "reserva" },
+  { codigo: "R-04", label: "R 04", x: 44.0, y: 74.0, tipo: "reserva" },
+  { codigo: "R-05", label: "R 05", x: 43.0, y: 47.0, tipo: "reserva" },
+  { codigo: "R-06", label: "R 06", x: 40.0, y: 39.0, tipo: "reserva" },
 ];
 
 type Talhao = {
@@ -35,12 +38,19 @@ type Talhao = {
   fazendas?: { nome: string } | null;
 };
 
-const statusLabels: Record<string, string> = {
-  em_crescimento: "Em crescimento", pronto_corte: "Pronto p/ corte",
-  em_corte: "Em corte", cortado: "Cortado", finalizado: "Finalizado",
+const STATUS_META: Record<string, { label: string; color: string; ring: string; pulse?: boolean }> = {
+  em_crescimento: { label: "Em crescimento", color: "bg-emerald-500", ring: "ring-emerald-300" },
+  pronto_corte:   { label: "Pronto p/ corte", color: "bg-amber-500",   ring: "ring-amber-300" },
+  em_corte:       { label: "Em corte",        color: "bg-red-500",     ring: "ring-red-300", pulse: true },
+  cortado:        { label: "Cortado",         color: "bg-slate-500",   ring: "ring-slate-300" },
+  finalizado:     { label: "Finalizado",      color: "bg-zinc-700",    ring: "ring-zinc-400" },
 };
+const STATUS_OPTIONS = Object.keys(STATUS_META);
 
 export function MapaFazenda() {
+  const qc = useQueryClient();
+  const [filtro, setFiltro] = useState<string | null>(null);
+
   const { data: talhoes = [] } = useQuery({
     queryKey: ["mapa-talhoes"],
     queryFn: async () => {
@@ -52,25 +62,63 @@ export function MapaFazenda() {
     },
   });
 
+  const updateStatus = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      const { error } = await supabase.from("talhoes").update({ status: status as Talhao["status"] as never }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Status atualizado");
+      qc.invalidateQueries({ queryKey: ["mapa-talhoes"] });
+      qc.invalidateQueries({ queryKey: ["talhoes"] });
+      qc.invalidateQueries({ queryKey: ["dashboard-kpis"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const findTalhao = (codigo: string) => {
     const norm = (s: string) => s.replace(/[-_\s]/g, "").toLowerCase();
     return talhoes.find(t => norm(t.codigo) === norm(codigo));
   };
 
+  const contagem = useMemo(() => {
+    const c: Record<string, number> = {};
+    for (const t of talhoes) c[t.status] = (c[t.status] ?? 0) + 1;
+    return c;
+  }, [talhoes]);
+
   return (
     <div className="rounded-xl border border-border/60 bg-card p-5 shadow-[var(--shadow-elegant)]">
-      <div className="mb-4 flex items-start justify-between gap-4">
+      <div className="mb-4 flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h3 className="font-display text-base font-semibold text-foreground flex items-center gap-2">
-            <MapPinned className="h-4 w-4 text-primary" /> Mapa da Fazenda Bela Vista
+            <MapPinned className="h-4 w-4 text-primary" /> Mapa operacional · Fazenda Bela Vista
           </h3>
           <p className="text-xs text-muted-foreground">
-            Clique em um talhão (T) ou reserva (R) para ver os dados cadastrados.
+            Clique em um talhão para ver dados e <span className="text-foreground">mudar o status</span> — tudo sincroniza automaticamente.
           </p>
         </div>
-        <div className="hidden gap-3 text-xs text-muted-foreground sm:flex">
-          <span className="inline-flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-emerald-500" /> Talhão</span>
-          <span className="inline-flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-orange-500" /> Reserva</span>
+        <div className="hidden gap-1.5 text-xs sm:flex">
+          <button
+            onClick={() => setFiltro(null)}
+            className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 transition ${filtro === null ? "border-primary bg-primary/10 text-primary" : "border-border/60 text-muted-foreground hover:bg-muted/40"}`}
+          >
+            <Filter className="h-3 w-3" /> Todos ({talhoes.length})
+          </button>
+          {STATUS_OPTIONS.map((s) => {
+            const meta = STATUS_META[s];
+            const n = contagem[s] ?? 0;
+            return (
+              <button
+                key={s}
+                onClick={() => setFiltro(filtro === s ? null : s)}
+                className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 transition ${filtro === s ? "border-foreground bg-foreground/5" : "border-border/60 text-muted-foreground hover:bg-muted/40"}`}
+              >
+                <span className={`h-2 w-2 rounded-full ${meta.color}`} />
+                {meta.label} <span className="opacity-60">({n})</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -81,48 +129,99 @@ export function MapaFazenda() {
           className="block w-full select-none"
           draggable={false}
         />
+        {/* Overlay sutil para destacar marcadores */}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/25" />
+
         {HOTSPOTS.map((h) => {
           const t = h.tipo === "talhao" ? findTalhao(h.codigo) : null;
           const isReserva = h.tipo === "reserva";
+          const meta = t ? STATUS_META[t.status] : null;
+          const dim = filtro && !isReserva && t && t.status !== filtro;
+          const color = isReserva ? "bg-orange-500" : meta?.color ?? "bg-emerald-500";
+          const ring = isReserva ? "ring-orange-200" : meta?.ring ?? "ring-emerald-200";
+
           return (
             <Popover key={h.codigo}>
               <PopoverTrigger asChild>
                 <button
-                  aria-label={`${h.tipo === "talhao" ? "Talhão" : "Reserva"} ${h.label}`}
-                  className={`absolute -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white/90 shadow-lg transition-transform hover:scale-125 ${
-                    isReserva ? "bg-orange-500" : "bg-emerald-500"
-                  }`}
-                  style={{
-                    left: `${h.x}%`,
-                    top: `${h.y}%`,
-                    width: "clamp(12px, 1.4vw, 20px)",
-                    height: "clamp(12px, 1.4vw, 20px)",
-                  }}
-                />
+                  aria-label={`${isReserva ? "Reserva" : "Talhão"} ${h.label}`}
+                  className={`group absolute -translate-x-1/2 -translate-y-1/2 transition-all ${dim ? "opacity-25 hover:opacity-100" : "opacity-100"}`}
+                  style={{ left: `${h.x}%`, top: `${h.y}%` }}
+                >
+                  {/* Halo pulsante para em_corte */}
+                  {meta?.pulse && (
+                    <span className={`absolute inset-0 -m-2 rounded-full ${color} opacity-40 animate-ping`} />
+                  )}
+                  <span
+                    className={`relative flex items-center justify-center rounded-full border-2 border-white/95 ring-2 ${ring} shadow-lg transition-transform group-hover:scale-125 ${color}`}
+                    style={{
+                      width: "clamp(18px, 2vw, 26px)",
+                      height: "clamp(18px, 2vw, 26px)",
+                    }}
+                  >
+                    <span className="text-[9px] font-bold text-white drop-shadow-sm leading-none">
+                      {h.label.replace(/\s/g, "")}
+                    </span>
+                  </span>
+                </button>
               </PopoverTrigger>
-              <PopoverContent className="w-72" side="top">
-                <div className="space-y-2">
+              <PopoverContent className="w-80" side="top">
+                <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     {isReserva ? <Shield className="h-4 w-4 text-orange-500" /> : <Trees className="h-4 w-4 text-emerald-500" />}
                     <h4 className="font-semibold">{isReserva ? "Reserva ambiental" : "Talhão"} {h.label}</h4>
+                    {meta && (
+                      <span className={`ml-auto inline-flex items-center gap-1 rounded-full ${meta.color} px-2 py-0.5 text-[10px] font-semibold text-white`}>
+                        <span className="h-1.5 w-1.5 rounded-full bg-white/80" />
+                        {meta.label}
+                      </span>
+                    )}
                   </div>
+
                   {isReserva ? (
                     <p className="text-xs text-muted-foreground">
                       Área de preservação permanente / reserva legal. Não sujeita a colheita.
                     </p>
                   ) : t ? (
-                    <div className="space-y-1 text-xs">
-                      <Row k="Código" v={t.codigo} />
-                      <Row k="Fazenda" v={t.fazendas?.nome ?? "—"} />
-                      <Row k="Espécie" v={t.especie} />
-                      <Row k="Área" v={`${Number(t.area_ha).toLocaleString("pt-BR")} ha`} />
-                      <Row k="Plantio" v={t.ano_plantio?.toString() ?? "—"} />
-                      <Row k="Vol. estimado" v={`${Number(t.volume_estimado_m3).toLocaleString("pt-BR")} m³`} />
-                      <Row k="Status" v={statusLabels[t.status] ?? t.status} />
-                      <Link to="/talhoes" className="mt-2 inline-block text-xs text-primary underline">
-                        Abrir na aba Talhões →
-                      </Link>
-                    </div>
+                    <>
+                      <div className="space-y-1 text-xs">
+                        <Row k="Código" v={t.codigo} />
+                        <Row k="Fazenda" v={t.fazendas?.nome ?? "—"} />
+                        <Row k="Espécie" v={t.especie} />
+                        <Row k="Área" v={`${Number(t.area_ha).toLocaleString("pt-BR")} ha`} />
+                        <Row k="Plantio" v={t.ano_plantio?.toString() ?? "—"} />
+                        <Row k="Vol. estimado" v={`${Number(t.volume_estimado_m3).toLocaleString("pt-BR")} m³`} />
+                      </div>
+
+                      <div className="space-y-1.5 rounded-md border border-border/60 bg-muted/30 p-2">
+                        <label className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                          Alterar status operacional
+                        </label>
+                        <div className="flex items-center gap-2">
+                          <Select
+                            value={t.status}
+                            onValueChange={(v) => updateStatus.mutate({ id: t.id, status: v })}
+                          >
+                            <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {STATUS_OPTIONS.map(s => (
+                                <SelectItem key={s} value={s} className="text-xs">
+                                  <span className="inline-flex items-center gap-2">
+                                    <span className={`h-2 w-2 rounded-full ${STATUS_META[s].color}`} />
+                                    {STATUS_META[s].label}
+                                  </span>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {updateStatus.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
+                        </div>
+                      </div>
+
+                      <Button asChild size="sm" variant="outline" className="w-full h-8 text-xs">
+                        <Link to="/talhoes">Abrir cadastro completo →</Link>
+                      </Button>
+                    </>
                   ) : (
                     <div className="text-xs text-muted-foreground">
                       Talhão ainda não cadastrado no sistema.
@@ -136,10 +235,24 @@ export function MapaFazenda() {
             </Popover>
           );
         })}
+
+        {/* Legenda flutuante */}
+        <div className="pointer-events-none absolute bottom-2 left-2 rounded-md bg-black/55 px-2.5 py-1.5 text-[10px] text-white backdrop-blur-sm">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-orange-500" /> Reserva</span>
+            {STATUS_OPTIONS.map((s) => (
+              <span key={s} className="inline-flex items-center gap-1">
+                <span className={`h-2 w-2 rounded-full ${STATUS_META[s].color}`} />
+                {STATUS_META[s].label}
+              </span>
+            ))}
+          </div>
+        </div>
       </div>
 
-      <div className="mt-3 text-[11px] text-muted-foreground">
-        Coordenadas de referência: 25°18′55″S 53°21′09″W · Área mapeada aprox. 679 m de altitude.
+      <div className="mt-3 flex items-center justify-between text-[11px] text-muted-foreground">
+        <span>Coordenadas de referência: 25°18′55″S 53°21′09″W · Altitude aprox. 679 m</span>
+        <span>{talhoes.length} talhões · {HOTSPOTS.filter(h => h.tipo === "reserva").length} reservas</span>
       </div>
     </div>
   );
