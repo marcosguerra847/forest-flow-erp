@@ -222,9 +222,29 @@ function NovoOrcamentoForm({ clientes, onSaved }: { clientes: Cliente[]; onSaved
       </section>
 
       <section className="space-y-3">
-        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Valores</h3>
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Valores</h3>
+          <label className="flex items-center gap-2 text-xs cursor-pointer">
+            <input
+              type="checkbox"
+              checked={brutoManual}
+              onChange={e => {
+                setBrutoManual(e.target.checked);
+                if (e.target.checked) setBrutoInput(String(totais.brutoCalc.toFixed(2)));
+              }}
+            />
+            Definir Total bruto manualmente (preço fechado)
+          </label>
+        </div>
         <div className="grid gap-3 sm:grid-cols-4">
-          <div className="space-y-1.5"><Label>Total bruto</Label><Input value={brl(totais.bruto)} disabled /></div>
+          <div className="space-y-1.5">
+            <Label>Total bruto {brutoManual && <span className="text-primary">(manual)</span>}</Label>
+            {brutoManual ? (
+              <Input type="number" step="0.01" value={brutoInput} onChange={e => setBrutoInput(e.target.value)} />
+            ) : (
+              <Input value={brl(totais.bruto)} disabled />
+            )}
+          </div>
           <div className="space-y-1.5"><Label>Desconto (R$)</Label><Input type="number" step="0.01" value={desconto} onChange={e => setDesconto(e.target.value)} /></div>
           <div className="space-y-1.5"><Label>Acréscimo (R$)</Label><Input type="number" step="0.01" value={acrescimo} onChange={e => setAcrescimo(e.target.value)} /></div>
           <div className="space-y-1.5"><Label>Frete (R$)</Label><Input type="number" step="0.01" value={frete} onChange={e => setFrete(e.target.value)} /></div>
