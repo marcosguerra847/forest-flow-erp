@@ -126,6 +126,8 @@ function NovoOrcamentoForm({ clientes, onSaved }: { clientes: Cliente[]; onSaved
   const [observacoes, setObservacoes] = useState("");
   const [validade, setValidade] = useState("");
   const [saving, setSaving] = useState(false);
+  const [brutoManual, setBrutoManual] = useState(false);
+  const [brutoInput, setBrutoInput] = useState("0");
 
   useEffect(() => {
     if (!clienteId) return;
@@ -134,11 +136,12 @@ function NovoOrcamentoForm({ clientes, onSaved }: { clientes: Cliente[]; onSaved
   }, [clienteId, clientes]);
 
   const totais = useMemo(() => {
-    const bruto = itens.reduce((s, i) => s + Number(i.qtd || 0) * Number(i.valor_unit || 0), 0);
+    const brutoCalc = itens.reduce((s, i) => s + Number(i.qtd || 0) * Number(i.valor_unit || 0), 0);
+    const bruto = brutoManual ? Number(brutoInput || 0) : brutoCalc;
     const liquido = bruto - Number(desconto || 0) + Number(acrescimo || 0) + Number(frete || 0);
     const p = Math.max(1, Number(parcelas || 1));
-    return { bruto, liquido, valorParcela: liquido / p };
-  }, [itens, desconto, acrescimo, frete, parcelas]);
+    return { bruto, brutoCalc, liquido, valorParcela: liquido / p };
+  }, [itens, desconto, acrescimo, frete, parcelas, brutoManual, brutoInput]);
 
   const setItem = (idx: number, patch: Partial<Item>) => setItens(itens.map((it, i) => i === idx ? { ...it, ...patch } : it));
   const addItem = () => setItens([...itens, { descricao: "", qtd: 1, unidade: "m³", valor_unit: 0 }]);
