@@ -149,7 +149,8 @@ function NovoOrcamentoForm({ clientes, onSaved }: { clientes: Cliente[]; onSaved
 
   const save = async () => {
     if (!cliente.nome.trim()) return toast.error("Informe o cliente");
-    if (itens.length === 0 || itens.some(i => !i.descricao.trim())) return toast.error("Preencha todos os itens");
+    if (!brutoManual && (itens.length === 0 || itens.some(i => !i.descricao.trim()))) return toast.error("Preencha todos os itens ou ative o modo de valor manual");
+    if (brutoManual && Number(brutoInput || 0) <= 0) return toast.error("Informe o total bruto");
     setSaving(true);
     try {
       const codigo = await proximoCodigo("ORC");
