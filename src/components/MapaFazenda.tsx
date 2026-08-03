@@ -89,6 +89,22 @@ export function MapaFazenda() {
     return c;
   }, [talhoes]);
 
+  const resumo = useMemo(() => {
+    const r: Record<string, { area: number; volume: number }> = {};
+    let area = 0, volume = 0;
+    for (const t of talhoes) {
+      const g = r[t.status] ?? { area: 0, volume: 0 };
+      g.area += Number(t.area_ha || 0);
+      g.volume += Number(t.volume_estimado_m3 || 0);
+      r[t.status] = g;
+      area += Number(t.area_ha || 0);
+      volume += Number(t.volume_estimado_m3 || 0);
+    }
+    return { por: r, area, volume };
+  }, [talhoes]);
+  const nf = (n: number) => n.toLocaleString("pt-BR", { maximumFractionDigits: 1 });
+
+
   return (
     <div className="rounded-xl border border-border/60 bg-card p-5 shadow-[var(--shadow-elegant)]">
       <div className="mb-4 flex items-start justify-between gap-4 flex-wrap">
