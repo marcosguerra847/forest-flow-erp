@@ -5,22 +5,32 @@ import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/PageHeader";
 import { DataTable } from "@/components/DataTable";
 import { Button } from "@/components/ui/button";
-import { FileBarChart, Download, Factory, Boxes, Scissors, AlertTriangle, Package2 } from "lucide-react";
+import { FileBarChart, Download, Factory, Boxes, Scissors, AlertTriangle, Package2, Receipt, Wallet, PiggyBank, Users, TrendingUp } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/relatorios")({
-  head: () => ({ meta: [{ title: "Relatórios · SilvaCore" }] }),
+  head: () => ({ meta: [{ title: "Relatórios · Fazenda Bela Vista" }] }),
   component: Relatorios,
 });
 
-type RelKey = "rendimento" | "estoque" | "ocs" | "divergencias" | "produtos";
+type RelKey =
+  | "rendimento" | "estoque" | "ocs" | "divergencias" | "produtos"
+  | "contas" | "fluxo" | "dre" | "notas" | "faturamento";
 
-const RELATORIOS: { key: RelKey; titulo: string; descricao: string; icon: typeof Factory }[] = [
-  { key: "rendimento", titulo: "Rendimento da serraria", descricao: "Volume entrada × produzido × perda por OP", icon: Factory },
-  { key: "estoque", titulo: "Estoque do pátio", descricao: "Lotes disponíveis com volume e localização", icon: Boxes },
-  { key: "ocs", titulo: "Ordens de Colheita", descricao: "Previsto vs colhido por OC", icon: Scissors },
-  { key: "divergencias", titulo: "Divergências de carga", descricao: "Histórico completo de alertas", icon: AlertTriangle },
-  { key: "produtos", titulo: "Produtos acabados", descricao: "Lotes de PA com volume e peças", icon: Package2 },
+type Rel = { key: RelKey; titulo: string; descricao: string; icon: typeof Factory; grupo: "Operacionais" | "Financeiros" };
+
+const RELATORIOS: Rel[] = [
+  { key: "rendimento", titulo: "Rendimento da serraria", descricao: "Volume entrada × produzido × perda por OP", icon: Factory, grupo: "Operacionais" },
+  { key: "estoque", titulo: "Estoque do pátio", descricao: "Lotes disponíveis com volume e localização", icon: Boxes, grupo: "Operacionais" },
+  { key: "ocs", titulo: "Ordens de Colheita", descricao: "Previsto vs colhido por OC", icon: Scissors, grupo: "Operacionais" },
+  { key: "divergencias", titulo: "Divergências de carga", descricao: "Histórico completo de alertas", icon: AlertTriangle, grupo: "Operacionais" },
+  { key: "produtos", titulo: "Produtos acabados", descricao: "Lotes de PA com volume e peças", icon: Package2, grupo: "Operacionais" },
+  { key: "contas", titulo: "Contas a pagar e receber", descricao: "Vencimentos, status, atrasos e saldo em aberto", icon: Wallet, grupo: "Financeiros" },
+  { key: "fluxo", titulo: "Fluxo de caixa", descricao: "Entradas, saídas e saldo acumulado por lançamento", icon: PiggyBank, grupo: "Financeiros" },
+  { key: "dre", titulo: "DRE por centro de custo", descricao: "Receitas, custos (colheita, transporte, serraria) e resultado", icon: TrendingUp, grupo: "Financeiros" },
+  { key: "notas", titulo: "Notas fiscais", descricao: "NFs emitidas/recebidas com valores e impostos", icon: Receipt, grupo: "Financeiros" },
+  { key: "faturamento", titulo: "Faturamento por cliente", descricao: "Pedidos, NFs e recebimentos por cliente", icon: Users, grupo: "Financeiros" },
 ];
+
 
 function toCSV(rows: Record<string, unknown>[]) {
   if (rows.length === 0) return "";
