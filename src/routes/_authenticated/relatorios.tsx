@@ -59,23 +59,29 @@ function Relatorios() {
       <PageHeader
         eyebrow="BI"
         title="Relatórios"
-        description="Relatórios operacionais conectados aos dados reais. Exporte em CSV (abre no Excel)."
+        description="Relatórios operacionais e financeiros conectados aos dados reais. Exporte em CSV (abre no Excel)."
       />
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {RELATORIOS.map((r) => (
-          <button key={r.key} onClick={() => setAtivo(r.key)}
-            className={`rounded-xl border p-5 text-left transition-all hover:border-primary/40 ${ativo === r.key ? "border-primary bg-primary/5" : "border-border/60 bg-card"}`}>
-            <div className="mb-3 flex items-center gap-3">
-              <div className="grid h-10 w-10 place-items-center rounded-lg bg-[image:var(--gradient-accent)] text-primary-foreground">
-                <r.icon className="h-5 w-5" />
-              </div>
-              <h3 className="font-display text-base font-semibold">{r.titulo}</h3>
-            </div>
-            <p className="text-xs text-muted-foreground">{r.descricao}</p>
-          </button>
-        ))}
-      </div>
+      {(["Operacionais", "Financeiros"] as const).map((grupo) => (
+        <section key={grupo} className="space-y-3">
+          <h2 className="font-display text-sm font-semibold uppercase tracking-wide text-muted-foreground">{grupo}</h2>
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {RELATORIOS.filter(r => r.grupo === grupo).map((r) => (
+              <button key={r.key} onClick={() => setAtivo(r.key)}
+                className={`rounded-xl border p-5 text-left transition-all hover:border-primary/40 ${ativo === r.key ? "border-primary bg-primary/5" : "border-border/60 bg-card"}`}>
+                <div className="mb-3 flex items-center gap-3">
+                  <div className="grid h-10 w-10 place-items-center rounded-lg bg-[image:var(--gradient-accent)] text-primary-foreground">
+                    <r.icon className="h-5 w-5" />
+                  </div>
+                  <h3 className="font-display text-base font-semibold">{r.titulo}</h3>
+                </div>
+                <p className="text-xs text-muted-foreground">{r.descricao}</p>
+              </button>
+            ))}
+          </div>
+        </section>
+      ))}
+
 
       {ativo && <RelatorioView key={ativo} tipo={ativo} />}
     </div>
