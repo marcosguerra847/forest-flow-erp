@@ -9,28 +9,30 @@ import { MapPinned, Trees, Shield, Loader2, Filter } from "lucide-react";
 import { toast } from "sonner";
 import mapaAsset from "@/assets/map_fazenda.png.asset.json";
 
-type Hotspot = { codigo: string; x: number; y: number; tipo: "talhao" | "reserva"; label: string };
+type Hotspot = { codigo: string; x: number; y: number; tipo: "talhao" | "reserva" | "sede"; label: string };
 
-// Posições (% da imagem) aproximadas a partir do mapa da Fazenda Bela Vista
+// Posições (% da imagem) medidas sobre os rótulos do mapa da Fazenda Bela Vista
 const HOTSPOTS: Hotspot[] = [
-  { codigo: "T-01", label: "T 01", x: 17.5, y: 63.5, tipo: "talhao" },
-  { codigo: "T-02", label: "T 02", x: 30.0, y: 63.5, tipo: "talhao" },
-  { codigo: "T-03", label: "T 03", x: 41.0, y: 60.0, tipo: "talhao" },
-  { codigo: "T-04", label: "T 04", x: 61.0, y: 62.0, tipo: "talhao" },
-  { codigo: "T-05", label: "T 05", x: 51.0, y: 56.0, tipo: "talhao" },
-  { codigo: "T-06", label: "T 06", x: 32.0, y: 47.0, tipo: "talhao" },
-  { codigo: "T-07", label: "T 07", x: 23.5, y: 47.0, tipo: "talhao" },
-  { codigo: "T-08", label: "T 08", x: 37.5, y: 29.5, tipo: "talhao" },
-  { codigo: "T-09", label: "T 09", x: 51.0, y: 26.5, tipo: "talhao" },
-  { codigo: "T-10", label: "T 10", x: 51.0, y: 39.0, tipo: "talhao" },
-  { codigo: "T-11", label: "T 11", x: 60.0, y: 43.0, tipo: "talhao" },
-  { codigo: "R-01", label: "R 01", x: 9.0, y: 74.0, tipo: "reserva" },
-  { codigo: "R-02", label: "R 02", x: 26.0, y: 30.0, tipo: "reserva" },
-  { codigo: "R-03", label: "R 03", x: 45.0, y: 15.0, tipo: "reserva" },
-  { codigo: "R-04", label: "R 04", x: 44.0, y: 74.0, tipo: "reserva" },
-  { codigo: "R-05", label: "R 05", x: 43.0, y: 47.0, tipo: "reserva" },
-  { codigo: "R-06", label: "R 06", x: 40.0, y: 39.0, tipo: "reserva" },
+  { codigo: "T-01", label: "T 01", x: 15.7, y: 63.2, tipo: "talhao" },
+  { codigo: "T-02", label: "T 02", x: 25.9, y: 62.0, tipo: "talhao" },
+  { codigo: "T-03", label: "T 03", x: 40.1, y: 58.9, tipo: "talhao" },
+  { codigo: "T-04", label: "T 04", x: 55.1, y: 63.2, tipo: "talhao" },
+  { codigo: "T-05", label: "T 05", x: 46.8, y: 55.4, tipo: "talhao" },
+  { codigo: "T-06", label: "T 06", x: 28.3, y: 45.3, tipo: "talhao" },
+  { codigo: "T-07", label: "T 07", x: 24.5, y: 46.8, tipo: "talhao" },
+  { codigo: "T-08", label: "T 08", x: 33.6, y: 30.8, tipo: "talhao" },
+  { codigo: "T-09", label: "T 09", x: 45.7, y: 26.9, tipo: "talhao" },
+  { codigo: "T-10", label: "T 10", x: 46.5, y: 37.5, tipo: "talhao" },
+  { codigo: "T-11", label: "T 11", x: 53.2, y: 41.2, tipo: "talhao" },
+  { codigo: "R-01", label: "R 01", x: 8.1, y: 70.7, tipo: "reserva" },
+  { codigo: "R-02", label: "R 02", x: 26.3, y: 31.0, tipo: "reserva" },
+  { codigo: "R-03", label: "R 03", x: 38.6, y: 15.2, tipo: "reserva" },
+  { codigo: "R-04", label: "R 04", x: 38.1, y: 70.0, tipo: "reserva" },
+  { codigo: "R-05", label: "R 05", x: 35.5, y: 44.6, tipo: "reserva" },
+  { codigo: "R-06", label: "R 06", x: 35.2, y: 38.2, tipo: "reserva" },
+  { codigo: "SEDE", label: "Sede", x: 19.9, y: 49.9, tipo: "sede" },
 ];
+
 
 type Talhao = {
   id: string; codigo: string; especie: string; area_ha: number;
