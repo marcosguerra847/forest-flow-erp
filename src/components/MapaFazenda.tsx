@@ -153,17 +153,26 @@ export function MapaFazenda() {
         {HOTSPOTS.map((h) => {
           const t = h.tipo === "talhao" ? findTalhao(h.codigo) : null;
           const isReserva = h.tipo === "reserva";
+          const isSede = h.tipo === "sede";
           const meta = t ? STATUS_META[t.status] : null;
-          const dim = filtro && !isReserva && t && t.status !== filtro;
-          const color = isReserva ? "bg-orange-500" : meta?.color ?? "bg-emerald-500";
-          const ring = isReserva ? "ring-orange-200" : meta?.ring ?? "ring-emerald-200";
+          const dim = filtro && h.tipo === "talhao" && (!t || t.status !== filtro);
+          const color = isSede ? "bg-sky-600" : isReserva ? "bg-orange-500" : meta?.color ?? "bg-emerald-500";
+          const ring = isSede ? "ring-sky-200" : isReserva ? "ring-orange-200" : meta?.ring ?? "ring-emerald-200";
+          const tooltip = isSede
+            ? "Sede industrial · pátio e serraria"
+            : isReserva
+              ? `Reserva ambiental ${h.label} · área protegida`
+              : t
+                ? `Talhão ${t.codigo} · ${t.especie} · ${nf(Number(t.area_ha))} ha · ${STATUS_META[t.status]?.label ?? t.status}`
+                : `Talhão ${h.label} · não cadastrado`;
 
           return (
             <Popover key={h.codigo}>
               <PopoverTrigger asChild>
                 <button
-                  aria-label={`${isReserva ? "Reserva" : "Talhão"} ${h.label}`}
-                  className={`group absolute -translate-x-1/2 -translate-y-1/2 transition-all ${dim ? "opacity-25 hover:opacity-100" : "opacity-100"}`}
+                  aria-label={tooltip}
+                  title={tooltip}
+                  className={`group absolute -translate-x-1/2 -translate-y-1/2 transition-all ${dim ? "opacity-20 hover:opacity-100" : "opacity-100"}`}
                   style={{ left: `${h.x}%`, top: `${h.y}%` }}
                 >
                   {/* Halo pulsante para em_corte */}
@@ -171,23 +180,31 @@ export function MapaFazenda() {
                     <span className={`absolute inset-0 -m-2 rounded-full ${color} opacity-40 animate-ping`} />
                   )}
                   <span
-                    className={`relative flex items-center justify-center rounded-full border-2 border-white/95 ring-2 ${ring} shadow-lg transition-transform group-hover:scale-125 ${color}`}
+                    className={`relative flex items-center justify-center border-2 border-white/95 ring-2 ${ring} shadow-lg transition-transform group-hover:scale-125 ${color} ${isSede ? "rounded-md" : "rounded-full"}`}
                     style={{
-                      width: "clamp(18px, 2vw, 26px)",
-                      height: "clamp(18px, 2vw, 26px)",
+                      width: isSede ? "clamp(16px, 1.7vw, 22px)" : "clamp(18px, 2vw, 26px)",
+                      height: isSede ? "clamp(16px, 1.7vw, 22px)" : "clamp(18px, 2vw, 26px)",
                     }}
                   >
-                    <span className="text-[9px] font-bold text-white drop-shadow-sm leading-none">
-                      {h.label.replace(/\s/g, "")}
-                    </span>
+                    {isSede ? (
+                      <Factory className="h-2.5 w-2.5 text-white" />
+                    ) : (
+                      <span className="text-[9px] font-bold text-white drop-shadow-sm leading-none">
+                        {h.label.replace(/\s/g, "")}
+                      </span>
+                    )}
+                  </span>
+                  {/* Etiqueta de status no hover */}
+                  <span className="pointer-events-none absolute left-1/2 top-full z-10 mt-1 hidden -translate-x-1/2 whitespace-nowrap rounded bg-black/80 px-1.5 py-0.5 text-[9px] font-medium text-white group-hover:block">
+                    {tooltip}
                   </span>
                 </button>
               </PopoverTrigger>
               <PopoverContent className="w-80" side="top">
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
-                    {isReserva ? <Shield className="h-4 w-4 text-orange-500" /> : <Trees className="h-4 w-4 text-emerald-500" />}
-                    <h4 className="font-semibold">{isReserva ? "Reserva ambiental" : "Talhão"} {h.label}</h4>
+                    {isSede ? <Factory className="h-4 w-4 text-sky-600" /> : isReserva ? <Shield className="h-4 w-4 text-orange-500" /> : <Trees className="h-4 w-4 text-emerald-500" />}
+                    <h4 className="font-semibold">{isSede ? "Sede industrial" : isReserva ? `Reserva ambiental ${h.label}` : `Talhão ${h.label}`}</h4>
                     {meta && (
                       <span className={`ml-auto inline-flex items-center gap-1 rounded-full ${meta.color} px-2 py-0.5 text-[10px] font-semibold text-white`}>
                         <span className="h-1.5 w-1.5 rounded-full bg-white/80" />
@@ -196,11 +213,22 @@ export function MapaFazenda() {
                     )}
                   </div>
 
-                  {isReserva ? (
+                  {isSede ? (
+                    <div className="space-y-2">
+                      <p className="text-xs text-muted-foreground">
+                        Pátio de toras, serraria e escritório. Ponto de recebimento das cargas.
+                      </p>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button asChild size="sm" variant="outline" className="h-8 text-xs"><Link to="/recebimento">Recebimento →</Link></Button>
+                        <Button asChild size="sm" variant="outline" className="h-8 text-xs"><Link to="/producao">Serraria →</Link></Button>
+                      </div>
+                    </div>
+                  ) : isReserva ? (
                     <p className="text-xs text-muted-foreground">
                       Área de preservação permanente / reserva legal. Não sujeita a colheita.
                     </p>
                   ) : t ? (
+
                     <>
                       <div className="space-y-1 text-xs">
                         <Row k="Código" v={t.codigo} />
