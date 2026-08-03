@@ -283,23 +283,49 @@ export function MapaFazenda() {
         })}
 
         {/* Legenda flutuante */}
-        <div className="pointer-events-none absolute bottom-2 left-2 rounded-md bg-black/55 px-2.5 py-1.5 text-[10px] text-white backdrop-blur-sm">
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-orange-500" /> Reserva</span>
-            {STATUS_OPTIONS.map((s) => (
-              <span key={s} className="inline-flex items-center gap-1">
-                <span className={`h-2 w-2 rounded-full ${STATUS_META[s].color}`} />
-                {STATUS_META[s].label}
-              </span>
-            ))}
-          </div>
+        <div className="pointer-events-none absolute bottom-2 left-2 flex flex-wrap gap-x-2 gap-y-1 rounded-md bg-black/60 px-2.5 py-1.5 text-[10px] text-white backdrop-blur-sm">
+          <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-sm bg-sky-600" /> Sede</span>
+          <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-orange-500" /> Reserva</span>
+          {STATUS_OPTIONS.map((s) => (
+            <span key={s} className="inline-flex items-center gap-1">
+              <span className={`h-2 w-2 rounded-full ${STATUS_META[s].color}`} />
+              {STATUS_META[s].label}
+            </span>
+          ))}
         </div>
       </div>
 
-      <div className="mt-3 flex items-center justify-between text-[11px] text-muted-foreground">
-        <span>Coordenadas de referência: 25°18′55″S 53°21′09″W · Altitude aprox. 679 m</span>
-        <span>{talhoes.length} talhões · {HOTSPOTS.filter(h => h.tipo === "reserva").length} reservas</span>
+      {/* Resumo por status — área e volume */}
+      <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+        {STATUS_OPTIONS.map((s) => {
+          const g = resumo.por[s] ?? { area: 0, volume: 0 };
+          const meta = STATUS_META[s];
+          const ativo = filtro === s;
+          return (
+            <button
+              key={s}
+              onClick={() => setFiltro(ativo ? null : s)}
+              className={`rounded-lg border p-2.5 text-left transition ${ativo ? "border-foreground bg-foreground/5" : "border-border/60 hover:bg-muted/40"}`}
+            >
+              <div className="flex items-center gap-1.5 text-[11px] font-medium">
+                <span className={`h-2 w-2 rounded-full ${meta.color}`} />
+                {meta.label}
+              </div>
+              <div className="mt-1 text-sm font-semibold tabular-nums">{contagem[s] ?? 0} talhões</div>
+              <div className="text-[10px] text-muted-foreground">{nf(g.area)} ha · {nf(g.volume)} m³</div>
+            </button>
+          );
+        })}
       </div>
+
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground">
+        <span>Coordenadas de referência: 25°18′55″S 53°21′09″W · Altitude aprox. 679 m</span>
+        <span>
+          {talhoes.length} talhões · {nf(resumo.area)} ha · {nf(resumo.volume)} m³ estimados ·{" "}
+          {HOTSPOTS.filter(h => h.tipo === "reserva").length} reservas
+        </span>
+      </div>
+
     </div>
   );
 }
