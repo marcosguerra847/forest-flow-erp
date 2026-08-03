@@ -5,7 +5,7 @@ import { Link } from "@tanstack/react-router";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { MapPinned, Trees, Shield, Loader2, Filter } from "lucide-react";
+import { MapPinned, Trees, Shield, Loader2, Filter, Factory } from "lucide-react";
 import { toast } from "sonner";
 import mapaAsset from "@/assets/map_fazenda.png.asset.json";
 
