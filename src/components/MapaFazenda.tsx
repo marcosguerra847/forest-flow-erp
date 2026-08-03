@@ -5,32 +5,34 @@ import { Link } from "@tanstack/react-router";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { MapPinned, Trees, Shield, Loader2, Filter } from "lucide-react";
+import { MapPinned, Trees, Shield, Loader2, Filter, Factory } from "lucide-react";
 import { toast } from "sonner";
 import mapaAsset from "@/assets/map_fazenda.png.asset.json";
 
-type Hotspot = { codigo: string; x: number; y: number; tipo: "talhao" | "reserva"; label: string };
+type Hotspot = { codigo: string; x: number; y: number; tipo: "talhao" | "reserva" | "sede"; label: string };
 
-// Posições (% da imagem) aproximadas a partir do mapa da Fazenda Bela Vista
+// Posições (% da imagem) medidas sobre os rótulos do mapa da Fazenda Bela Vista
 const HOTSPOTS: Hotspot[] = [
-  { codigo: "T-01", label: "T 01", x: 17.5, y: 63.5, tipo: "talhao" },
-  { codigo: "T-02", label: "T 02", x: 30.0, y: 63.5, tipo: "talhao" },
-  { codigo: "T-03", label: "T 03", x: 41.0, y: 60.0, tipo: "talhao" },
-  { codigo: "T-04", label: "T 04", x: 61.0, y: 62.0, tipo: "talhao" },
-  { codigo: "T-05", label: "T 05", x: 51.0, y: 56.0, tipo: "talhao" },
-  { codigo: "T-06", label: "T 06", x: 32.0, y: 47.0, tipo: "talhao" },
-  { codigo: "T-07", label: "T 07", x: 23.5, y: 47.0, tipo: "talhao" },
-  { codigo: "T-08", label: "T 08", x: 37.5, y: 29.5, tipo: "talhao" },
-  { codigo: "T-09", label: "T 09", x: 51.0, y: 26.5, tipo: "talhao" },
-  { codigo: "T-10", label: "T 10", x: 51.0, y: 39.0, tipo: "talhao" },
-  { codigo: "T-11", label: "T 11", x: 60.0, y: 43.0, tipo: "talhao" },
-  { codigo: "R-01", label: "R 01", x: 9.0, y: 74.0, tipo: "reserva" },
-  { codigo: "R-02", label: "R 02", x: 26.0, y: 30.0, tipo: "reserva" },
-  { codigo: "R-03", label: "R 03", x: 45.0, y: 15.0, tipo: "reserva" },
-  { codigo: "R-04", label: "R 04", x: 44.0, y: 74.0, tipo: "reserva" },
-  { codigo: "R-05", label: "R 05", x: 43.0, y: 47.0, tipo: "reserva" },
-  { codigo: "R-06", label: "R 06", x: 40.0, y: 39.0, tipo: "reserva" },
+  { codigo: "T-01", label: "T 01", x: 15.7, y: 63.2, tipo: "talhao" },
+  { codigo: "T-02", label: "T 02", x: 25.9, y: 62.0, tipo: "talhao" },
+  { codigo: "T-03", label: "T 03", x: 40.1, y: 58.9, tipo: "talhao" },
+  { codigo: "T-04", label: "T 04", x: 55.1, y: 63.2, tipo: "talhao" },
+  { codigo: "T-05", label: "T 05", x: 46.8, y: 55.4, tipo: "talhao" },
+  { codigo: "T-06", label: "T 06", x: 28.3, y: 45.3, tipo: "talhao" },
+  { codigo: "T-07", label: "T 07", x: 24.5, y: 46.8, tipo: "talhao" },
+  { codigo: "T-08", label: "T 08", x: 33.6, y: 30.8, tipo: "talhao" },
+  { codigo: "T-09", label: "T 09", x: 45.7, y: 26.9, tipo: "talhao" },
+  { codigo: "T-10", label: "T 10", x: 46.5, y: 37.5, tipo: "talhao" },
+  { codigo: "T-11", label: "T 11", x: 53.2, y: 41.2, tipo: "talhao" },
+  { codigo: "R-01", label: "R 01", x: 8.1, y: 70.7, tipo: "reserva" },
+  { codigo: "R-02", label: "R 02", x: 26.3, y: 31.0, tipo: "reserva" },
+  { codigo: "R-03", label: "R 03", x: 38.6, y: 15.2, tipo: "reserva" },
+  { codigo: "R-04", label: "R 04", x: 38.1, y: 70.0, tipo: "reserva" },
+  { codigo: "R-05", label: "R 05", x: 35.5, y: 44.6, tipo: "reserva" },
+  { codigo: "R-06", label: "R 06", x: 35.2, y: 38.2, tipo: "reserva" },
+  { codigo: "SEDE", label: "Sede", x: 19.9, y: 49.9, tipo: "sede" },
 ];
+
 
 type Talhao = {
   id: string; codigo: string; especie: string; area_ha: number;
@@ -87,6 +89,22 @@ export function MapaFazenda() {
     return c;
   }, [talhoes]);
 
+  const resumo = useMemo(() => {
+    const r: Record<string, { area: number; volume: number }> = {};
+    let area = 0, volume = 0;
+    for (const t of talhoes) {
+      const g = r[t.status] ?? { area: 0, volume: 0 };
+      g.area += Number(t.area_ha || 0);
+      g.volume += Number(t.volume_estimado_m3 || 0);
+      r[t.status] = g;
+      area += Number(t.area_ha || 0);
+      volume += Number(t.volume_estimado_m3 || 0);
+    }
+    return { por: r, area, volume };
+  }, [talhoes]);
+  const nf = (n: number) => n.toLocaleString("pt-BR", { maximumFractionDigits: 1 });
+
+
   return (
     <div className="rounded-xl border border-border/60 bg-card p-5 shadow-[var(--shadow-elegant)]">
       <div className="mb-4 flex items-start justify-between gap-4 flex-wrap">
@@ -135,17 +153,26 @@ export function MapaFazenda() {
         {HOTSPOTS.map((h) => {
           const t = h.tipo === "talhao" ? findTalhao(h.codigo) : null;
           const isReserva = h.tipo === "reserva";
+          const isSede = h.tipo === "sede";
           const meta = t ? STATUS_META[t.status] : null;
-          const dim = filtro && !isReserva && t && t.status !== filtro;
-          const color = isReserva ? "bg-orange-500" : meta?.color ?? "bg-emerald-500";
-          const ring = isReserva ? "ring-orange-200" : meta?.ring ?? "ring-emerald-200";
+          const dim = filtro && h.tipo === "talhao" && (!t || t.status !== filtro);
+          const color = isSede ? "bg-sky-600" : isReserva ? "bg-orange-500" : meta?.color ?? "bg-emerald-500";
+          const ring = isSede ? "ring-sky-200" : isReserva ? "ring-orange-200" : meta?.ring ?? "ring-emerald-200";
+          const tooltip = isSede
+            ? "Sede industrial · pátio e serraria"
+            : isReserva
+              ? `Reserva ambiental ${h.label} · área protegida`
+              : t
+                ? `Talhão ${t.codigo} · ${t.especie} · ${nf(Number(t.area_ha))} ha · ${STATUS_META[t.status]?.label ?? t.status}`
+                : `Talhão ${h.label} · não cadastrado`;
 
           return (
             <Popover key={h.codigo}>
               <PopoverTrigger asChild>
                 <button
-                  aria-label={`${isReserva ? "Reserva" : "Talhão"} ${h.label}`}
-                  className={`group absolute -translate-x-1/2 -translate-y-1/2 transition-all ${dim ? "opacity-25 hover:opacity-100" : "opacity-100"}`}
+                  aria-label={tooltip}
+                  title={tooltip}
+                  className={`group absolute -translate-x-1/2 -translate-y-1/2 transition-all ${dim ? "opacity-20 hover:opacity-100" : "opacity-100"}`}
                   style={{ left: `${h.x}%`, top: `${h.y}%` }}
                 >
                   {/* Halo pulsante para em_corte */}
@@ -153,23 +180,31 @@ export function MapaFazenda() {
                     <span className={`absolute inset-0 -m-2 rounded-full ${color} opacity-40 animate-ping`} />
                   )}
                   <span
-                    className={`relative flex items-center justify-center rounded-full border-2 border-white/95 ring-2 ${ring} shadow-lg transition-transform group-hover:scale-125 ${color}`}
+                    className={`relative flex items-center justify-center border-2 border-white/95 ring-2 ${ring} shadow-lg transition-transform group-hover:scale-125 ${color} ${isSede ? "rounded-md" : "rounded-full"}`}
                     style={{
-                      width: "clamp(18px, 2vw, 26px)",
-                      height: "clamp(18px, 2vw, 26px)",
+                      width: isSede ? "clamp(16px, 1.7vw, 22px)" : "clamp(18px, 2vw, 26px)",
+                      height: isSede ? "clamp(16px, 1.7vw, 22px)" : "clamp(18px, 2vw, 26px)",
                     }}
                   >
-                    <span className="text-[9px] font-bold text-white drop-shadow-sm leading-none">
-                      {h.label.replace(/\s/g, "")}
-                    </span>
+                    {isSede ? (
+                      <Factory className="h-2.5 w-2.5 text-white" />
+                    ) : (
+                      <span className="text-[9px] font-bold text-white drop-shadow-sm leading-none">
+                        {h.label.replace(/\s/g, "")}
+                      </span>
+                    )}
+                  </span>
+                  {/* Etiqueta de status no hover */}
+                  <span className="pointer-events-none absolute left-1/2 top-full z-10 mt-1 hidden -translate-x-1/2 whitespace-nowrap rounded bg-black/80 px-1.5 py-0.5 text-[9px] font-medium text-white group-hover:block">
+                    {tooltip}
                   </span>
                 </button>
               </PopoverTrigger>
               <PopoverContent className="w-80" side="top">
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
-                    {isReserva ? <Shield className="h-4 w-4 text-orange-500" /> : <Trees className="h-4 w-4 text-emerald-500" />}
-                    <h4 className="font-semibold">{isReserva ? "Reserva ambiental" : "Talhão"} {h.label}</h4>
+                    {isSede ? <Factory className="h-4 w-4 text-sky-600" /> : isReserva ? <Shield className="h-4 w-4 text-orange-500" /> : <Trees className="h-4 w-4 text-emerald-500" />}
+                    <h4 className="font-semibold">{isSede ? "Sede industrial" : isReserva ? `Reserva ambiental ${h.label}` : `Talhão ${h.label}`}</h4>
                     {meta && (
                       <span className={`ml-auto inline-flex items-center gap-1 rounded-full ${meta.color} px-2 py-0.5 text-[10px] font-semibold text-white`}>
                         <span className="h-1.5 w-1.5 rounded-full bg-white/80" />
@@ -178,11 +213,22 @@ export function MapaFazenda() {
                     )}
                   </div>
 
-                  {isReserva ? (
+                  {isSede ? (
+                    <div className="space-y-2">
+                      <p className="text-xs text-muted-foreground">
+                        Pátio de toras, serraria e escritório. Ponto de recebimento das cargas.
+                      </p>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button asChild size="sm" variant="outline" className="h-8 text-xs"><Link to="/recebimento">Recebimento →</Link></Button>
+                        <Button asChild size="sm" variant="outline" className="h-8 text-xs"><Link to="/producao">Serraria →</Link></Button>
+                      </div>
+                    </div>
+                  ) : isReserva ? (
                     <p className="text-xs text-muted-foreground">
                       Área de preservação permanente / reserva legal. Não sujeita a colheita.
                     </p>
                   ) : t ? (
+
                     <>
                       <div className="space-y-1 text-xs">
                         <Row k="Código" v={t.codigo} />
@@ -237,23 +283,49 @@ export function MapaFazenda() {
         })}
 
         {/* Legenda flutuante */}
-        <div className="pointer-events-none absolute bottom-2 left-2 rounded-md bg-black/55 px-2.5 py-1.5 text-[10px] text-white backdrop-blur-sm">
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-orange-500" /> Reserva</span>
-            {STATUS_OPTIONS.map((s) => (
-              <span key={s} className="inline-flex items-center gap-1">
-                <span className={`h-2 w-2 rounded-full ${STATUS_META[s].color}`} />
-                {STATUS_META[s].label}
-              </span>
-            ))}
-          </div>
+        <div className="pointer-events-none absolute bottom-2 left-2 flex flex-wrap gap-x-2 gap-y-1 rounded-md bg-black/60 px-2.5 py-1.5 text-[10px] text-white backdrop-blur-sm">
+          <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-sm bg-sky-600" /> Sede</span>
+          <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-orange-500" /> Reserva</span>
+          {STATUS_OPTIONS.map((s) => (
+            <span key={s} className="inline-flex items-center gap-1">
+              <span className={`h-2 w-2 rounded-full ${STATUS_META[s].color}`} />
+              {STATUS_META[s].label}
+            </span>
+          ))}
         </div>
       </div>
 
-      <div className="mt-3 flex items-center justify-between text-[11px] text-muted-foreground">
-        <span>Coordenadas de referência: 25°18′55″S 53°21′09″W · Altitude aprox. 679 m</span>
-        <span>{talhoes.length} talhões · {HOTSPOTS.filter(h => h.tipo === "reserva").length} reservas</span>
+      {/* Resumo por status — área e volume */}
+      <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+        {STATUS_OPTIONS.map((s) => {
+          const g = resumo.por[s] ?? { area: 0, volume: 0 };
+          const meta = STATUS_META[s];
+          const ativo = filtro === s;
+          return (
+            <button
+              key={s}
+              onClick={() => setFiltro(ativo ? null : s)}
+              className={`rounded-lg border p-2.5 text-left transition ${ativo ? "border-foreground bg-foreground/5" : "border-border/60 hover:bg-muted/40"}`}
+            >
+              <div className="flex items-center gap-1.5 text-[11px] font-medium">
+                <span className={`h-2 w-2 rounded-full ${meta.color}`} />
+                {meta.label}
+              </div>
+              <div className="mt-1 text-sm font-semibold tabular-nums">{contagem[s] ?? 0} talhões</div>
+              <div className="text-[10px] text-muted-foreground">{nf(g.area)} ha · {nf(g.volume)} m³</div>
+            </button>
+          );
+        })}
       </div>
+
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground">
+        <span>Coordenadas de referência: 25°18′55″S 53°21′09″W · Altitude aprox. 679 m</span>
+        <span>
+          {talhoes.length} talhões · {nf(resumo.area)} ha · {nf(resumo.volume)} m³ estimados ·{" "}
+          {HOTSPOTS.filter(h => h.tipo === "reserva").length} reservas
+        </span>
+      </div>
+
     </div>
   );
 }
