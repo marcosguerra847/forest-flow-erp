@@ -164,7 +164,119 @@ function RelatorioView({ tipo }: { tipo: RelKey }) {
           Criado: r.criado_em ? new Date(r.criado_em).toLocaleDateString("pt-BR") : "",
         }));
       }
+      if (tipo === "contas") {
+        const { data } = await supabase.from("contas_financeiras")
+          .select("tipo,descricao,categoria,valor,vencimento,data_pagamento,status,fornecedor,clientes(nome),centros_custo(nome)")
+          .order("vencimento", { ascending: true });
+        const hoje = new Date().toISOString().slice(0, 10);
+        return (data ?? []).map(r => ({
+          Tipo: r.tipo === "receber" ? "A receber" : "A pagar",
+          Descrição: r.descricao,
+          Categoria: r.categoria ?? "—",
+          "Cliente/Fornecedor": r.clientes?.nome ?? r.fornecedor ?? "—",
+          "Centro de custo": r.centros_custo?.nome ?? "—",
+          "Valor (R$)": brl(r.valor),
+          Vencimento: r.vencimento ? new Date(r.vencimento + "T00:00:00").toLocaleDateString("pt-BR") : "",
+          Status: r.status,
+          "Dias em atraso": r.status !== "pago" && r.vencimento && r.vencimento < hoje
+            ? Math.floor((Date.parse(hoje) - Date.parse(r.vencimento)) / 86400000)
+            : 0,
+          Pagamento: r.data_pagamento ? new Date(r.data_pagamento + "T00:00:00").toLocaleDateString("pt-BR") : "—",
+        }));
+      }
+      if (tipo === "fluxo") {
+        const { data } = await supabase.from("movimentacoes_caixa")
+          .select("data,tipo,descricao,categoria,valor,forma_pagamento,conciliado_em,contas_bancarias(banco),centros_custo(nome)")
+          .order("data", { ascending: true });
+        let saldo = 0;
+        return (data ?? []).map(r => {
+          const v = Number(r.valor || 0);
+          saldo += r.tipo === "entrada" ? v : -v;
+          return {
+            Data: r.data ? new Date(r.data + "T00:00:00").toLocaleDateString("pt-BR") : "",
+            Tipo: r.tipo === "entrada" ? "Entrada" : "Saída",
+            Descrição: r.descricao,
+            Categoria: r.categoria ?? "—",
+            "Centro de custo": r.centros_custo?.nome ?? "—",
+            Conta: r.contas_bancarias?.banco ?? "—",
+            Forma: r.forma_pagamento ?? "—",
+            "Valor (R$)": brl(v),
+            "Saldo acumulado (R$)": brl(saldo),
+            Conciliado: r.conciliado_em ? "Sim" : "Não",
+          };
+        });
+      }
+      if (tipo === "dre") {
+        const { data } = await supabase.from("movimentacoes_caixa")
+          .select("tipo,valor,categoria,centros_custo(nome,tipo)");
+        const grupos = new Map<string, { entradas: number; saidas: number }>();
+        for (const r of data ?? []) {
+          const nome = r.centros_custo?.nome ?? r.categoria ?? "Sem centro de custo";
+          const g = grupos.get(nome) ?? { entradas: 0, saidas: 0 };
+          const v = Number(r.valor || 0);
+          if (r.tipo === "entrada") g.entradas += v; else g.saidas += v;
+          grupos.set(nome, g);
+        }
+        const rows = [...grupos.entries()].map(([nome, g]) => ({
+          "Centro de custo / Categoria": nome,
+          "Receitas (R$)": brl(g.entradas),
+          "Custos (R$)": brl(g.saidas),
+          "Resultado (R$)": brl(g.entradas - g.saidas),
+        }));
+        if (rows.length > 0) {
+          const totE = [...grupos.values()].reduce((s, g) => s + g.entradas, 0);
+          const totS = [...grupos.values()].reduce((s, g) => s + g.saidas, 0);
+          rows.push({
+            "Centro de custo / Categoria": "RESULTADO TOTAL",
+            "Receitas (R$)": brl(totE),
+            "Custos (R$)": brl(totS),
+            "Resultado (R$)": brl(totE - totS),
+          });
+        }
+        return rows;
+      }
+      if (tipo === "notas") {
+        const { data } = await supabase.from("notas_fiscais")
+          .select("numero,serie,tipo,valor,data_emissao,status,cfop,natureza_operacao,base_icms,valor_icms,valor_ipi,fornecedor,clientes(nome),cargas(codigo)")
+          .order("data_emissao", { ascending: false });
+        return (data ?? []).map(r => ({
+          NF: `${r.numero}${r.serie ? "/" + r.serie : ""}`,
+          Tipo: r.tipo,
+          "Cliente/Fornecedor": r.clientes?.nome ?? r.fornecedor ?? "—",
+          Carga: r.cargas?.codigo ?? "—",
+          CFOP: r.cfop ?? "—",
+          Natureza: r.natureza_operacao ?? "—",
+          "Valor (R$)": brl(r.valor),
+          "Base ICMS (R$)": brl(r.base_icms ?? 0),
+          "ICMS (R$)": brl(r.valor_icms ?? 0),
+          "IPI (R$)": brl(r.valor_ipi ?? 0),
+          Emissão: r.data_emissao ? new Date(r.data_emissao + "T00:00:00").toLocaleDateString("pt-BR") : "",
+          Status: r.status,
+        }));
+      }
+      if (tipo === "faturamento") {
+        const [clientes, pedidos, contas] = await Promise.all([
+          supabase.from("clientes").select("id,nome,limite_credito"),
+          supabase.from("pedidos").select("cliente_id,valor_total,status"),
+          supabase.from("contas_financeiras").select("cliente_id,valor,status,tipo"),
+        ]);
+        return (clientes.data ?? []).map(c => {
+          const ps = (pedidos.data ?? []).filter(p => p.cliente_id === c.id);
+          const cs = (contas.data ?? []).filter(x => x.cliente_id === c.id && x.tipo === "receber");
+          const recebido = cs.filter(x => x.status === "pago").reduce((s, x) => s + Number(x.valor || 0), 0);
+          const aberto = cs.filter(x => x.status !== "pago").reduce((s, x) => s + Number(x.valor || 0), 0);
+          return {
+            Cliente: c.nome,
+            Pedidos: ps.length,
+            "Faturado (R$)": brl(ps.reduce((s, p) => s + Number(p.valor_total || 0), 0)),
+            "Recebido (R$)": brl(recebido),
+            "Em aberto (R$)": brl(aberto),
+            "Limite crédito (R$)": brl(c.limite_credito ?? 0),
+          };
+        }).sort((a, b) => b.Pedidos - a.Pedidos);
+      }
       return [];
+
     },
   });
 
