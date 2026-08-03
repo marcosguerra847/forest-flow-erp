@@ -32,7 +32,11 @@ const RELATORIOS: Rel[] = [
 ];
 
 
+const brl = (v: unknown) =>
+  Number(v || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
 function toCSV(rows: Record<string, unknown>[]) {
+
   if (rows.length === 0) return "";
   const cols = Object.keys(rows[0]);
   const esc = (v: unknown) => {
