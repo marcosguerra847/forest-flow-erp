@@ -86,7 +86,7 @@ function CargasPage() {
         actions={
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild><Button><Plus className="mr-1 h-4 w-4" /> Nova carga</Button></DialogTrigger>
-            <CargaForm ocs={ocs} onSaved={(c) => { setOpen(false); qc.invalidateQueries({ queryKey: ["cargas"] }); setShowQr(c); }} />
+            <CargaForm ocs={ocsAbertas} onSaved={(c) => { setOpen(false); qc.invalidateQueries({ queryKey: ["cargas"] }); setShowQr(c); }} />
           </Dialog>
         }
       />
