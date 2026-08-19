@@ -44,25 +44,44 @@ function CargasPage() {
       return data as Carga[];
     },
   });
-  const { data: ocs = [] } = useQuery({
-    queryKey: ["ocs-ativas"],
+  const { data: ocsTodas = [] } = useQuery({
+    queryKey: ["ocs-com-origem"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("ordens_colheita").select("id,codigo,status").in("status", ["aberta", "em_execucao"]).order("codigo");
+      const { data, error } = await supabase
+        .from("ordens_colheita")
+        .select("id,codigo,status,talhoes(codigo,especie,fazendas(nome,local))")
+        .order("codigo");
       if (error) throw error;
-      return data as OC[];
+      return data as (OC & { status: string })[];
     },
   });
+  const ocs = ocsTodas as OC[];
+  const ocsAbertas = ocsTodas.filter((o) => o.status === "aberta" || o.status === "em_execucao") as OC[];
 
   const emTransito = cargas.filter(c => c.status === "em_transito").length;
-  const divergentes = cargas.filter(c => c.status === "divergente").length;
+  const entregues = cargas.filter(c => !!c.entregue_em).length;
   const volTotal = cargas.reduce((s, c) => s + Number(c.volume_carregado_m3 || 0), 0);
+
+  const detalhesCarga = (c: Carga) => {
+    const oc = ocs.find((o) => o.id === c.ordem_colheita_id);
+    return [
+      { label: "Fazenda", value: oc?.talhoes?.fazendas?.nome ?? "Fazenda Bela Vista" },
+      ...(oc?.talhoes?.fazendas?.local ? [{ label: "Local", value: oc.talhoes.fazendas.local }] : []),
+      { label: "Talhão / espécie", value: oc?.talhoes ? `${oc.talhoes.codigo} · ${oc.talhoes.especie}` : "—" },
+      { label: "Ordem de colheita", value: oc?.codigo ?? "—" },
+      { label: "Volume", value: `${Number(c.volume_carregado_m3).toFixed(2)} m³` },
+      { label: "Toras", value: String(c.qtd_toras) },
+      { label: "Placa / motorista", value: `${c.placa_veiculo ?? "—"} · ${c.motorista ?? "—"}` },
+      { label: "Saída", value: new Date(c.data_saida).toLocaleString("pt-BR") },
+    ];
+  };
 
   return (
     <div className="space-y-8">
       <PageHeader
         eyebrow="Operação"
-        title="Cargas em trânsito"
-        description="Cada caminhão sai da fazenda com QR Code único. Compare no pátio com Recebimento."
+        title="Cargas e pacotes para entrega"
+        description="Cada carga sai com QR Code próprio já pronto para entrega: traz os dados da fazenda, do talhão de origem e do volume. O cliente escaneia e confirma o recebimento na hora."
         actions={
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild><Button><Plus className="mr-1 h-4 w-4" /> Nova carga</Button></DialogTrigger>
