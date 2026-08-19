@@ -23,7 +23,11 @@ type Carga = {
   gps_origem: string | null; data_saida: string; data_recebimento: string | null;
   status: "em_transito" | "recebida" | "divergente" | "cancelada";
 };
-type OC = { id: string; codigo: string };
+type OC = {
+  id: string;
+  codigo: string;
+  talhoes?: { codigo: string; especie: string; fazendas?: { nome: string; local: string | null } | null } | null;
+};
 
 export const Route = createFileRoute("/_authenticated/cargas")({ component: CargasPage });
 
