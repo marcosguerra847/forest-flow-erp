@@ -132,14 +132,32 @@ function CargasPage() {
       )}
 
       <Dialog open={!!showQr} onOpenChange={(o) => !o && setShowQr(null)}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>QR da carga {showQr?.codigo}</DialogTitle></DialogHeader>
-          <div className="flex flex-col items-center gap-3 py-4">
-            {showQr && <QrDisplay tipo="cg" codigo={showQr.codigo} size={220} label={`Carga · ${showQr.placa_veiculo ?? ""} · ${Number(showQr.volume_carregado_m3).toFixed(1)} m³`} />}
-            <p className="text-center text-xs text-muted-foreground max-w-xs">
-              Apresente este QR Code na portaria do pátio para conferência. Ele identifica a carga, placa e volume declarado.
-            </p>
-          </div>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>Etiqueta de entrega · {showQr?.codigo}</DialogTitle></DialogHeader>
+          {showQr && (
+            <div className="flex flex-col items-center gap-4 py-2">
+              <QrDisplay
+                tipo="cg"
+                codigo={showQr.codigo}
+                size={220}
+                tituloEtiqueta="Pacote pronto para entrega"
+                details={detalhesCarga(showQr)}
+                label={`Fazenda Bela Vista · ${Number(showQr.volume_carregado_m3).toFixed(2)} m³ · ${showQr.qtd_toras} toras`}
+                notaEtiqueta="Escaneie o QR Code para ver a origem da madeira (fazenda, talhão, volume) e confirmar o recebimento desta entrega diretamente pelo celular."
+              />
+              <dl className="grid w-full grid-cols-2 gap-2 text-xs">
+                {detalhesCarga(showQr).map((d) => (
+                  <div key={d.label} className="rounded-md bg-secondary/40 p-2">
+                    <dt className="text-[10px] uppercase tracking-wide text-muted-foreground">{d.label}</dt>
+                    <dd className="font-medium">{d.value}</dd>
+                  </div>
+                ))}
+              </dl>
+              <p className="text-center text-xs text-muted-foreground">
+                Entregue esta etiqueta junto com a carga. O cliente escaneia, vê os dados da fazenda e da carga e confirma o recebimento — a confirmação aparece aqui automaticamente.
+              </p>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
