@@ -22,8 +22,13 @@ type Carga = {
   volume_carregado_m3: number; qtd_toras: number;
   gps_origem: string | null; data_saida: string; data_recebimento: string | null;
   status: "em_transito" | "recebida" | "divergente" | "cancelada";
+  entregue_em?: string | null; recebedor_nome?: string | null;
 };
-type OC = { id: string; codigo: string };
+type OC = {
+  id: string;
+  codigo: string;
+  talhoes?: { codigo: string; especie: string; fazendas?: { nome: string; local: string | null } | null } | null;
+};
 
 export const Route = createFileRoute("/_authenticated/cargas")({ component: CargasPage });
 
@@ -40,29 +45,48 @@ function CargasPage() {
       return data as Carga[];
     },
   });
-  const { data: ocs = [] } = useQuery({
-    queryKey: ["ocs-ativas"],
+  const { data: ocsTodas = [] } = useQuery({
+    queryKey: ["ocs-com-origem"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("ordens_colheita").select("id,codigo,status").in("status", ["aberta", "em_execucao"]).order("codigo");
+      const { data, error } = await supabase
+        .from("ordens_colheita")
+        .select("id,codigo,status,talhoes(codigo,especie,fazendas(nome,local))")
+        .order("codigo");
       if (error) throw error;
-      return data as OC[];
+      return data as (OC & { status: string })[];
     },
   });
+  const ocs = ocsTodas as OC[];
+  const ocsAbertas = ocsTodas.filter((o) => o.status === "aberta" || o.status === "em_execucao") as OC[];
 
   const emTransito = cargas.filter(c => c.status === "em_transito").length;
-  const divergentes = cargas.filter(c => c.status === "divergente").length;
+  const entregues = cargas.filter(c => !!c.entregue_em).length;
   const volTotal = cargas.reduce((s, c) => s + Number(c.volume_carregado_m3 || 0), 0);
+
+  const detalhesCarga = (c: Carga) => {
+    const oc = ocs.find((o) => o.id === c.ordem_colheita_id);
+    return [
+      { label: "Fazenda", value: oc?.talhoes?.fazendas?.nome ?? "Fazenda Bela Vista" },
+      ...(oc?.talhoes?.fazendas?.local ? [{ label: "Local", value: oc.talhoes.fazendas.local }] : []),
+      { label: "Talhão / espécie", value: oc?.talhoes ? `${oc.talhoes.codigo} · ${oc.talhoes.especie}` : "—" },
+      { label: "Ordem de colheita", value: oc?.codigo ?? "—" },
+      { label: "Volume", value: `${Number(c.volume_carregado_m3).toFixed(2)} m³` },
+      { label: "Toras", value: String(c.qtd_toras) },
+      { label: "Placa / motorista", value: `${c.placa_veiculo ?? "—"} · ${c.motorista ?? "—"}` },
+      { label: "Saída", value: new Date(c.data_saida).toLocaleString("pt-BR") },
+    ];
+  };
 
   return (
     <div className="space-y-8">
       <PageHeader
         eyebrow="Operação"
-        title="Cargas em trânsito"
-        description="Cada caminhão sai da fazenda com QR Code único. Compare no pátio com Recebimento."
+        title="Cargas e pacotes para entrega"
+        description="Cada carga sai com QR Code próprio já pronto para entrega: traz os dados da fazenda, do talhão de origem e do volume. O cliente escaneia e confirma o recebimento na hora."
         actions={
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild><Button><Plus className="mr-1 h-4 w-4" /> Nova carga</Button></DialogTrigger>
-            <CargaForm ocs={ocs} onSaved={(c) => { setOpen(false); qc.invalidateQueries({ queryKey: ["cargas"] }); setShowQr(c); }} />
+            <CargaForm ocs={ocsAbertas} onSaved={(c) => { setOpen(false); qc.invalidateQueries({ queryKey: ["cargas"] }); setShowQr(c); }} />
           </Dialog>
         }
       />
@@ -70,7 +94,7 @@ function CargasPage() {
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <KpiCard label="Total" value={cargas.length} icon={Truck} />
         <KpiCard label="Em trânsito" value={emTransito} icon={Truck} tone="warning" />
-        <KpiCard label="Divergentes" value={divergentes} icon={Truck} tone="danger" />
+        <KpiCard label="Entregues (confirmadas)" value={entregues} icon={Truck} tone="success" />
         <KpiCard label="Volume total (m³)" value={volTotal.toFixed(1)} icon={Truck} />
       </div>
 
@@ -90,6 +114,9 @@ function CargasPage() {
                 {r.status.replace("_", " ")}
               </StatusBadge>
             ) },
+            { key: "entregue_em", label: "Entrega", render: (r) => r.entregue_em
+              ? <span className="text-xs">Confirmada · {r.recebedor_nome ?? "cliente"}<br /><span className="text-muted-foreground">{new Date(r.entregue_em).toLocaleString("pt-BR")}</span></span>
+              : <span className="text-xs text-muted-foreground">Aguardando cliente</span> },
             { key: "qr", label: "", render: (r) => (
               <div className="flex justify-end gap-1">
                 <Button size="icon" variant="ghost" onClick={() => setShowQr(r)}><QrCode className="h-4 w-4" /></Button>
@@ -105,14 +132,32 @@ function CargasPage() {
       )}
 
       <Dialog open={!!showQr} onOpenChange={(o) => !o && setShowQr(null)}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>QR da carga {showQr?.codigo}</DialogTitle></DialogHeader>
-          <div className="flex flex-col items-center gap-3 py-4">
-            {showQr && <QrDisplay tipo="cg" codigo={showQr.codigo} size={220} label={`Carga · ${showQr.placa_veiculo ?? ""} · ${Number(showQr.volume_carregado_m3).toFixed(1)} m³`} />}
-            <p className="text-center text-xs text-muted-foreground max-w-xs">
-              Apresente este QR Code na portaria do pátio para conferência. Ele identifica a carga, placa e volume declarado.
-            </p>
-          </div>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>Etiqueta de entrega · {showQr?.codigo}</DialogTitle></DialogHeader>
+          {showQr && (
+            <div className="flex flex-col items-center gap-4 py-2">
+              <QrDisplay
+                tipo="cg"
+                codigo={showQr.codigo}
+                size={220}
+                tituloEtiqueta="Pacote pronto para entrega"
+                details={detalhesCarga(showQr)}
+                label={`Fazenda Bela Vista · ${Number(showQr.volume_carregado_m3).toFixed(2)} m³ · ${showQr.qtd_toras} toras`}
+                notaEtiqueta="Escaneie o QR Code para ver a origem da madeira (fazenda, talhão, volume) e confirmar o recebimento desta entrega diretamente pelo celular."
+              />
+              <dl className="grid w-full grid-cols-2 gap-2 text-xs">
+                {detalhesCarga(showQr).map((d) => (
+                  <div key={d.label} className="rounded-md bg-secondary/40 p-2">
+                    <dt className="text-[10px] uppercase tracking-wide text-muted-foreground">{d.label}</dt>
+                    <dd className="font-medium">{d.value}</dd>
+                  </div>
+                ))}
+              </dl>
+              <p className="text-center text-xs text-muted-foreground">
+                Entregue esta etiqueta junto com a carga. O cliente escaneia, vê os dados da fazenda e da carga e confirma o recebimento — a confirmação aparece aqui automaticamente.
+              </p>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

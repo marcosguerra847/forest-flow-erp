@@ -51,7 +51,7 @@ function AuthLayout() {
               <span className="text-foreground">Fazenda Bela Vista</span> · Gestão da Fazenda
             </div>
             <div className="ml-auto flex items-center gap-3 text-xs">
-              <Link to="/_authenticated/usuarios" className="hidden sm:inline text-muted-foreground hover:text-foreground">{nome}</Link>
+              <Link to="/usuarios" className="hidden sm:inline text-muted-foreground hover:text-foreground">{nome}</Link>
               {roles.map((r) => (
                 <span key={r} className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-widest text-primary">{r}</span>
               ))}
