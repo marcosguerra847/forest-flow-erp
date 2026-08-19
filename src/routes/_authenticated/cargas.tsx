@@ -94,7 +94,7 @@ function CargasPage() {
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <KpiCard label="Total" value={cargas.length} icon={Truck} />
         <KpiCard label="Em trânsito" value={emTransito} icon={Truck} tone="warning" />
-        <KpiCard label="Divergentes" value={divergentes} icon={Truck} tone="danger" />
+        <KpiCard label="Entregues (confirmadas)" value={entregues} icon={Truck} tone="success" />
         <KpiCard label="Volume total (m³)" value={volTotal.toFixed(1)} icon={Truck} />
       </div>
 
