@@ -12,9 +12,15 @@ type Props = {
   value?: string;
   size?: number;
   label?: string;
+  /** Dados impressos na etiqueta (fazenda, carga, produto, cliente...) */
+  details?: { label: string; value: string }[];
+  /** Título da etiqueta impressa */
+  tituloEtiqueta?: string;
+  /** Instrução final da etiqueta (ex.: confirmação de recebimento) */
+  notaEtiqueta?: string;
 };
 
-export function QrDisplay({ tipo, codigo, value, size = 200, label }: Props) {
+export function QrDisplay({ tipo, codigo, value, size = 200, label, details, tituloEtiqueta, notaEtiqueta }: Props) {
   const ref = useRef<HTMLCanvasElement>(null);
   const [dataUrl, setDataUrl] = useState<string>("");
   // A partir da evolução do QR: aponta para a página pública /r/<codigo>
