@@ -243,7 +243,7 @@ function PublicQrPage() {
         </section>
 
         {/* Confirmação de entrega pelo cliente (sem login) — só para cargas ainda não confirmadas */}
-        {tipo === "CG" && !etapasRegistradas.has("entregue") && (
+        {(tipo === "CG" || tipo === "PA") && !etapasRegistradas.has("entregue") && (
           <DeliveryConfirmForm codigo={codigo} onDone={carregarEventos} />
         )}
 
