@@ -22,6 +22,7 @@ type Carga = {
   volume_carregado_m3: number; qtd_toras: number;
   gps_origem: string | null; data_saida: string; data_recebimento: string | null;
   status: "em_transito" | "recebida" | "divergente" | "cancelada";
+  entregue_em?: string | null; recebedor_nome?: string | null;
 };
 type OC = {
   id: string;
