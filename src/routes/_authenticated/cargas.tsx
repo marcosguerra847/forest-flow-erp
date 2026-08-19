@@ -114,6 +114,9 @@ function CargasPage() {
                 {r.status.replace("_", " ")}
               </StatusBadge>
             ) },
+            { key: "entregue_em", label: "Entrega", render: (r) => r.entregue_em
+              ? <span className="text-xs">Confirmada · {r.recebedor_nome ?? "cliente"}<br /><span className="text-muted-foreground">{new Date(r.entregue_em).toLocaleString("pt-BR")}</span></span>
+              : <span className="text-xs text-muted-foreground">Aguardando cliente</span> },
             { key: "qr", label: "", render: (r) => (
               <div className="flex justify-end gap-1">
                 <Button size="icon" variant="ghost" onClick={() => setShowQr(r)}><QrCode className="h-4 w-4" /></Button>
