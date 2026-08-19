@@ -92,12 +92,33 @@ function PAPage() {
       />
 
       <Dialog open={!!showQr} onOpenChange={(o) => !o && setShowQr(null)}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>{showQr?.codigo}</DialogTitle></DialogHeader>
-          <div className="flex flex-col items-center gap-3 py-4">
-            {showQr && <QrDisplay tipo="pa" codigo={showQr.codigo} size={220} label={`${showQr.descricao} · ${showQr.dimensoes ?? ""}`} />}
-            <p className="text-xs text-muted-foreground text-center max-w-xs">{showQr?.descricao} · {showQr?.dimensoes}</p>
-          </div>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>Etiqueta de entrega · {showQr?.codigo}</DialogTitle></DialogHeader>
+          {showQr && (
+            <div className="flex flex-col items-center gap-4 py-2">
+              <QrDisplay
+                tipo="pa"
+                codigo={showQr.codigo}
+                size={220}
+                tituloEtiqueta="Pacote pronto para entrega"
+                details={[
+                  { label: "Fazenda", value: "Fazenda Bela Vista" },
+                  { label: "Produto", value: showQr.descricao },
+                  { label: "Dimensões", value: showQr.dimensoes ?? "—" },
+                  { label: "Peças", value: String(showQr.qtd_pecas) },
+                  { label: "Volume", value: `${Number(showQr.volume_m3).toFixed(2)} m³` },
+                  { label: "OP de origem", value: ops.find((o) => o.id === showQr.ordem_producao_id)?.codigo ?? "—" },
+                  { label: "Produzido em", value: new Date(showQr.criado_em).toLocaleDateString("pt-BR") },
+                  { label: "Status", value: showQr.status.replace("_", " ") },
+                ]}
+                label={`Fazenda Bela Vista · ${showQr.descricao} · ${showQr.qtd_pecas} peças · ${Number(showQr.volume_m3).toFixed(2)} m³`}
+                notaEtiqueta="O cliente escaneia este QR Code, vê a origem completa da madeira (fazenda, talhão, colheita e produção) e confirma o recebimento do pacote pelo celular."
+              />
+              <p className="text-xs text-muted-foreground text-center max-w-xs">
+                Imprima e fixe no pacote. A confirmação de recebimento feita pelo cliente entra no histórico de rastreabilidade deste código.
+              </p>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
