@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as XCodigoRouteImport } from './routes/x.$codigo'
 import { Route as RCodigoRouteImport } from './routes/r.$codigo'
 import { Route as AuthenticatedUsuariosRouteImport } from './routes/_authenticated/usuarios'
 import { Route as AuthenticatedTorasRouteImport } from './routes/_authenticated/toras'
@@ -30,6 +31,7 @@ import { Route as AuthenticatedInventarioRouteImport } from './routes/_authentic
 import { Route as AuthenticatedFlorestalRouteImport } from './routes/_authenticated/florestal'
 import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authenticated/financeiro'
 import { Route as AuthenticatedFazendasRouteImport } from './routes/_authenticated/fazendas'
+import { Route as AuthenticatedExpedicaoRouteImport } from './routes/_authenticated/expedicao'
 import { Route as AuthenticatedEstoqueRouteImport } from './routes/_authenticated/estoque'
 import { Route as AuthenticatedDivergenciasRouteImport } from './routes/_authenticated/divergencias'
 import { Route as AuthenticatedComercialRouteImport } from './routes/_authenticated/comercial'
@@ -49,6 +51,11 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const XCodigoRoute = XCodigoRouteImport.update({
+  id: '/x/$codigo',
+  path: '/x/$codigo',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const RCodigoRoute = RCodigoRouteImport.update({
   id: '/r/$codigo',
@@ -145,6 +152,11 @@ const AuthenticatedFazendasRoute = AuthenticatedFazendasRouteImport.update({
   path: '/fazendas',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedExpedicaoRoute = AuthenticatedExpedicaoRouteImport.update({
+  id: '/expedicao',
+  path: '/expedicao',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedEstoqueRoute = AuthenticatedEstoqueRouteImport.update({
   id: '/estoque',
   path: '/estoque',
@@ -180,6 +192,7 @@ export interface FileRoutesByFullPath {
   '/comercial': typeof AuthenticatedComercialRoute
   '/divergencias': typeof AuthenticatedDivergenciasRoute
   '/estoque': typeof AuthenticatedEstoqueRoute
+  '/expedicao': typeof AuthenticatedExpedicaoRoute
   '/fazendas': typeof AuthenticatedFazendasRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
   '/florestal': typeof AuthenticatedFlorestalRoute
@@ -198,6 +211,7 @@ export interface FileRoutesByFullPath {
   '/toras': typeof AuthenticatedTorasRoute
   '/usuarios': typeof AuthenticatedUsuariosRoute
   '/r/$codigo': typeof RCodigoRoute
+  '/x/$codigo': typeof XCodigoRoute
   '/qr/$tipo/$codigo': typeof AuthenticatedQrTipoCodigoRoute
 }
 export interface FileRoutesByTo {
@@ -206,6 +220,7 @@ export interface FileRoutesByTo {
   '/comercial': typeof AuthenticatedComercialRoute
   '/divergencias': typeof AuthenticatedDivergenciasRoute
   '/estoque': typeof AuthenticatedEstoqueRoute
+  '/expedicao': typeof AuthenticatedExpedicaoRoute
   '/fazendas': typeof AuthenticatedFazendasRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
   '/florestal': typeof AuthenticatedFlorestalRoute
@@ -224,6 +239,7 @@ export interface FileRoutesByTo {
   '/toras': typeof AuthenticatedTorasRoute
   '/usuarios': typeof AuthenticatedUsuariosRoute
   '/r/$codigo': typeof RCodigoRoute
+  '/x/$codigo': typeof XCodigoRoute
   '/': typeof AuthenticatedIndexRoute
   '/qr/$tipo/$codigo': typeof AuthenticatedQrTipoCodigoRoute
 }
@@ -235,6 +251,7 @@ export interface FileRoutesById {
   '/_authenticated/comercial': typeof AuthenticatedComercialRoute
   '/_authenticated/divergencias': typeof AuthenticatedDivergenciasRoute
   '/_authenticated/estoque': typeof AuthenticatedEstoqueRoute
+  '/_authenticated/expedicao': typeof AuthenticatedExpedicaoRoute
   '/_authenticated/fazendas': typeof AuthenticatedFazendasRoute
   '/_authenticated/financeiro': typeof AuthenticatedFinanceiroRoute
   '/_authenticated/florestal': typeof AuthenticatedFlorestalRoute
@@ -253,6 +270,7 @@ export interface FileRoutesById {
   '/_authenticated/toras': typeof AuthenticatedTorasRoute
   '/_authenticated/usuarios': typeof AuthenticatedUsuariosRoute
   '/r/$codigo': typeof RCodigoRoute
+  '/x/$codigo': typeof XCodigoRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/qr/$tipo/$codigo': typeof AuthenticatedQrTipoCodigoRoute
 }
@@ -265,6 +283,7 @@ export interface FileRouteTypes {
     | '/comercial'
     | '/divergencias'
     | '/estoque'
+    | '/expedicao'
     | '/fazendas'
     | '/financeiro'
     | '/florestal'
@@ -283,6 +302,7 @@ export interface FileRouteTypes {
     | '/toras'
     | '/usuarios'
     | '/r/$codigo'
+    | '/x/$codigo'
     | '/qr/$tipo/$codigo'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -291,6 +311,7 @@ export interface FileRouteTypes {
     | '/comercial'
     | '/divergencias'
     | '/estoque'
+    | '/expedicao'
     | '/fazendas'
     | '/financeiro'
     | '/florestal'
@@ -309,6 +330,7 @@ export interface FileRouteTypes {
     | '/toras'
     | '/usuarios'
     | '/r/$codigo'
+    | '/x/$codigo'
     | '/'
     | '/qr/$tipo/$codigo'
   id:
@@ -319,6 +341,7 @@ export interface FileRouteTypes {
     | '/_authenticated/comercial'
     | '/_authenticated/divergencias'
     | '/_authenticated/estoque'
+    | '/_authenticated/expedicao'
     | '/_authenticated/fazendas'
     | '/_authenticated/financeiro'
     | '/_authenticated/florestal'
@@ -337,6 +360,7 @@ export interface FileRouteTypes {
     | '/_authenticated/toras'
     | '/_authenticated/usuarios'
     | '/r/$codigo'
+    | '/x/$codigo'
     | '/_authenticated/'
     | '/_authenticated/qr/$tipo/$codigo'
   fileRoutesById: FileRoutesById
@@ -345,6 +369,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   RCodigoRoute: typeof RCodigoRoute
+  XCodigoRoute: typeof XCodigoRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -369,6 +394,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/x/$codigo': {
+      id: '/x/$codigo'
+      path: '/x/$codigo'
+      fullPath: '/x/$codigo'
+      preLoaderRoute: typeof XCodigoRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/r/$codigo': {
       id: '/r/$codigo'
@@ -496,6 +528,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedFazendasRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/expedicao': {
+      id: '/_authenticated/expedicao'
+      path: '/expedicao'
+      fullPath: '/expedicao'
+      preLoaderRoute: typeof AuthenticatedExpedicaoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/estoque': {
       id: '/_authenticated/estoque'
       path: '/estoque'
@@ -539,6 +578,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedComercialRoute: typeof AuthenticatedComercialRoute
   AuthenticatedDivergenciasRoute: typeof AuthenticatedDivergenciasRoute
   AuthenticatedEstoqueRoute: typeof AuthenticatedEstoqueRoute
+  AuthenticatedExpedicaoRoute: typeof AuthenticatedExpedicaoRoute
   AuthenticatedFazendasRoute: typeof AuthenticatedFazendasRoute
   AuthenticatedFinanceiroRoute: typeof AuthenticatedFinanceiroRoute
   AuthenticatedFlorestalRoute: typeof AuthenticatedFlorestalRoute
@@ -565,6 +605,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedComercialRoute: AuthenticatedComercialRoute,
   AuthenticatedDivergenciasRoute: AuthenticatedDivergenciasRoute,
   AuthenticatedEstoqueRoute: AuthenticatedEstoqueRoute,
+  AuthenticatedExpedicaoRoute: AuthenticatedExpedicaoRoute,
   AuthenticatedFazendasRoute: AuthenticatedFazendasRoute,
   AuthenticatedFinanceiroRoute: AuthenticatedFinanceiroRoute,
   AuthenticatedFlorestalRoute: AuthenticatedFlorestalRoute,
@@ -593,6 +634,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   RCodigoRoute: RCodigoRoute,
+  XCodigoRoute: XCodigoRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
