@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as XCodigoRouteImport } from './routes/x.$codigo'
 import { Route as RCodigoRouteImport } from './routes/r.$codigo'
 import { Route as AuthenticatedUsuariosRouteImport } from './routes/_authenticated/usuarios'
 import { Route as AuthenticatedTorasRouteImport } from './routes/_authenticated/toras'
@@ -49,6 +50,11 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const XCodigoRoute = XCodigoRouteImport.update({
+  id: '/x/$codigo',
+  path: '/x/$codigo',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const RCodigoRoute = RCodigoRouteImport.update({
   id: '/r/$codigo',
@@ -198,6 +204,7 @@ export interface FileRoutesByFullPath {
   '/toras': typeof AuthenticatedTorasRoute
   '/usuarios': typeof AuthenticatedUsuariosRoute
   '/r/$codigo': typeof RCodigoRoute
+  '/x/$codigo': typeof XCodigoRoute
   '/qr/$tipo/$codigo': typeof AuthenticatedQrTipoCodigoRoute
 }
 export interface FileRoutesByTo {
@@ -224,6 +231,7 @@ export interface FileRoutesByTo {
   '/toras': typeof AuthenticatedTorasRoute
   '/usuarios': typeof AuthenticatedUsuariosRoute
   '/r/$codigo': typeof RCodigoRoute
+  '/x/$codigo': typeof XCodigoRoute
   '/': typeof AuthenticatedIndexRoute
   '/qr/$tipo/$codigo': typeof AuthenticatedQrTipoCodigoRoute
 }
@@ -253,6 +261,7 @@ export interface FileRoutesById {
   '/_authenticated/toras': typeof AuthenticatedTorasRoute
   '/_authenticated/usuarios': typeof AuthenticatedUsuariosRoute
   '/r/$codigo': typeof RCodigoRoute
+  '/x/$codigo': typeof XCodigoRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/qr/$tipo/$codigo': typeof AuthenticatedQrTipoCodigoRoute
 }
@@ -283,6 +292,7 @@ export interface FileRouteTypes {
     | '/toras'
     | '/usuarios'
     | '/r/$codigo'
+    | '/x/$codigo'
     | '/qr/$tipo/$codigo'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -309,6 +319,7 @@ export interface FileRouteTypes {
     | '/toras'
     | '/usuarios'
     | '/r/$codigo'
+    | '/x/$codigo'
     | '/'
     | '/qr/$tipo/$codigo'
   id:
@@ -337,6 +348,7 @@ export interface FileRouteTypes {
     | '/_authenticated/toras'
     | '/_authenticated/usuarios'
     | '/r/$codigo'
+    | '/x/$codigo'
     | '/_authenticated/'
     | '/_authenticated/qr/$tipo/$codigo'
   fileRoutesById: FileRoutesById
@@ -345,6 +357,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   RCodigoRoute: typeof RCodigoRoute
+  XCodigoRoute: typeof XCodigoRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -369,6 +382,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/x/$codigo': {
+      id: '/x/$codigo'
+      path: '/x/$codigo'
+      fullPath: '/x/$codigo'
+      preLoaderRoute: typeof XCodigoRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/r/$codigo': {
       id: '/r/$codigo'
@@ -593,6 +613,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   RCodigoRoute: RCodigoRoute,
+  XCodigoRoute: XCodigoRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

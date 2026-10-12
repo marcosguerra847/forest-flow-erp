@@ -28,6 +28,7 @@ const operacao = [
 const serraria = [
   { title: "Ordens de Produção", url: "/ordens-producao", icon: Factory },
   { title: "Produtos Acabados", url: "/produtos-acabados", icon: Package2 },
+  { title: "Expedição (QR)", url: "/expedicao", icon: Package2 },
 ];
 
 const comercial = [
