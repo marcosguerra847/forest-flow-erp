@@ -91,6 +91,7 @@ function ExpedicaoPage() {
                 details={[
                   { label: "Produto", value: qr.descricao },
                   { label: "Cliente", value: qr.cliente_nome ?? "—" },
+                  ...(qr.espessura_cm && qr.largura_cm && qr.comprimento_m ? [{ label: "Medidas", value: `${qr.espessura_cm}cm x ${qr.largura_cm}cm x ${qr.comprimento_m}m` }] : []),
                   { label: "Blocos", value: String(qr.qtd_blocos) },
                   { label: "Peças", value: String(qr.qtd_pecas) },
                   { label: "Volume", value: `${Number(qr.volume_m3).toFixed(2)} m³` },
