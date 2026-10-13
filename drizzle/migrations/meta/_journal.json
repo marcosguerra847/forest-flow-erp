@@ -8,6 +8,13 @@
       "when": 1791840247151,
       "tag": "0000_pacotes_expedicao",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791925979228,
+      "tag": "0001_pacotes_medidas",
+      "breakpoints": true
     }
   ]
 }

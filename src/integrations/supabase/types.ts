@@ -1009,10 +1009,13 @@ export type Database = {
           atualizado_em: string
           cliente_nome: string | null
           codigo: string
+          comprimento_m: number | null
           criado_em: string
           descricao: string
+          espessura_cm: number | null
           expedido_em: string | null
           id: string
+          largura_cm: number | null
           observacoes: string | null
           operador_nome: string | null
           produto_acabado_id: string | null
@@ -1029,10 +1032,13 @@ export type Database = {
           atualizado_em?: string
           cliente_nome?: string | null
           codigo: string
+          comprimento_m?: number | null
           criado_em?: string
           descricao: string
+          espessura_cm?: number | null
           expedido_em?: string | null
           id?: string
+          largura_cm?: number | null
           observacoes?: string | null
           operador_nome?: string | null
           produto_acabado_id?: string | null
@@ -1049,10 +1055,13 @@ export type Database = {
           atualizado_em?: string
           cliente_nome?: string | null
           codigo?: string
+          comprimento_m?: number | null
           criado_em?: string
           descricao?: string
+          espessura_cm?: number | null
           expedido_em?: string | null
           id?: string
+          largura_cm?: number | null
           observacoes?: string | null
           operador_nome?: string | null
           produto_acabado_id?: string | null
