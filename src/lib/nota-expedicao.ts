@@ -52,7 +52,6 @@ export type PacoteNota = {
   observacoes?: string | null;
 };
 
-// Cubagem: comprimento x espessura x largura x quantidade de peças.
 export function calcM3(
   comprimentoM: number,
   espessuraM: number,
@@ -62,7 +61,6 @@ export function calcM3(
   return comprimentoM * espessuraM * larguraM * pecas;
 }
 
-// Números para quantidades, volumes e valores numéricos.
 const n = (
   v: number | null | undefined,
   d = 2
@@ -74,7 +72,6 @@ const n = (
         maximumFractionDigits: d,
       });
 
-// Medidas em metros sem zeros desnecessários.
 const medida = (v: number | null | undefined) =>
   v == null
     ? "—"
@@ -83,7 +80,6 @@ const medida = (v: number | null | undefined) =>
         maximumFractionDigits: 4,
       });
 
-// Comprimento sempre com duas casas decimais.
 const comprimento = (v: number | null | undefined) =>
   v == null
     ? "—"
@@ -92,7 +88,6 @@ const comprimento = (v: number | null | undefined) =>
         maximumFractionDigits: 2,
       });
 
-// Valores em reais.
 const brl = (v: number | null | undefined) =>
   v == null
     ? "—"
@@ -101,7 +96,6 @@ const brl = (v: number | null | undefined) =>
         currency: "BRL",
       });
 
-// Forma de pagamento.
 const forma = (v?: string | null) =>
   ({
     pix: "PIX",
@@ -126,7 +120,7 @@ export async function gerarNotaPacote(
   const W = doc.internal.pageSize.getWidth();
   const H = doc.internal.pageSize.getHeight();
 
-  // Logo.
+  // Logo da Fazenda.
   try {
     const img = await fetch(logoAsset.url)
       .then((r) => r.blob())
@@ -141,7 +135,7 @@ export async function gerarNotaPacote(
 
     doc.addImage(img, "PNG", 14, 10, 20, 20);
   } catch {
-    // A nota pode ser gerada sem o logo.
+    // Logo opcional.
   }
 
   // Cabeçalho.
@@ -180,7 +174,7 @@ export async function gerarNotaPacote(
 
   doc.setDrawColor(180).line(14, 34, W - 14, 34);
 
-  // Cliente e pagamento.
+  // Dados do cliente.
   doc
     .setFontSize(10)
     .setFont("helvetica", "bold")
@@ -201,7 +195,7 @@ export async function gerarNotaPacote(
   const isCavaco = p.tipo_carga === "cavaco";
   const itens = p.itens ?? [];
 
-  // Tabela de produtos.
+  // Tabela de cavaco ou pó de serra.
   if (isCavaco) {
     const unidade =
       p.unidade_venda === "ton" ? "toneladas" : "m³";
@@ -232,6 +226,7 @@ export async function gerarNotaPacote(
       },
     });
   } else if (itens.length > 0) {
+    // Vários produtos no mesmo romaneio.
     autoTable(doc, {
       startY: 63,
       head: [[
@@ -271,7 +266,7 @@ export async function gerarNotaPacote(
       },
     });
   } else {
-    // Compatibilidade com romaneios antigos de produto único.
+    // Compatibilidade com romaneios antigos.
     const temMedidas =
       p.espessura_cm != null &&
       p.largura_cm != null &&
@@ -328,24 +323,49 @@ export async function gerarNotaPacote(
     });
   }
 
-  // Posição abaixo da tabela.
+  // Posição logo abaixo da tabela.
   let y =
     (doc as unknown as {
       lastAutoTable: { finalY: number };
     }).lastAutoTable.finalY + 8;
 
+  // QR Code à direita, abaixo da tabela de produtos.
+  // Se faltar espaço, abre uma nova página.
+  let qrY = y;
+
+  if (qrY + 31 > H - 42) {
+    doc.addPage();
+    qrY = 18;
+  }
+
+  try {
+    const qr = await QRCode.toDataURL(link, {
+      width: 300,
+      margin: 1,
+    });
+
+    const qrSize = 25;
+    const qrX = W - 14 - qrSize;
+
+    doc.addImage(qr, "PNG", qrX, qrY, qrSize, qrSize);
+
+  } catch {
+    // QR Code opcional.
+  }
+
+  // Reserva espaço para o QR Code à direita.
+  // As informações abaixo ficam na coluna esquerda.
+  y = qrY;
+
+  const esquerdaX = 14;
+  const larguraTexto = W - 75;
+
   // Conferência de saída.
   if (!isCavaco) {
-    // Mantém a conferência junta e evita que ela fique cortada.
-    if (y + 42 > H - 45) {
-      doc.addPage();
-      y = 18;
-    }
-
     doc
       .setFont("helvetica", "bold")
       .setFontSize(10)
-      .text("CONFERÊNCIA DE SAÍDA", 14, y);
+      .text("CONFERÊNCIA DE SAÍDA", esquerdaX, y);
 
     y += 3;
 
@@ -383,31 +403,32 @@ export async function gerarNotaPacote(
         fontSize: 8,
         cellPadding: 2,
       },
-      tableWidth: 110,
+      tableWidth: 85,
       margin: {
-        left: 14,
+        left: esquerdaX,
       },
     });
 
     y =
       (doc as unknown as {
         lastAutoTable: { finalY: number };
-      }).lastAutoTable.finalY + 8;
+      }).lastAutoTable.finalY + 7;
   }
 
-  // Operador e data de saída.
-  // O resumo aparece abaixo destas informações.
-  if (y + 75 > H - 40) {
+  // Se a tabela e o QR Code ocuparam muito espaço, inicia nova página.
+  if (y + 65 > H - 25) {
     doc.addPage();
     y = 18;
   }
 
+  // Operador e data de saída.
   doc.setFont("helvetica", "normal").setFontSize(9);
 
   doc.text(
     `Operador: ${p.operador_nome ?? "________________________"}`,
-    14,
-    y
+    esquerdaX,
+    y,
+    { maxWidth: larguraTexto }
   );
 
   y += 6;
@@ -418,8 +439,9 @@ export async function gerarNotaPacote(
         ? new Date(p.expedido_em).toLocaleString("pt-BR")
         : "____/____/______"
     }`,
-    14,
-    y
+    esquerdaX,
+    y,
+    { maxWidth: larguraTexto }
   );
 
   y += 8;
@@ -487,7 +509,7 @@ export async function gerarNotaPacote(
     y
   );
 
-  // Observações abaixo do resumo.
+  // Observações.
   if (p.observacoes) {
     y += 7;
 
@@ -496,26 +518,12 @@ export async function gerarNotaPacote(
       W - 28
     );
 
-    if (y + linhas.length * 4 > H - 32) {
+    if (y + linhas.length * 4 > H - 25) {
       doc.addPage();
       y = 18;
     }
 
     doc.text(linhas, 14, y);
-    y += linhas.length * 4 + 4;
-  }
-
-  // QR Code de conferência.
-  try {
-    const qr = await QRCode.toDataURL(link, {
-      width: 300,
-      margin: 1,
-    });
-
-    // Mantém o QR Code na parte inferior direita.
-    doc.addImage(qr, "PNG", W - 50, H - 42, 32, 32);
-  } catch {
-    // QR Code opcional.
   }
 
   // Assinaturas no rodapé da última página.
@@ -542,7 +550,7 @@ export async function gerarNotaPacote(
     { align: "center" }
   );
 
-  // Imprimir ou baixar.
+  // Baixar ou imprimir o PDF.
   if (autoPrint) {
     doc.autoPrint();
     window.open(doc.output("bloburl"), "_blank");
