@@ -91,7 +91,8 @@ function ExpedicaoPage() {
                 details={[
                   { label: "Produto", value: qr.descricao },
                   { label: "Cliente", value: qr.cliente_nome ?? "—" },
-                  ...(qr.espessura_cm && qr.largura_cm && qr.comprimento_m ? [{ label: "Medidas", value: `${qr.espessura_cm}cm x ${qr.largura_cm}cm x ${qr.comprimento_m}m` }] : []),
+                  ...(qr.espessura_cm && qr.largura_cm && qr.comprimento_m ? [{ label: "Medidas", value: `${qr.espessura_cm} cm x ${qr.largura_cm} cm x ${(Number(qr.comprimento_m) * 100).toLocaleString("pt-BR")} cm` }] : []),
+                  { label: "Peças por pacote", value: String(qr.pecas_por_pacote ?? "—") },
                   { label: "Blocos", value: String(qr.qtd_blocos) },
                   { label: "Peças", value: String(qr.qtd_pecas) },
                   { label: "Volume", value: `${Number(qr.volume_m3).toFixed(2)} m³` },
@@ -113,46 +114,77 @@ function ExpedicaoPage() {
 }
 
 function PacoteForm({ onSaved }: { onSaved: (p: Pacote) => void }) {
-  const [f, setF] = useState({ descricao: "", cliente_nome: "", espessura_cm: "", largura_cm: "", comprimento_m: "", qtd_blocos: "", qtd_pecas: "", volume_m3: "", observacoes: "" });
+  const [f, setF] = useState({
+    descricao: "",
+    cliente_nome: "",
+    espessura_cm: "",
+    largura_cm: "",
+    comprimento_cm: "",
+    qtd_blocos: "",
+    pecas_por_pacote: "",
+    volume_m3: "",
+    observacoes: "",
+  });
   const [saving, setSaving] = useState(false);
   const num = (s: string) => Number(s.replace(",", ".")) || 0;
-  const auto = calcM3(num(f.espessura_cm), num(f.largura_cm), num(f.comprimento_m), num(f.qtd_pecas));
-  const temMedidas = num(f.espessura_cm) > 0 && num(f.largura_cm) > 0 && num(f.comprimento_m) > 0;
-  const volumeFinal = f.volume_m3 ? num(f.volume_m3) : auto;
+  const pacotes = num(f.qtd_blocos);
+  const pecasPorPacote = num(f.pecas_por_pacote);
+  const totalPecas = pacotes * pecasPorPacote;
+  const comprimentoCm = num(f.comprimento_cm);
+  const auto = calcM3(num(f.espessura_cm), num(f.largura_cm), comprimentoCm, totalPecas);
+  const temMedidas = num(f.espessura_cm) > 0 && num(f.largura_cm) > 0 && comprimentoCm > 0 && pacotes > 0 && pecasPorPacote > 0;
+  const volumeFinal = f.volume_m3.trim() ? num(f.volume_m3) : auto;
+
   const save = async () => {
     if (!f.descricao.trim()) return toast.error("Informe o produto");
+    if (!temMedidas) return toast.error("Informe as três medidas em cm, a quantidade de pacotes e as peças por pacote");
+    if (!Number.isInteger(pacotes) || !Number.isInteger(pecasPorPacote)) return toast.error("Pacotes e peças por pacote devem ser números inteiros");
     setSaving(true);
     try {
       const { data: codigo, error: e1 } = await supabase.rpc("proximo_codigo" as never, { _prefixo: "PX" } as never);
       if (e1) throw e1;
       const { data, error } = await supabase.from("pacotes_expedicao" as never).insert({
-        codigo, descricao: f.descricao.trim(), cliente_nome: f.cliente_nome || null,
-        espessura_cm: num(f.espessura_cm) || null, largura_cm: num(f.largura_cm) || null, comprimento_m: num(f.comprimento_m) || null,
-        qtd_blocos: Number(f.qtd_blocos) || 0, qtd_pecas: Number(f.qtd_pecas) || 0,
-        volume_m3: Number(volumeFinal.toFixed(4)), observacoes: f.observacoes || null,
+        codigo,
+        descricao: f.descricao.trim(),
+        cliente_nome: f.cliente_nome || null,
+        espessura_cm: num(f.espessura_cm),
+        largura_cm: num(f.largura_cm),
+        // Mantém o armazenamento existente em metros para compatibilidade com registros antigos.
+        comprimento_m: comprimentoCm / 100,
+        qtd_blocos: pacotes,
+        pecas_por_pacote: pecasPorPacote,
+        qtd_pecas: totalPecas,
+        volume_m3: Number(volumeFinal.toFixed(4)),
+        observacoes: f.observacoes || null,
       } as never).select().single();
       if (error) throw error;
       toast.success(`Pacote ${codigo} criado`);
       onSaved(data as unknown as Pacote);
-    } catch (e) { toast.error((e as Error).message); }
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
     setSaving(false);
   };
+
   return (
     <DialogContent className="max-w-lg">
       <DialogHeader><DialogTitle>Novo pacote para envio</DialogTitle></DialogHeader>
       <div className="grid gap-4 sm:grid-cols-3">
-        <div className="sm:col-span-3 space-y-1.5"><Label>Produto / descrição *</Label><Input value={f.descricao} onChange={(e) => setF({ ...f, descricao: e.target.value })} placeholder="Ex.: Tábua eucalipto" /></div>
+        <div className="sm:col-span-3 space-y-1.5"><Label>Produto / descrição *</Label><Input value={f.descricao} onChange={(e) => setF({ ...f, descricao: e.target.value })} placeholder="Ex.: Tábua de eucalipto" /></div>
         <div className="sm:col-span-3 space-y-1.5"><Label>Cliente</Label><Input value={f.cliente_nome} onChange={(e) => setF({ ...f, cliente_nome: e.target.value })} /></div>
-        <div className="space-y-1.5"><Label>Espessura (cm)</Label><Input inputMode="decimal" value={f.espessura_cm} onChange={(e) => setF({ ...f, espessura_cm: e.target.value })} /></div>
-        <div className="space-y-1.5"><Label>Largura (cm)</Label><Input inputMode="decimal" value={f.largura_cm} onChange={(e) => setF({ ...f, largura_cm: e.target.value })} /></div>
-        <div className="space-y-1.5"><Label>Comprimento (m)</Label><Input inputMode="decimal" value={f.comprimento_m} onChange={(e) => setF({ ...f, comprimento_m: e.target.value })} /></div>
-        <div className="space-y-1.5"><Label>Blocos</Label><Input type="number" value={f.qtd_blocos} onChange={(e) => setF({ ...f, qtd_blocos: e.target.value })} /></div>
-        <div className="space-y-1.5"><Label>Peças</Label><Input type="number" value={f.qtd_pecas} onChange={(e) => setF({ ...f, qtd_pecas: e.target.value })} /></div>
-        <div className="space-y-1.5"><Label>Volume (m³)</Label><Input value={f.volume_m3} placeholder={temMedidas ? auto.toFixed(3) : "auto"} onChange={(e) => setF({ ...f, volume_m3: e.target.value })} /></div>
+        <div className="space-y-1.5"><Label>Espessura (cm)</Label><Input inputMode="decimal" value={f.espessura_cm} onChange={(e) => setF({ ...f, espessura_cm: e.target.value })} placeholder="Ex.: 1,9" /></div>
+        <div className="space-y-1.5"><Label>Largura (cm)</Label><Input inputMode="decimal" value={f.largura_cm} onChange={(e) => setF({ ...f, largura_cm: e.target.value })} placeholder="Ex.: 12" /></div>
+        <div className="space-y-1.5"><Label>Comprimento (cm)</Label><Input inputMode="decimal" value={f.comprimento_cm} onChange={(e) => setF({ ...f, comprimento_cm: e.target.value })} placeholder="Ex.: 120" /></div>
+        <div className="space-y-1.5"><Label>Quantidade de pacotes</Label><Input type="number" min="1" step="1" value={f.qtd_blocos} onChange={(e) => setF({ ...f, qtd_blocos: e.target.value })} placeholder="Ex.: 12" /></div>
+        <div className="space-y-1.5"><Label>Peças por pacote</Label><Input type="number" min="1" step="1" value={f.pecas_por_pacote} onChange={(e) => setF({ ...f, pecas_por_pacote: e.target.value })} placeholder="Ex.: 522" /></div>
+        <div className="space-y-1.5"><Label>Volume manual (m³, opcional)</Label><Input inputMode="decimal" value={f.volume_m3} placeholder={temMedidas ? auto.toFixed(4) : "Automático"} onChange={(e) => setF({ ...f, volume_m3: e.target.value })} /></div>
         <div className="sm:col-span-3 rounded-md border border-primary/30 bg-primary/5 p-3 text-sm">
-          {temMedidas
-            ? <>Cálculo automático: <b>{auto.toFixed(3)} m³</b> ({(auto / Math.max(num(f.qtd_pecas), 1)).toFixed(4)} m³ por peça){f.volume_m3 && " — usando o valor digitado"}</>
-            : "Preencha as medidas e as peças para calcular o m³ automaticamente."}
+          {temMedidas ? <>
+            <p>Total de peças: <b>{totalPecas.toLocaleString("pt-BR")}</b></p>
+            <p>Volume por peça: <b>{(auto / Math.max(totalPecas, 1)).toFixed(6)} m³</b></p>
+            <p>Volume total calculado: <b>{auto.toLocaleString("pt-BR", { minimumFractionDigits: 4, maximumFractionDigits: 4 })} m³</b></p>
+            {f.volume_m3.trim() && <p>Será usado o volume manual informado.</p>}
+          </> : "Preencha as três medidas em cm, a quantidade de pacotes e as peças por pacote para calcular automaticamente."}
         </div>
         <div className="sm:col-span-3 space-y-1.5"><Label>Observações</Label><Textarea value={f.observacoes} onChange={(e) => setF({ ...f, observacoes: e.target.value })} /></div>
       </div>
