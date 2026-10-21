@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogT
 import { Package2, Plus, QrCode, Trash2, Copy, FileDown, Printer, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { QrDisplay } from "@/components/QrDisplay";
-import { gerarNotaPacote, calcM3, type PacoteNota } from "@/lib/nota-expedicao";
+import { gerarNotaPacote, type PacoteNota } from "@/lib/nota-expedicao";
 
 type Pacote = PacoteNota & { id: string; token: string };
 
@@ -98,7 +98,7 @@ function ExpedicaoPage() {
                   { label: "Tipo", value: qr.tipo_carga === "cavaco" ? "Cavaco" : "Madeira serrada" },
                   { label: "Produto", value: qr.descricao || (qr.tipo_carga === "cavaco" ? "Cavaco" : "—") },
                   { label: "Cliente", value: qr.cliente_nome ?? "—" },
-                  ...(qr.espessura_cm && qr.largura_cm && qr.comprimento_m ? [{ label: "Medidas", value: `${(Number(qr.espessura_cm) * 10).toLocaleString("pt-BR")} mm x ${(Number(qr.largura_cm) * 10).toLocaleString("pt-BR")} mm x ${(Number(qr.comprimento_m) * 1000).toLocaleString("pt-BR")} mm` }] : []),
+                  ...(qr.comprimento_m && qr.espessura_cm && qr.largura_cm ? [{ label: "Comprimento × espessura × largura", value: `${Number(qr.comprimento_m).toLocaleString("pt-BR")} m × ${(Number(qr.espessura_cm) / 100).toLocaleString("pt-BR")} m × ${(Number(qr.largura_cm) / 100).toLocaleString("pt-BR")} m` }] : []),
                   { label: "Peças por pacote", value: String(qr.pecas_por_pacote ?? "—") },
                   { label: "Blocos", value: String(qr.qtd_blocos) },
                   { label: "Peças", value: String(qr.qtd_pecas) },
@@ -126,9 +126,9 @@ function PacoteForm({ onSaved, pacote }: { onSaved: (p: Pacote) => void; pacote?
     tipo_carga: pacote?.tipo_carga ?? "madeira",
     descricao: pacote?.descricao ?? "",
     cliente_nome: pacote?.cliente_nome ?? "",
-    espessura_mm: pacote?.espessura_cm != null ? String(Number(pacote.espessura_cm) * 10) : "",
-    largura_mm: pacote?.largura_cm != null ? String(Number(pacote.largura_cm) * 10) : "",
-    comprimento_mm: pacote?.comprimento_m != null ? String(Number(pacote.comprimento_m) * 1000) : "",
+    comprimento_m: pacote?.comprimento_m != null ? String(Number(pacote.comprimento_m)) : "",
+    espessura_m: pacote?.espessura_cm != null ? String(Number(pacote.espessura_cm) / 100) : "",
+    largura_m: pacote?.largura_cm != null ? String(Number(pacote.largura_cm) / 100) : "",
     qtd_blocos: String(pacote?.qtd_blocos ?? ""),
     pecas_por_pacote: pacote?.pecas_por_pacote != null ? String(pacote.pecas_por_pacote) : "",
     volume_m3: pacote?.tipo_carga === "cavaco" ? "" : "",
@@ -143,11 +143,12 @@ function PacoteForm({ onSaved, pacote }: { onSaved: (p: Pacote) => void; pacote?
   const pacotes = num(f.qtd_blocos);
   const pecasPorPacote = num(f.pecas_por_pacote);
   const totalPecas = pacotes * pecasPorPacote;
-  const espessuraMm = num(f.espessura_mm);
-  const larguraMm = num(f.largura_mm);
-  const comprimentoMm = num(f.comprimento_mm);
-  const auto = calcM3(espessuraMm, larguraMm, comprimentoMm, totalPecas);
-  const temMedidas = espessuraMm > 0 && larguraMm > 0 && comprimentoMm > 0 && pacotes > 0 && pecasPorPacote > 0;
+  const comprimentoM = num(f.comprimento_m);
+  const espessuraM = num(f.espessura_m);
+  const larguraM = num(f.largura_m);
+  // Todas as medidas são digitadas em metros; o resultado é m³.
+  const auto = comprimentoM * espessuraM * larguraM * totalPecas;
+  const temMedidas = comprimentoM > 0 && espessuraM > 0 && larguraM > 0 && pacotes > 0 && pecasPorPacote > 0;
   const quantidadeCavaco = num(f.quantidade_venda);
   const volumeFinal = isCavaco ? (f.unidade_venda === "m3" ? quantidadeCavaco : 0) : (f.volume_m3.trim() ? num(f.volume_m3) : auto);
   const valorTotal = num(f.valor_unitario) * (isCavaco ? quantidadeCavaco : volumeFinal);
@@ -155,7 +156,7 @@ function PacoteForm({ onSaved, pacote }: { onSaved: (p: Pacote) => void; pacote?
   const save = async () => {
     if (!f.descricao.trim() && !isCavaco) return toast.error("Informe o produto");
     if (isCavaco && quantidadeCavaco <= 0) return toast.error("Informe a quantidade de cavaco vendida");
-    if (!isCavaco && !temMedidas) return toast.error("Informe as três medidas em mm, a quantidade de pacotes e as peças por pacote");
+    if (!isCavaco && !temMedidas) return toast.error("Informe comprimento, espessura e largura em metros, além dos pacotes e peças por pacote");
     if (!isCavaco && (!Number.isInteger(pacotes) || !Number.isInteger(pecasPorPacote))) return toast.error("Pacotes e peças por pacote devem ser números inteiros");
     setSaving(true);
     try {
@@ -163,9 +164,10 @@ function PacoteForm({ onSaved, pacote }: { onSaved: (p: Pacote) => void; pacote?
         tipo_carga: f.tipo_carga,
         descricao: f.descricao.trim() || "Cavaco",
         cliente_nome: f.cliente_nome || null,
-        espessura_cm: isCavaco ? null : espessuraMm / 10,
-        largura_cm: isCavaco ? null : larguraMm / 10,
-        comprimento_m: isCavaco ? null : comprimentoMm / 1000,
+        // Mantém compatibilidade com o banco: espessura/largura são armazenadas em cm.
+        espessura_cm: isCavaco ? null : espessuraM * 100,
+        largura_cm: isCavaco ? null : larguraM * 100,
+        comprimento_m: isCavaco ? null : comprimentoM,
         qtd_blocos: isCavaco ? 0 : pacotes,
         pecas_por_pacote: isCavaco ? null : pecasPorPacote,
         qtd_pecas: isCavaco ? 0 : totalPecas,
@@ -215,13 +217,13 @@ function PacoteForm({ onSaved, pacote }: { onSaved: (p: Pacote) => void; pacote?
           <div className="space-y-1.5"><Label>Preço por {f.unidade_venda === "ton" ? "tonelada" : "m³"} (R$)</Label><Input inputMode="decimal" value={f.valor_unitario} onChange={(e) => setF({ ...f, valor_unitario: e.target.value })} placeholder="Ex.: 120" /></div>
           <div className="sm:col-span-3 rounded-md border border-primary/30 bg-primary/5 p-3 text-sm"><p>Quantidade da carga: <b>{quantidadeCavaco.toLocaleString("pt-BR")} {f.unidade_venda === "ton" ? "t" : "m³"}</b></p>{f.valor_unitario.trim() && <p>Valor total estimado: <b>{valorTotal.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</b></p>}<p className="text-muted-foreground">Esta carga será registrada como cavaco, sem exigir medidas de peças ou pacotes.</p></div>
         </> : <>
-          <div className="space-y-1.5"><Label>Espessura (mm)</Label><Input inputMode="decimal" value={f.espessura_mm} onChange={(e) => setF({ ...f, espessura_mm: e.target.value })} placeholder="Ex.: 9" /></div>
-          <div className="space-y-1.5"><Label>Largura (mm)</Label><Input inputMode="decimal" value={f.largura_mm} onChange={(e) => setF({ ...f, largura_mm: e.target.value })} placeholder="Ex.: 90" /></div>
-          <div className="space-y-1.5"><Label>Comprimento (mm)</Label><Input inputMode="decimal" value={f.comprimento_mm} onChange={(e) => setF({ ...f, comprimento_mm: e.target.value })} placeholder="Ex.: 1200" /></div>
+          <div className="space-y-1.5"><Label>Comprimento (m)</Label><Input inputMode="decimal" value={f.comprimento_m} onChange={(e) => setF({ ...f, comprimento_m: e.target.value })} placeholder="Ex.: 1,20" /></div>
+          <div className="space-y-1.5"><Label>Espessura (m)</Label><Input inputMode="decimal" value={f.espessura_m} onChange={(e) => setF({ ...f, espessura_m: e.target.value })} placeholder="Ex.: 0,09" /></div>
+          <div className="space-y-1.5"><Label>Largura (m)</Label><Input inputMode="decimal" value={f.largura_m} onChange={(e) => setF({ ...f, largura_m: e.target.value })} placeholder="Ex.: 0,019" /></div>
           <div className="space-y-1.5"><Label>Quantidade de pacotes</Label><Input type="number" min="1" step="1" value={f.qtd_blocos} onChange={(e) => setF({ ...f, qtd_blocos: e.target.value })} placeholder="Ex.: 12" /></div>
           <div className="space-y-1.5"><Label>Peças por pacote</Label><Input type="number" min="1" step="1" value={f.pecas_por_pacote} onChange={(e) => setF({ ...f, pecas_por_pacote: e.target.value })} placeholder="Ex.: 522" /></div>
           <div className="space-y-1.5"><Label>Volume manual (m³, opcional)</Label><Input inputMode="decimal" value={f.volume_m3} placeholder={temMedidas ? auto.toFixed(4) : "Automático"} onChange={(e) => setF({ ...f, volume_m3: e.target.value })} /></div>
-          <div className="sm:col-span-3 rounded-md border border-primary/30 bg-primary/5 p-3 text-sm">{temMedidas ? <><p>Total de peças: <b>{totalPecas.toLocaleString("pt-BR")}</b></p><p>Volume por peça: <b>{(auto / Math.max(totalPecas, 1)).toFixed(6)} m³</b></p><p>Volume total calculado: <b>{auto.toLocaleString("pt-BR", { minimumFractionDigits: 4, maximumFractionDigits: 4 })} m³</b></p>{f.volume_m3.trim() && <p>Será usado o volume manual informado.</p>}</> : "Preencha as três medidas em mm, a quantidade de pacotes e as peças por pacote para calcular automaticamente."}</div>
+          <div className="sm:col-span-3 rounded-md border border-primary/30 bg-primary/5 p-3 text-sm">{temMedidas ? <><p>Total de peças: <b>{totalPecas.toLocaleString("pt-BR")}</b></p><p>Volume por peça: <b>{(auto / Math.max(totalPecas, 1)).toFixed(6)} m³</b></p><p>Volume total calculado: <b>{auto.toLocaleString("pt-BR", { minimumFractionDigits: 4, maximumFractionDigits: 4 })} m³</b></p>{f.volume_m3.trim() && <p>Será usado o volume manual informado.</p>}</> : "Preencha comprimento, espessura e largura em metros, a quantidade de pacotes e as peças por pacote para calcular automaticamente."}</div>
           <div className="space-y-1.5"><Label>Preço por m³ (R$), opcional</Label><Input inputMode="decimal" value={f.valor_unitario} onChange={(e) => setF({ ...f, valor_unitario: e.target.value })} placeholder="Preço de venda" /></div>
           {f.valor_unitario.trim() && <div className="space-y-1.5"><Label>Valor total estimado</Label><div className="flex h-10 items-center rounded-md border bg-muted px-3 text-sm font-semibold">{valorTotal.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</div></div>}
         </>}
