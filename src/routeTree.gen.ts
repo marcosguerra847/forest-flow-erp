@@ -9,42 +9,42 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
-import { Route as XCodigoRouteImport } from './routes/x.$codigo'
-import { Route as RCodigoRouteImport } from './routes/r.$codigo'
-import { Route as AuthenticatedUsuariosRouteImport } from './routes/_authenticated/usuarios'
-import { Route as AuthenticatedTorasRouteImport } from './routes/_authenticated/toras'
-import { Route as AuthenticatedTalhoesRouteImport } from './routes/_authenticated/talhoes'
-import { Route as AuthenticatedRelatoriosRouteImport } from './routes/_authenticated/relatorios'
-import { Route as AuthenticatedRecebimentoRouteImport } from './routes/_authenticated/recebimento'
-import { Route as AuthenticatedRastreabilidadeRouteImport } from './routes/_authenticated/rastreabilidade'
-import { Route as AuthenticatedProdutosAcabadosRouteImport } from './routes/_authenticated/produtos-acabados'
-import { Route as AuthenticatedProducaoRouteImport } from './routes/_authenticated/producao'
-import { Route as AuthenticatedOrdensProducaoRouteImport } from './routes/_authenticated/ordens-producao'
-import { Route as AuthenticatedOrdensColheitaRouteImport } from './routes/_authenticated/ordens-colheita'
-import { Route as AuthenticatedOrcamentosRouteImport } from './routes/_authenticated/orcamentos'
-import { Route as AuthenticatedLotesRouteImport } from './routes/_authenticated/lotes'
-import { Route as AuthenticatedLogisticaRouteImport } from './routes/_authenticated/logistica'
-import { Route as AuthenticatedInventarioRouteImport } from './routes/_authenticated/inventario'
-import { Route as AuthenticatedFlorestalRouteImport } from './routes/_authenticated/florestal'
-import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authenticated/financeiro'
-import { Route as AuthenticatedFazendasRouteImport } from './routes/_authenticated/fazendas'
-import { Route as AuthenticatedExpedicaoRouteImport } from './routes/_authenticated/expedicao'
-import { Route as AuthenticatedEstoqueRouteImport } from './routes/_authenticated/estoque'
-import { Route as AuthenticatedDivergenciasRouteImport } from './routes/_authenticated/divergencias'
-import { Route as AuthenticatedComercialRouteImport } from './routes/_authenticated/comercial'
 import { Route as AuthenticatedCargasRouteImport } from './routes/_authenticated/cargas'
+import { Route as AuthenticatedComercialRouteImport } from './routes/_authenticated/comercial'
+import { Route as AuthenticatedDivergenciasRouteImport } from './routes/_authenticated/divergencias'
+import { Route as AuthenticatedEstoqueRouteImport } from './routes/_authenticated/estoque'
+import { Route as AuthenticatedExpedicaoRouteImport } from './routes/_authenticated/expedicao'
+import { Route as AuthenticatedFazendasRouteImport } from './routes/_authenticated/fazendas'
+import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authenticated/financeiro'
+import { Route as AuthenticatedFlorestalRouteImport } from './routes/_authenticated/florestal'
+import { Route as AuthenticatedInventarioRouteImport } from './routes/_authenticated/inventario'
+import { Route as AuthenticatedLogisticaRouteImport } from './routes/_authenticated/logistica'
+import { Route as AuthenticatedLotesRouteImport } from './routes/_authenticated/lotes'
+import { Route as AuthenticatedOrcamentosRouteImport } from './routes/_authenticated/orcamentos'
+import { Route as AuthenticatedOrdensColheitaRouteImport } from './routes/_authenticated/ordens-colheita'
+import { Route as AuthenticatedOrdensProducaoRouteImport } from './routes/_authenticated/ordens-producao'
+import { Route as AuthenticatedProducaoRouteImport } from './routes/_authenticated/producao'
+import { Route as AuthenticatedProdutosAcabadosRouteImport } from './routes/_authenticated/produtos-acabados'
+import { Route as AuthenticatedRastreabilidadeRouteImport } from './routes/_authenticated/rastreabilidade'
+import { Route as AuthenticatedRecebimentoRouteImport } from './routes/_authenticated/recebimento'
+import { Route as AuthenticatedRelatoriosRouteImport } from './routes/_authenticated/relatorios'
+import { Route as AuthenticatedTalhoesRouteImport } from './routes/_authenticated/talhoes'
+import { Route as AuthenticatedTorasRouteImport } from './routes/_authenticated/toras'
+import { Route as AuthenticatedUsuariosRouteImport } from './routes/_authenticated/usuarios'
+import { Route as RCodigoRouteImport } from './routes/r.$codigo'
+import { Route as XCodigoRouteImport } from './routes/x.$codigo'
 import { Route as AuthenticatedQrTipoCodigoRouteImport } from './routes/_authenticated/qr.$tipo.$codigo'
 
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
-  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
@@ -52,114 +52,14 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const XCodigoRoute = XCodigoRouteImport.update({
-  id: '/x/$codigo',
-  path: '/x/$codigo',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RCodigoRoute = RCodigoRouteImport.update({
-  id: '/r/$codigo',
-  path: '/r/$codigo',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedUsuariosRoute = AuthenticatedUsuariosRouteImport.update({
-  id: '/usuarios',
-  path: '/usuarios',
+const AuthenticatedCargasRoute = AuthenticatedCargasRouteImport.update({
+  id: '/cargas',
+  path: '/cargas',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedTorasRoute = AuthenticatedTorasRouteImport.update({
-  id: '/toras',
-  path: '/toras',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedTalhoesRoute = AuthenticatedTalhoesRouteImport.update({
-  id: '/talhoes',
-  path: '/talhoes',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedRelatoriosRoute = AuthenticatedRelatoriosRouteImport.update({
-  id: '/relatorios',
-  path: '/relatorios',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedRecebimentoRoute =
-  AuthenticatedRecebimentoRouteImport.update({
-    id: '/recebimento',
-    path: '/recebimento',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedRastreabilidadeRoute =
-  AuthenticatedRastreabilidadeRouteImport.update({
-    id: '/rastreabilidade',
-    path: '/rastreabilidade',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedProdutosAcabadosRoute =
-  AuthenticatedProdutosAcabadosRouteImport.update({
-    id: '/produtos-acabados',
-    path: '/produtos-acabados',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedProducaoRoute = AuthenticatedProducaoRouteImport.update({
-  id: '/producao',
-  path: '/producao',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedOrdensProducaoRoute =
-  AuthenticatedOrdensProducaoRouteImport.update({
-    id: '/ordens-producao',
-    path: '/ordens-producao',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedOrdensColheitaRoute =
-  AuthenticatedOrdensColheitaRouteImport.update({
-    id: '/ordens-colheita',
-    path: '/ordens-colheita',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedOrcamentosRoute = AuthenticatedOrcamentosRouteImport.update({
-  id: '/orcamentos',
-  path: '/orcamentos',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedLotesRoute = AuthenticatedLotesRouteImport.update({
-  id: '/lotes',
-  path: '/lotes',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedLogisticaRoute = AuthenticatedLogisticaRouteImport.update({
-  id: '/logistica',
-  path: '/logistica',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedInventarioRoute = AuthenticatedInventarioRouteImport.update({
-  id: '/inventario',
-  path: '/inventario',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedFlorestalRoute = AuthenticatedFlorestalRouteImport.update({
-  id: '/florestal',
-  path: '/florestal',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedFinanceiroRoute = AuthenticatedFinanceiroRouteImport.update({
-  id: '/financeiro',
-  path: '/financeiro',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedFazendasRoute = AuthenticatedFazendasRouteImport.update({
-  id: '/fazendas',
-  path: '/fazendas',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedExpedicaoRoute = AuthenticatedExpedicaoRouteImport.update({
-  id: '/expedicao',
-  path: '/expedicao',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedEstoqueRoute = AuthenticatedEstoqueRouteImport.update({
-  id: '/estoque',
-  path: '/estoque',
+const AuthenticatedComercialRoute = AuthenticatedComercialRouteImport.update({
+  id: '/comercial',
+  path: '/comercial',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedDivergenciasRoute =
@@ -168,15 +68,115 @@ const AuthenticatedDivergenciasRoute =
     path: '/divergencias',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedComercialRoute = AuthenticatedComercialRouteImport.update({
-  id: '/comercial',
-  path: '/comercial',
+const AuthenticatedEstoqueRoute = AuthenticatedEstoqueRouteImport.update({
+  id: '/estoque',
+  path: '/estoque',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedCargasRoute = AuthenticatedCargasRouteImport.update({
-  id: '/cargas',
-  path: '/cargas',
+const AuthenticatedExpedicaoRoute = AuthenticatedExpedicaoRouteImport.update({
+  id: '/expedicao',
+  path: '/expedicao',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedFazendasRoute = AuthenticatedFazendasRouteImport.update({
+  id: '/fazendas',
+  path: '/fazendas',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedFinanceiroRoute = AuthenticatedFinanceiroRouteImport.update({
+  id: '/financeiro',
+  path: '/financeiro',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedFlorestalRoute = AuthenticatedFlorestalRouteImport.update({
+  id: '/florestal',
+  path: '/florestal',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedInventarioRoute = AuthenticatedInventarioRouteImport.update({
+  id: '/inventario',
+  path: '/inventario',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedLogisticaRoute = AuthenticatedLogisticaRouteImport.update({
+  id: '/logistica',
+  path: '/logistica',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedLotesRoute = AuthenticatedLotesRouteImport.update({
+  id: '/lotes',
+  path: '/lotes',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedOrcamentosRoute = AuthenticatedOrcamentosRouteImport.update({
+  id: '/orcamentos',
+  path: '/orcamentos',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedOrdensColheitaRoute =
+  AuthenticatedOrdensColheitaRouteImport.update({
+    id: '/ordens-colheita',
+    path: '/ordens-colheita',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedOrdensProducaoRoute =
+  AuthenticatedOrdensProducaoRouteImport.update({
+    id: '/ordens-producao',
+    path: '/ordens-producao',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedProducaoRoute = AuthenticatedProducaoRouteImport.update({
+  id: '/producao',
+  path: '/producao',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedProdutosAcabadosRoute =
+  AuthenticatedProdutosAcabadosRouteImport.update({
+    id: '/produtos-acabados',
+    path: '/produtos-acabados',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedRastreabilidadeRoute =
+  AuthenticatedRastreabilidadeRouteImport.update({
+    id: '/rastreabilidade',
+    path: '/rastreabilidade',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedRecebimentoRoute =
+  AuthenticatedRecebimentoRouteImport.update({
+    id: '/recebimento',
+    path: '/recebimento',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedRelatoriosRoute = AuthenticatedRelatoriosRouteImport.update({
+  id: '/relatorios',
+  path: '/relatorios',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedTalhoesRoute = AuthenticatedTalhoesRouteImport.update({
+  id: '/talhoes',
+  path: '/talhoes',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedTorasRoute = AuthenticatedTorasRouteImport.update({
+  id: '/toras',
+  path: '/toras',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedUsuariosRoute = AuthenticatedUsuariosRouteImport.update({
+  id: '/usuarios',
+  path: '/usuarios',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const RCodigoRoute = RCodigoRouteImport.update({
+  id: '/r/$codigo',
+  path: '/r/$codigo',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const XCodigoRoute = XCodigoRouteImport.update({
+  id: '/x/$codigo',
+  path: '/x/$codigo',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedQrTipoCodigoRoute =
   AuthenticatedQrTipoCodigoRouteImport.update({
@@ -374,18 +374,18 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/_authenticated': {
       id: '/_authenticated'
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/': {
@@ -395,158 +395,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/x/$codigo': {
-      id: '/x/$codigo'
-      path: '/x/$codigo'
-      fullPath: '/x/$codigo'
-      preLoaderRoute: typeof XCodigoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/r/$codigo': {
-      id: '/r/$codigo'
-      path: '/r/$codigo'
-      fullPath: '/r/$codigo'
-      preLoaderRoute: typeof RCodigoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/usuarios': {
-      id: '/_authenticated/usuarios'
-      path: '/usuarios'
-      fullPath: '/usuarios'
-      preLoaderRoute: typeof AuthenticatedUsuariosRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/toras': {
-      id: '/_authenticated/toras'
-      path: '/toras'
-      fullPath: '/toras'
-      preLoaderRoute: typeof AuthenticatedTorasRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/talhoes': {
-      id: '/_authenticated/talhoes'
-      path: '/talhoes'
-      fullPath: '/talhoes'
-      preLoaderRoute: typeof AuthenticatedTalhoesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/relatorios': {
-      id: '/_authenticated/relatorios'
-      path: '/relatorios'
-      fullPath: '/relatorios'
-      preLoaderRoute: typeof AuthenticatedRelatoriosRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/recebimento': {
-      id: '/_authenticated/recebimento'
-      path: '/recebimento'
-      fullPath: '/recebimento'
-      preLoaderRoute: typeof AuthenticatedRecebimentoRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/rastreabilidade': {
-      id: '/_authenticated/rastreabilidade'
-      path: '/rastreabilidade'
-      fullPath: '/rastreabilidade'
-      preLoaderRoute: typeof AuthenticatedRastreabilidadeRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/produtos-acabados': {
-      id: '/_authenticated/produtos-acabados'
-      path: '/produtos-acabados'
-      fullPath: '/produtos-acabados'
-      preLoaderRoute: typeof AuthenticatedProdutosAcabadosRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/producao': {
-      id: '/_authenticated/producao'
-      path: '/producao'
-      fullPath: '/producao'
-      preLoaderRoute: typeof AuthenticatedProducaoRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/ordens-producao': {
-      id: '/_authenticated/ordens-producao'
-      path: '/ordens-producao'
-      fullPath: '/ordens-producao'
-      preLoaderRoute: typeof AuthenticatedOrdensProducaoRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/ordens-colheita': {
-      id: '/_authenticated/ordens-colheita'
-      path: '/ordens-colheita'
-      fullPath: '/ordens-colheita'
-      preLoaderRoute: typeof AuthenticatedOrdensColheitaRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/orcamentos': {
-      id: '/_authenticated/orcamentos'
-      path: '/orcamentos'
-      fullPath: '/orcamentos'
-      preLoaderRoute: typeof AuthenticatedOrcamentosRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/lotes': {
-      id: '/_authenticated/lotes'
-      path: '/lotes'
-      fullPath: '/lotes'
-      preLoaderRoute: typeof AuthenticatedLotesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/logistica': {
-      id: '/_authenticated/logistica'
-      path: '/logistica'
-      fullPath: '/logistica'
-      preLoaderRoute: typeof AuthenticatedLogisticaRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/inventario': {
-      id: '/_authenticated/inventario'
-      path: '/inventario'
-      fullPath: '/inventario'
-      preLoaderRoute: typeof AuthenticatedInventarioRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/florestal': {
-      id: '/_authenticated/florestal'
-      path: '/florestal'
-      fullPath: '/florestal'
-      preLoaderRoute: typeof AuthenticatedFlorestalRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/financeiro': {
-      id: '/_authenticated/financeiro'
-      path: '/financeiro'
-      fullPath: '/financeiro'
-      preLoaderRoute: typeof AuthenticatedFinanceiroRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/fazendas': {
-      id: '/_authenticated/fazendas'
-      path: '/fazendas'
-      fullPath: '/fazendas'
-      preLoaderRoute: typeof AuthenticatedFazendasRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/expedicao': {
-      id: '/_authenticated/expedicao'
-      path: '/expedicao'
-      fullPath: '/expedicao'
-      preLoaderRoute: typeof AuthenticatedExpedicaoRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/estoque': {
-      id: '/_authenticated/estoque'
-      path: '/estoque'
-      fullPath: '/estoque'
-      preLoaderRoute: typeof AuthenticatedEstoqueRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/divergencias': {
-      id: '/_authenticated/divergencias'
-      path: '/divergencias'
-      fullPath: '/divergencias'
-      preLoaderRoute: typeof AuthenticatedDivergenciasRouteImport
+    '/_authenticated/cargas': {
+      id: '/_authenticated/cargas'
+      path: '/cargas'
+      fullPath: '/cargas'
+      preLoaderRoute: typeof AuthenticatedCargasRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/comercial': {
@@ -556,12 +409,159 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedComercialRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/cargas': {
-      id: '/_authenticated/cargas'
-      path: '/cargas'
-      fullPath: '/cargas'
-      preLoaderRoute: typeof AuthenticatedCargasRouteImport
+    '/_authenticated/divergencias': {
+      id: '/_authenticated/divergencias'
+      path: '/divergencias'
+      fullPath: '/divergencias'
+      preLoaderRoute: typeof AuthenticatedDivergenciasRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/estoque': {
+      id: '/_authenticated/estoque'
+      path: '/estoque'
+      fullPath: '/estoque'
+      preLoaderRoute: typeof AuthenticatedEstoqueRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/expedicao': {
+      id: '/_authenticated/expedicao'
+      path: '/expedicao'
+      fullPath: '/expedicao'
+      preLoaderRoute: typeof AuthenticatedExpedicaoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/fazendas': {
+      id: '/_authenticated/fazendas'
+      path: '/fazendas'
+      fullPath: '/fazendas'
+      preLoaderRoute: typeof AuthenticatedFazendasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/financeiro': {
+      id: '/_authenticated/financeiro'
+      path: '/financeiro'
+      fullPath: '/financeiro'
+      preLoaderRoute: typeof AuthenticatedFinanceiroRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/florestal': {
+      id: '/_authenticated/florestal'
+      path: '/florestal'
+      fullPath: '/florestal'
+      preLoaderRoute: typeof AuthenticatedFlorestalRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/inventario': {
+      id: '/_authenticated/inventario'
+      path: '/inventario'
+      fullPath: '/inventario'
+      preLoaderRoute: typeof AuthenticatedInventarioRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/logistica': {
+      id: '/_authenticated/logistica'
+      path: '/logistica'
+      fullPath: '/logistica'
+      preLoaderRoute: typeof AuthenticatedLogisticaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/lotes': {
+      id: '/_authenticated/lotes'
+      path: '/lotes'
+      fullPath: '/lotes'
+      preLoaderRoute: typeof AuthenticatedLotesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/orcamentos': {
+      id: '/_authenticated/orcamentos'
+      path: '/orcamentos'
+      fullPath: '/orcamentos'
+      preLoaderRoute: typeof AuthenticatedOrcamentosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ordens-colheita': {
+      id: '/_authenticated/ordens-colheita'
+      path: '/ordens-colheita'
+      fullPath: '/ordens-colheita'
+      preLoaderRoute: typeof AuthenticatedOrdensColheitaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ordens-producao': {
+      id: '/_authenticated/ordens-producao'
+      path: '/ordens-producao'
+      fullPath: '/ordens-producao'
+      preLoaderRoute: typeof AuthenticatedOrdensProducaoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/producao': {
+      id: '/_authenticated/producao'
+      path: '/producao'
+      fullPath: '/producao'
+      preLoaderRoute: typeof AuthenticatedProducaoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/produtos-acabados': {
+      id: '/_authenticated/produtos-acabados'
+      path: '/produtos-acabados'
+      fullPath: '/produtos-acabados'
+      preLoaderRoute: typeof AuthenticatedProdutosAcabadosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/rastreabilidade': {
+      id: '/_authenticated/rastreabilidade'
+      path: '/rastreabilidade'
+      fullPath: '/rastreabilidade'
+      preLoaderRoute: typeof AuthenticatedRastreabilidadeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/recebimento': {
+      id: '/_authenticated/recebimento'
+      path: '/recebimento'
+      fullPath: '/recebimento'
+      preLoaderRoute: typeof AuthenticatedRecebimentoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/relatorios': {
+      id: '/_authenticated/relatorios'
+      path: '/relatorios'
+      fullPath: '/relatorios'
+      preLoaderRoute: typeof AuthenticatedRelatoriosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/talhoes': {
+      id: '/_authenticated/talhoes'
+      path: '/talhoes'
+      fullPath: '/talhoes'
+      preLoaderRoute: typeof AuthenticatedTalhoesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/toras': {
+      id: '/_authenticated/toras'
+      path: '/toras'
+      fullPath: '/toras'
+      preLoaderRoute: typeof AuthenticatedTorasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/usuarios': {
+      id: '/_authenticated/usuarios'
+      path: '/usuarios'
+      fullPath: '/usuarios'
+      preLoaderRoute: typeof AuthenticatedUsuariosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/r/$codigo': {
+      id: '/r/$codigo'
+      path: '/r/$codigo'
+      fullPath: '/r/$codigo'
+      preLoaderRoute: typeof RCodigoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/x/$codigo': {
+      id: '/x/$codigo'
+      path: '/x/$codigo'
+      fullPath: '/x/$codigo'
+      preLoaderRoute: typeof XCodigoRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/qr/$tipo/$codigo': {
       id: '/_authenticated/qr/$tipo/$codigo'
