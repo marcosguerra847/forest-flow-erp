@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/PageHeader";
@@ -10,31 +10,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
-import { Package2, Plus, QrCode, Trash2, Copy, FileDown, Printer, Pencil, PlusCircle } from "lucide-react";
+import { Package2, Plus, QrCode, Trash2, Copy, FileDown, Printer, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { QrDisplay } from "@/components/QrDisplay";
-import { gerarNotaPacote, calcM3, type PacoteNota, type ItemRomaneioNota } from "@/lib/nota-expedicao";
+import { gerarNotaPacote, calcM3, type PacoteNota } from "@/lib/nota-expedicao";
 
-type Pacote = PacoteNota & { id: string; token: string; forma_pagamento?: string | null; situacao_pagamento?: "pendente" | "pago" | null; valor_previsto?: number | null };
-type ItemForm = { descricao: string; comprimento_m: string; espessura_m: string; largura_m: string; qtd_blocos: string; pecas_por_pacote: string; valor_unitario: string };
-
-const novoItem = (): ItemForm => ({ descricao: "", comprimento_m: "", espessura_m: "", largura_m: "", qtd_blocos: "", pecas_por_pacote: "", valor_unitario: "" });
-const num = (s: string | number | null | undefined) => Number(String(s ?? "").replace(",", ".")) || 0;
-const moeda = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+type Pacote = PacoteNota & { id: string; token: string };
 
 export const Route = createFileRoute("/_authenticated/expedicao")({
-  head: () => ({ meta: [{ title: "Expedição · Fazenda Bela Vista" }, { name: "description", content: "Romaneios de expedição com múltiplos produtos." }] }),
+  head: () => ({ meta: [{ title: "Expedição · Fazenda Bela Vista" }, { name: "description", content: "Pacotes prontos para envio com QR para baixa pelo celular." }] }),
   component: ExpedicaoPage,
 });
 
-const linkOperador = (p: Pacote) => `${typeof window !== "undefined" ? window.location.origin : ""}/x/${encodeURIComponent(p.codigo)}?t=${p.token}`;
-
-async function pacoteComItens(p: Pacote): Promise<Pacote> {
-  if (p.tipo_carga === "cavaco") return p;
-  const { data, error } = await supabase.from("itens_romaneio" as never).select("*").eq("romaneio_id", p.id).order("criado_em", { ascending: true });
-  if (error) throw error;
-  return { ...p, itens: (data ?? []) as unknown as ItemRomaneioNota[] };
-}
+const linkOperador = (p: Pacote) =>
+  `${typeof window !== "undefined" ? window.location.origin : ""}/x/${encodeURIComponent(p.codigo)}?t=${p.token}`;
 
 function ExpedicaoPage() {
   const qc = useQueryClient();
@@ -42,7 +31,8 @@ function ExpedicaoPage() {
   const [qr, setQr] = useState<Pacote | null>(null);
   const [editing, setEditing] = useState<Pacote | null>(null);
   const { data: rows = [], isLoading } = useQuery({
-    queryKey: ["pacotes"], refetchInterval: 15000,
+    queryKey: ["pacotes"],
+    refetchInterval: 15000,
     queryFn: async () => {
       const { data, error } = await supabase.from("pacotes_expedicao" as never).select("*").order("criado_em", { ascending: false });
       if (error) throw error;
@@ -51,192 +41,203 @@ function ExpedicaoPage() {
   });
   const prontos = rows.filter((r) => r.status === "pronto");
   const exp = rows.filter((r) => r.status !== "pronto");
-  const abrirPdf = async (p: Pacote, imprimir = false) => {
-    try { await gerarNotaPacote(await pacoteComItens(p), linkOperador(p), imprimir); }
-    catch (e) { toast.error(`Não foi possível gerar a nota: ${(e as Error).message}`); }
-  };
 
-  return <div className="space-y-8">
-    <PageHeader eyebrow="Pátio · Estoque" title="Expedição de romaneios"
-      description="Cadastre uma carga com vários produtos, calcule a cubagem e controle o pagamento."
-      actions={<Dialog open={open} onOpenChange={setOpen}><DialogTrigger asChild><Button><Plus className="mr-1 h-4 w-4" /> Novo romaneio</Button></DialogTrigger><RomaneioForm onSaved={(p) => { setOpen(false); qc.invalidateQueries({ queryKey: ["pacotes"] }); setQr(p); }} /></Dialog>} />
-    <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-      <KpiCard label="Prontos p/ envio" value={prontos.length} icon={Package2} tone="warning" />
-      <KpiCard label="Pacotes prontos" value={prontos.reduce((s, r) => s + Number(r.qtd_blocos || 0), 0)} icon={Package2} />
-      <KpiCard label="Romaneios expedidos" value={exp.length} icon={Package2} tone="success" />
-      <KpiCard label="m³ expedidos" value={exp.reduce((s, r) => s + Number(r.volume_expedido_m3 ?? r.volume_m3 ?? 0), 0).toLocaleString("pt-BR", { maximumFractionDigits: 3 })} icon={Package2} />
+  return (
+    <div className="space-y-8">
+      <PageHeader eyebrow="Pátio · Estoque" title="Expedição de pacotes"
+        description="Cada pacote pronto recebe um QR para colar na carga. O operador escaneia pelo celular, confere as quantidades e dá baixa de saída — sem login."
+        actions={
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild><Button><Plus className="mr-1 h-4 w-4" /> Nova carga</Button></DialogTrigger>
+            <PacoteForm onSaved={(p) => { setOpen(false); qc.invalidateQueries({ queryKey: ["pacotes"] }); setQr(p); }} />
+          </Dialog>
+        } />
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+        <KpiCard label="Prontos p/ envio" value={prontos.length} icon={Package2} tone="warning" />
+        <KpiCard label="Blocos prontos" value={prontos.reduce((s, r) => s + r.qtd_blocos, 0)} icon={Package2} />
+        <KpiCard label="Expedidos" value={exp.length} icon={Package2} tone="success" />
+        <KpiCard label="m³ expedidos" value={exp.reduce((s, r) => s + Number(r.volume_expedido_m3 ?? 0), 0).toFixed(1)} icon={Package2} />
+      </div>
+      {isLoading ? <div className="text-sm text-muted-foreground">Carregando...</div> : (
+        <DataTable rows={rows} columns={[
+          { key: "codigo", label: "Código", render: (r) => <span className="font-mono text-xs">{r.codigo}</span> },
+          { key: "descricao", label: "Produto", render: (r) => <span>{r.descricao || (r.tipo_carga === "cavaco" ? "Cavaco" : "—")}</span> },
+          { key: "tipo_carga", label: "Tipo", render: (r) => r.tipo_carga === "cavaco" ? "Cavaco" : "Madeira serrada" },
+          { key: "cliente_nome", label: "Cliente" },
+          { key: "qtd_blocos", label: "Blocos (prev/env)", align: "right", render: (r) => `${r.qtd_blocos} / ${r.qtd_blocos_expedida ?? "—"}` },
+          { key: "qtd_pecas", label: "Peças (prev/env)", align: "right", render: (r) => `${r.qtd_pecas} / ${r.qtd_pecas_expedida ?? "—"}` },
+          { key: "volume_m3", label: "Quantidade (prev/env)", align: "right", render: (r) => r.tipo_carga === "cavaco" ? `${Number(r.quantidade_venda ?? 0).toLocaleString("pt-BR", { maximumFractionDigits: 3 })} ${r.unidade_venda === "ton" ? "t" : "m³"} / ${r.quantidade_expedida != null ? `${Number(r.quantidade_expedida).toLocaleString("pt-BR", { maximumFractionDigits: 3 })} ${r.unidade_venda === "ton" ? "t" : "m³"}` : "—"}` : `${Number(r.volume_m3).toFixed(2)} / ${r.volume_expedido_m3 != null ? Number(r.volume_expedido_m3).toFixed(2) : "—"} m³` },
+          { key: "status", label: "Status", render: (r) => (
+            <StatusBadge tone={r.status === "pronto" ? "warning" : "success"}>
+              {r.status === "pronto" ? "pronto" : `saiu ${r.expedido_em ? new Date(r.expedido_em).toLocaleDateString("pt-BR") : ""} · ${r.operador_nome ?? ""}`}
+            </StatusBadge>) },
+          { key: "acoes", label: "", render: (r) => (
+            <div className="flex justify-end gap-1">
+              <Button size="icon" variant="ghost" title="Editar carga" onClick={() => setEditing(r)}><Pencil className="h-4 w-4" /></Button>
+              <Button size="icon" variant="ghost" title="Baixar nota" onClick={() => gerarNotaPacote(r, linkOperador(r))}><FileDown className="h-4 w-4" /></Button>
+              <Button size="icon" variant="ghost" onClick={() => setQr(r)}><QrCode className="h-4 w-4" /></Button>
+              <Button size="icon" variant="ghost" className="text-destructive hover:text-destructive" onClick={async () => {
+                if (!confirm(`Excluir pacote ${r.codigo}?`)) return;
+                const { error } = await supabase.from("pacotes_expedicao" as never).delete().eq("id", r.id);
+                if (error) toast.error(error.message); else { toast.success("Excluído"); qc.invalidateQueries({ queryKey: ["pacotes"] }); }
+              }}><Trash2 className="h-4 w-4" /></Button>
+            </div>) },
+        ]} />
+      )}
+      <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
+        {editing && <PacoteForm pacote={editing} onSaved={(p) => { setEditing(null); qc.invalidateQueries({ queryKey: ["pacotes"] }); if (qr?.id === p.id) setQr(p); }} />}
+      </Dialog>
+      <Dialog open={!!qr} onOpenChange={(o) => !o && setQr(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Etiqueta do pacote {qr?.codigo}</DialogTitle></DialogHeader>
+          {qr && (
+            <div className="flex flex-col items-center gap-3 py-2">
+              <QrDisplay codigo={qr.codigo} value={linkOperador(qr)} size={220}
+                tituloEtiqueta="Pacote para expedição"
+                details={[
+                  { label: "Tipo", value: qr.tipo_carga === "cavaco" ? "Cavaco" : "Madeira serrada" },
+                  { label: "Produto", value: qr.descricao || (qr.tipo_carga === "cavaco" ? "Cavaco" : "—") },
+                  { label: "Cliente", value: qr.cliente_nome ?? "—" },
+                  ...(qr.espessura_cm && qr.largura_cm && qr.comprimento_m ? [{ label: "Medidas", value: `${(Number(qr.espessura_cm) * 10).toLocaleString("pt-BR")} mm x ${(Number(qr.largura_cm) * 10).toLocaleString("pt-BR")} mm x ${(Number(qr.comprimento_m) * 1000).toLocaleString("pt-BR")} mm` }] : []),
+                  { label: "Peças por pacote", value: String(qr.pecas_por_pacote ?? "—") },
+                  { label: "Blocos", value: String(qr.qtd_blocos) },
+                  { label: "Peças", value: String(qr.qtd_pecas) },
+                  { label: qr.tipo_carga === "cavaco" ? "Quantidade vendida" : "Volume", value: qr.tipo_carga === "cavaco" ? `${Number(qr.quantidade_venda ?? 0).toLocaleString("pt-BR")} ${qr.unidade_venda === "ton" ? "toneladas" : "m³"}` : `${Number(qr.volume_m3).toFixed(2)} m³` },
+                  ...(qr.valor_total != null ? [{ label: "Valor total", value: Number(qr.valor_total).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) }] : []),
+                ]}
+                notaEtiqueta="Operador: escaneie com o celular para conferir e dar baixa de saída." />
+              <div className="flex flex-wrap justify-center gap-2">
+                <Button size="sm" onClick={() => gerarNotaPacote(qr, linkOperador(qr))}><FileDown className="mr-1 h-3.5 w-3.5" /> Baixar nota (PDF)</Button>
+                <Button size="sm" variant="outline" onClick={() => gerarNotaPacote(qr, linkOperador(qr), true)}><Printer className="mr-1 h-3.5 w-3.5" /> Imprimir nota</Button>
+                <Button size="sm" variant="ghost" onClick={() => { navigator.clipboard.writeText(linkOperador(qr)); toast.success("Link copiado"); }}>
+                  <Copy className="mr-1 h-3.5 w-3.5" /> Copiar link
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
-    {isLoading ? <div className="text-sm text-muted-foreground">Carregando...</div> : <DataTable rows={rows} columns={[
-      { key: "codigo", label: "Romaneio", render: (r) => <span className="font-mono text-xs">{r.codigo}</span> },
-      { key: "descricao", label: "Produtos", render: (r) => <span>{r.descricao || (r.tipo_carga === "cavaco" ? "Cavaco" : "Romaneio")}</span> },
-      { key: "cliente_nome", label: "Cliente" },
-      { key: "qtd_blocos", label: "Pacotes", align: "right", render: (r) => String(r.qtd_blocos ?? 0) },
-      { key: "qtd_pecas", label: "Peças", align: "right", render: (r) => Number(r.qtd_pecas ?? 0).toLocaleString("pt-BR") },
-      { key: "volume_m3", label: "Volume (m³)", align: "right", render: (r) => Number(r.volume_m3 ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 3, maximumFractionDigits: 3 }) },
-      { key: "valor_previsto", label: "Valor", align: "right", render: (r) => moeda(Number(r.valor_previsto ?? r.valor_total ?? 0)) },
-      { key: "situacao_pagamento", label: "Pagamento", render: (r) => <StatusBadge tone={r.situacao_pagamento === "pago" ? "success" : "warning"}>{r.situacao_pagamento === "pago" ? "Pago" : "Pendente"}</StatusBadge> },
-      { key: "status", label: "Expedição", render: (r) => <StatusBadge tone={r.status === "pronto" ? "warning" : "success"}>{r.status === "pronto" ? "Pronto" : `Expedido ${r.expedido_em ? new Date(r.expedido_em).toLocaleDateString("pt-BR") : ""}`}</StatusBadge> },
-      { key: "acoes", label: "", render: (r) => <div className="flex justify-end gap-1">
-        <Button size="icon" variant="ghost" title="Editar romaneio" onClick={() => setEditing(r)}><Pencil className="h-4 w-4" /></Button>
-        <Button size="icon" variant="ghost" title="Baixar nota" onClick={() => void abrirPdf(r)}><FileDown className="h-4 w-4" /></Button>
-        <Button size="icon" variant="ghost" title="QR Code" onClick={() => setQr(r)}><QrCode className="h-4 w-4" /></Button>
-        <Button size="icon" variant="ghost" className="text-destructive hover:text-destructive" title="Excluir" onClick={async () => {
-          if (!confirm(`Excluir romaneio ${r.codigo}? Os produtos vinculados também serão excluídos.`)) return;
-          const { error } = await supabase.from("pacotes_expedicao" as never).delete().eq("id", r.id);
-          if (error) toast.error(error.message); else { toast.success("Romaneio excluído"); qc.invalidateQueries({ queryKey: ["pacotes"] }); }
-        }}><Trash2 className="h-4 w-4" /></Button>
-      </div> },
-    ]} />}
-    <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>{editing && <RomaneioForm pacote={editing} onSaved={(p) => { setEditing(null); qc.invalidateQueries({ queryKey: ["pacotes"] }); if (qr?.id === p.id) setQr(p); }} />}</Dialog>
-    <Dialog open={!!qr} onOpenChange={(o) => !o && setQr(null)}><DialogContent>
-      <DialogHeader><DialogTitle>Romaneio {qr?.codigo}</DialogTitle></DialogHeader>
-      {qr && <div className="flex flex-col items-center gap-3 py-2">
-        <QrDisplay codigo={qr.codigo} value={linkOperador(qr)} size={220} tituloEtiqueta="Romaneio para expedição" details={[
-          { label: "Produtos", value: qr.descricao || "Romaneio de produtos" }, { label: "Cliente", value: qr.cliente_nome ?? "—" },
-          { label: "Pacotes", value: String(qr.qtd_blocos ?? 0) }, { label: "Peças", value: Number(qr.qtd_pecas ?? 0).toLocaleString("pt-BR") },
-          { label: "Volume", value: `${Number(qr.volume_m3 ?? 0).toLocaleString("pt-BR", { maximumFractionDigits: 4 })} m³` },
-          { label: "Valor", value: moeda(Number(qr.valor_previsto ?? qr.valor_total ?? 0)) },
-          { label: "Pagamento", value: qr.situacao_pagamento === "pago" ? "Pago" : "Pendente" },
-        ]} notaEtiqueta="Operador: escaneie com o celular para conferir e dar baixa de saída." />
-        <div className="flex flex-wrap justify-center gap-2">
-          <Button size="sm" onClick={() => void abrirPdf(qr)}><FileDown className="mr-1 h-3.5 w-3.5" /> Baixar nota (PDF)</Button>
-          <Button size="sm" variant="outline" onClick={() => void abrirPdf(qr, true)}><Printer className="mr-1 h-3.5 w-3.5" /> Imprimir nota</Button>
-          <Button size="sm" variant="ghost" onClick={() => { navigator.clipboard.writeText(linkOperador(qr)); toast.success("Link copiado"); }}><Copy className="mr-1 h-3.5 w-3.5" /> Copiar link</Button>
-        </div>
-      </div>}
-    </DialogContent></Dialog>
-  </div>;
+  );
 }
 
-function RomaneioForm({ onSaved, pacote }: { onSaved: (p: Pacote) => void; pacote?: Pacote }) {
-  const [tipo, setTipo] = useState(pacote?.tipo_carga ?? "madeira");
-  const [cliente, setCliente] = useState(pacote?.cliente_nome ?? "");
-  const [observacoes, setObservacoes] = useState(pacote?.observacoes ?? "");
-  const [formaPagamento, setFormaPagamento] = useState(pacote?.forma_pagamento ?? "pix");
-  const [situacaoPagamento, setSituacaoPagamento] = useState<"pendente" | "pago">(pacote?.situacao_pagamento === "pago" ? "pago" : "pendente");
-  const [itens, setItens] = useState<ItemForm[]>([novoItem()]);
-  const [unidade, setUnidade] = useState(pacote?.unidade_venda ?? "m3");
-  const [quantidadeCavaco, setQuantidadeCavaco] = useState(String(pacote?.quantidade_venda ?? ""));
-  const [precoCavaco, setPrecoCavaco] = useState(String(pacote?.valor_unitario ?? ""));
-  const [loadingItems, setLoadingItems] = useState(Boolean(pacote && pacote.tipo_carga !== "cavaco"));
+function PacoteForm({ onSaved, pacote }: { onSaved: (p: Pacote) => void; pacote?: Pacote }) {
+  const [f, setF] = useState(() => ({
+    tipo_carga: pacote?.tipo_carga ?? "madeira",
+    descricao: pacote?.descricao ?? "",
+    cliente_nome: pacote?.cliente_nome ?? "",
+    espessura_mm: pacote?.espessura_cm != null ? String(Number(pacote.espessura_cm) * 10) : "",
+    largura_mm: pacote?.largura_cm != null ? String(Number(pacote.largura_cm) * 10) : "",
+    comprimento_mm: pacote?.comprimento_m != null ? String(Number(pacote.comprimento_m) * 1000) : "",
+    qtd_blocos: String(pacote?.qtd_blocos ?? ""),
+    pecas_por_pacote: pacote?.pecas_por_pacote != null ? String(pacote.pecas_por_pacote) : "",
+    volume_m3: pacote?.tipo_carga === "cavaco" ? "" : "",
+    unidade_venda: pacote?.unidade_venda ?? "m3",
+    quantidade_venda: pacote?.quantidade_venda != null ? String(pacote.quantidade_venda) : "",
+    valor_unitario: pacote?.valor_unitario != null ? String(pacote.valor_unitario) : "",
+    data_saida_carga: pacote?.data_saida_carga
+      ? String(pacote.data_saida_carga).slice(0, 10)
+      : pacote?.expedido_em
+        ? String(pacote.expedido_em).slice(0, 10)
+        : "",
+    placa_caminhao: pacote?.placa_caminhao ?? "",
+    observacoes: pacote?.observacoes ?? "",
+  }));
   const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    let active = true;
-    if (!pacote || pacote.tipo_carga === "cavaco") { setLoadingItems(false); return; }
-    (async () => {
-      const { data, error } = await supabase.from("itens_romaneio" as never).select("*").eq("romaneio_id", pacote.id).order("criado_em", { ascending: true });
-      if (!active) return;
-      if (error) { toast.error(`Não foi possível carregar os produtos: ${error.message}`); setLoadingItems(false); return; }
-      const found = (data ?? []) as unknown as ItemRomaneioNota[];
-      if (found.length) setItens(found.map((i) => ({ descricao: i.descricao, comprimento_m: String(i.comprimento_m), espessura_m: String(i.espessura_m), largura_m: String(i.largura_m), qtd_blocos: String(i.qtd_blocos), pecas_por_pacote: String(i.pecas_por_pacote), valor_unitario: String(i.valor_unitario) })));
-      else if (pacote.comprimento_m && pacote.espessura_cm && pacote.largura_cm) setItens([{ descricao: pacote.descricao, comprimento_m: String(pacote.comprimento_m), espessura_m: String(Number(pacote.espessura_cm) / 100), largura_m: String(Number(pacote.largura_cm) / 100), qtd_blocos: String(pacote.qtd_blocos), pecas_por_pacote: String(pacote.pecas_por_pacote ?? (pacote.qtd_blocos ? Math.round(pacote.qtd_pecas / pacote.qtd_blocos) : 0)), valor_unitario: String(pacote.valor_unitario ?? "") }]);
-      setLoadingItems(false);
-    })();
-    return () => { active = false; };
-  }, [pacote]);
-
-  const calculados = itens.map((i) => {
-    const qtdBlocos = num(i.qtd_blocos), pecasPorPacote = num(i.pecas_por_pacote), qtdPecas = qtdBlocos * pecasPorPacote;
-    const volume = calcM3(num(i.comprimento_m), num(i.espessura_m), num(i.largura_m), qtdPecas);
-    const valor = volume * num(i.valor_unitario);
-    return { ...i, qtdBlocos, pecasPorPacote, qtdPecas, volume, valor };
-  });
-  const totalPacotes = calculados.reduce((s, i) => s + i.qtdBlocos, 0);
-  const totalPecas = calculados.reduce((s, i) => s + i.qtdPecas, 0);
-  const totalVolume = calculados.reduce((s, i) => s + i.volume, 0);
-  const totalValor = tipo === "cavaco" ? num(quantidadeCavaco) * num(precoCavaco) : calculados.reduce((s, i) => s + i.valor, 0);
-  const atualizaItem = (index: number, campo: keyof ItemForm, valor: string) => setItens((old) => old.map((i, ix) => ix === index ? { ...i, [campo]: valor } : i));
+  const num = (s: string) => Number(s.replace(",", ".")) || 0;
+  const isCavaco = f.tipo_carga === "cavaco";
+  const pacotes = num(f.qtd_blocos);
+  const pecasPorPacote = num(f.pecas_por_pacote);
+  const totalPecas = pacotes * pecasPorPacote;
+  const espessuraMm = num(f.espessura_mm);
+  const larguraMm = num(f.largura_mm);
+  const comprimentoMm = num(f.comprimento_mm);
+  const auto = calcM3(espessuraMm, larguraMm, comprimentoMm, totalPecas);
+  const temMedidas = espessuraMm > 0 && larguraMm > 0 && comprimentoMm > 0 && pacotes > 0 && pecasPorPacote > 0;
+  const quantidadeCavaco = num(f.quantidade_venda);
+  const volumeFinal = isCavaco ? (f.unidade_venda === "m3" ? quantidadeCavaco : 0) : (f.volume_m3.trim() ? num(f.volume_m3) : auto);
+  const valorTotal = num(f.valor_unitario) * (isCavaco ? quantidadeCavaco : volumeFinal);
 
   const save = async () => {
-    if (tipo !== "cavaco") {
-      if (!calculados.length) return toast.error("Adicione pelo menos um produto");
-      for (let i = 0; i < calculados.length; i++) {
-        const p = calculados[i];
-        if (!p.descricao.trim()) return toast.error(`Informe a descrição do produto ${i + 1}`);
-        if ([p.comprimento_m, p.espessura_m, p.largura_m].some((v) => num(v) <= 0)) return toast.error(`Informe as três medidas em metros do produto ${i + 1}`);
-        if (!Number.isInteger(p.qtdBlocos) || p.qtdBlocos <= 0 || !Number.isInteger(p.pecasPorPacote) || p.pecasPorPacote <= 0) return toast.error(`Pacotes e peças por pacote devem ser inteiros positivos (produto ${i + 1})`);
-      }
-    } else if (num(quantidadeCavaco) <= 0) return toast.error("Informe a quantidade de cavaco");
+    if (!f.descricao.trim() && !isCavaco) return toast.error("Informe o produto");
+    if (isCavaco && quantidadeCavaco <= 0) return toast.error("Informe a quantidade de cavaco vendida");
+    if (!isCavaco && !temMedidas) return toast.error("Informe as três medidas em mm, a quantidade de pacotes e as peças por pacote");
+    if (!isCavaco && (!Number.isInteger(pacotes) || !Number.isInteger(pecasPorPacote))) return toast.error("Pacotes e peças por pacote devem ser números inteiros");
     setSaving(true);
     try {
-      const isCavaco = tipo === "cavaco";
-      const base: Record<string, unknown> = {
-        tipo_carga: tipo,
-        descricao: isCavaco ? "Cavaco" : calculados.length === 1 ? calculados[0].descricao.trim() : `Romaneio com ${calculados.length} produtos`,
-        cliente_nome: cliente.trim() || null,
-        espessura_cm: !isCavaco && calculados.length === 1 ? num(calculados[0].espessura_m) * 100 : null,
-        largura_cm: !isCavaco && calculados.length === 1 ? num(calculados[0].largura_m) * 100 : null,
-        comprimento_m: !isCavaco && calculados.length === 1 ? num(calculados[0].comprimento_m) : null,
-        qtd_blocos: isCavaco ? 0 : totalPacotes,
-        pecas_por_pacote: !isCavaco && calculados.length === 1 ? calculados[0].pecasPorPacote : null,
+      const base = {
+        tipo_carga: f.tipo_carga,
+        descricao: f.descricao.trim() || "Cavaco",
+        cliente_nome: f.cliente_nome || null,
+        espessura_cm: isCavaco ? null : espessuraMm / 10,
+        largura_cm: isCavaco ? null : larguraMm / 10,
+        comprimento_m: isCavaco ? null : comprimentoMm / 1000,
+        qtd_blocos: isCavaco ? 0 : pacotes,
+        pecas_por_pacote: isCavaco ? null : pecasPorPacote,
         qtd_pecas: isCavaco ? 0 : totalPecas,
-        volume_m3: Number((isCavaco ? (unidade === "m3" ? num(quantidadeCavaco) : 0) : totalVolume).toFixed(6)),
-        unidade_venda: isCavaco ? unidade : "m3",
-        quantidade_venda: isCavaco ? num(quantidadeCavaco) : Number(totalVolume.toFixed(6)),
-        valor_unitario: isCavaco ? (precoCavaco.trim() ? num(precoCavaco) : null) : (totalVolume > 0 ? Number((totalValor / totalVolume).toFixed(2)) : null),
-        valor_total: Number(totalValor.toFixed(2)),
-        valor_previsto: Number(totalValor.toFixed(2)),
-        forma_pagamento: formaPagamento,
-        situacao_pagamento: situacaoPagamento,
-        observacoes: observacoes.trim() || null,
+        volume_m3: Number(volumeFinal.toFixed(6)),
+        unidade_venda: isCavaco ? f.unidade_venda : "m3",
+        quantidade_venda: isCavaco ? quantidadeCavaco : volumeFinal,
+        valor_unitario: f.valor_unitario.trim() ? num(f.valor_unitario) : null,
+        valor_total: f.valor_unitario.trim() ? Number(valorTotal.toFixed(2)) : null,
+        data_saida_carga: f.data_saida_carga || null,
+        placa_caminhao: f.placa_caminhao.trim().toUpperCase() || null,
+        observacoes: f.observacoes || null,
       };
-      let saved: Pacote;
+      let data: unknown;
+      let error: { message: string } | null;
       if (pacote) {
-        const { data, error } = await supabase.from("pacotes_expedicao" as never).update(base as never).eq("id", pacote.id).select().single();
-        if (error) throw error;
-        saved = data as unknown as Pacote;
+        const result = await supabase.from("pacotes_expedicao" as never).update(base as never).eq("id", pacote.id).select().single();
+        data = result.data; error = result.error;
       } else {
-        const { data: codigo, error: codeError } = await supabase.rpc("proximo_codigo" as never, { _prefixo: "PX" } as never);
-        if (codeError) throw codeError;
-        const { data, error } = await supabase.from("pacotes_expedicao" as never).insert({ ...base, codigo } as never).select().single();
-        if (error) throw error;
-        saved = data as unknown as Pacote;
+        const { data: codigo, error: e1 } = await supabase.rpc("proximo_codigo" as never, { _prefixo: "PX" } as never);
+        if (e1) throw e1;
+        const result = await supabase.from("pacotes_expedicao" as never).insert({ ...base, codigo } as never).select().single();
+        data = result.data; error = result.error;
       }
-      if (isCavaco) {
-        if (pacote) { const { error } = await supabase.from("itens_romaneio" as never).delete().eq("romaneio_id", saved.id); if (error) throw error; }
-      } else {
-        const rowsToInsert = calculados.map((i) => ({ romaneio_id: saved.id, descricao: i.descricao.trim(), comprimento_m: num(i.comprimento_m), espessura_m: num(i.espessura_m), largura_m: num(i.largura_m), qtd_blocos: i.qtdBlocos, pecas_por_pacote: i.pecasPorPacote, qtd_pecas: i.qtdPecas, volume_m3: Number(i.volume.toFixed(6)), valor_unitario: num(i.valor_unitario), valor_total: Number(i.valor.toFixed(2)) }));
-        if (pacote) { const { error } = await supabase.from("itens_romaneio" as never).delete().eq("romaneio_id", saved.id); if (error) throw error; }
-        const { error: itemError } = await supabase.from("itens_romaneio" as never).insert(rowsToInsert as never);
-        if (itemError) throw itemError;
-      }
-      toast.success(pacote ? `Romaneio ${saved.codigo} atualizado` : `Romaneio ${saved.codigo} cadastrado`);
-      onSaved(saved);
-    } catch (e) { toast.error(`Erro ao salvar: ${(e as Error).message}`); }
-    finally { setSaving(false); }
+      if (error) throw new Error(error.message);
+      toast.success(pacote ? `Carga ${pacote.codigo} atualizada` : `Carga cadastrada`);
+      onSaved(data as Pacote);
+    } catch (e) { toast.error((e as Error).message); }
+    setSaving(false);
   };
 
-  return <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-    <DialogHeader><DialogTitle>{pacote ? `Editar romaneio ${pacote.codigo}` : "Novo romaneio de expedição"}</DialogTitle></DialogHeader>
-    <div className="grid gap-4 sm:grid-cols-2">
-      <div className="space-y-1.5"><Label>Tipo de carga</Label><select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={tipo} onChange={(e) => setTipo(e.target.value)}><option value="madeira">Madeira / produtos por peças</option><option value="cavaco">Cavaco (por m³ ou tonelada)</option></select></div>
-      <div className="space-y-1.5"><Label>Cliente / comprador</Label><Input value={cliente} onChange={(e) => setCliente(e.target.value)} placeholder="Nome do cliente" /></div>
-      {tipo === "cavaco" ? <>
-        <div className="space-y-1.5"><Label>Unidade de venda</Label><select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={unidade} onChange={(e) => setUnidade(e.target.value)}><option value="m3">Metro cúbico (m³)</option><option value="ton">Tonelada (t)</option></select></div>
-        <div className="space-y-1.5"><Label>Quantidade ({unidade === "ton" ? "toneladas" : "m³"})</Label><Input type="number" min="0.001" step="any" value={quantidadeCavaco} onChange={(e) => setQuantidadeCavaco(e.target.value)} /></div>
-        <div className="space-y-1.5"><Label>Preço por {unidade === "ton" ? "tonelada" : "m³"} (R$)</Label><Input inputMode="decimal" value={precoCavaco} onChange={(e) => setPrecoCavaco(e.target.value)} /></div>
-      </> : <div className="sm:col-span-2 space-y-3">
-        <div className="flex items-center justify-between"><h3 className="font-semibold">Produtos do romaneio</h3><Button type="button" variant="outline" size="sm" onClick={() => setItens((old) => [...old, novoItem()])}><PlusCircle className="mr-1 h-4 w-4" /> Adicionar produto</Button></div>
-        {loadingItems ? <p className="text-sm text-muted-foreground">Carregando produtos existentes...</p> : calculados.map((item, index) => <div key={index} className="space-y-3 rounded-lg border p-4">
-          <div className="flex items-center justify-between"><h4 className="font-medium">Produto {index + 1}</h4>{itens.length > 1 && <Button type="button" size="sm" variant="ghost" onClick={() => setItens((old) => old.filter((_, ix) => ix !== index))}><Trash2 className="mr-1 h-4 w-4" /> Remover</Button>}</div>
-          <div className="space-y-1.5"><Label>Descrição *</Label><Input value={item.descricao} onChange={(e) => atualizaItem(index, "descricao", e.target.value)} placeholder="Ex.: Ripinha de eucalipto" /></div>
-          <div className="grid gap-3 sm:grid-cols-3">
-            <div className="space-y-1.5"><Label>Comprimento (m)</Label><Input inputMode="decimal" value={item.comprimento_m} onChange={(e) => atualizaItem(index, "comprimento_m", e.target.value)} placeholder="1,20" /></div>
-            <div className="space-y-1.5"><Label>Espessura (m)</Label><Input inputMode="decimal" value={item.espessura_m} onChange={(e) => atualizaItem(index, "espessura_m", e.target.value)} placeholder="0,08" /></div>
-            <div className="space-y-1.5"><Label>Largura (m)</Label><Input inputMode="decimal" value={item.largura_m} onChange={(e) => atualizaItem(index, "largura_m", e.target.value)} placeholder="0,019" /></div>
-            <div className="space-y-1.5"><Label>Quantidade de pacotes</Label><Input type="number" min="1" step="1" value={item.qtd_blocos} onChange={(e) => atualizaItem(index, "qtd_blocos", e.target.value)} /></div>
-            <div className="space-y-1.5"><Label>Peças por pacote</Label><Input type="number" min="1" step="1" value={item.pecas_por_pacote} onChange={(e) => atualizaItem(index, "pecas_por_pacote", e.target.value)} /></div>
-            <div className="space-y-1.5"><Label>Preço por m³ (R$)</Label><Input inputMode="decimal" value={item.valor_unitario} onChange={(e) => atualizaItem(index, "valor_unitario", e.target.value)} placeholder="730,00" /></div>
+  return (
+    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogHeader><DialogTitle>{pacote ? `Editar carga ${pacote.codigo}` : "Cadastrar carga para expedição"}</DialogTitle></DialogHeader>
+      <div className="grid gap-4 sm:grid-cols-3">
+        <div className="sm:col-span-3 space-y-1.5"><Label>Tipo de carga</Label>
+          <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={f.tipo_carga} onChange={(e) => setF({ ...f, tipo_carga: e.target.value })}>
+            <option value="madeira">Madeira serrada / produtos por peças</option><option value="cavaco">Venda somente de cavaco</option>
+          </select>
+        </div>
+        <div className="sm:col-span-3 space-y-1.5"><Label>{isCavaco ? "Descrição do cavaco" : "Produto / descrição *"}</Label><Input value={f.descricao} onChange={(e) => setF({ ...f, descricao: e.target.value })} placeholder={isCavaco ? "Ex.: Cavaco de eucalipto" : "Ex.: Tábua de eucalipto"} /></div>
+        <div className="sm:col-span-3 space-y-1.5"><Label>Cliente / comprador</Label><Input value={f.cliente_nome} onChange={(e) => setF({ ...f, cliente_nome: e.target.value })} placeholder="Nome do cliente ou comprador" /></div>
+        {isCavaco ? <>
+          <div className="space-y-1.5"><Label>Unidade de venda</Label>
+            <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={f.unidade_venda} onChange={(e) => setF({ ...f, unidade_venda: e.target.value })}>
+              <option value="m3">Metro cúbico (m³)</option><option value="ton">Tonelada (t)</option>
+            </select>
           </div>
-          <div className="rounded-md bg-muted p-3 text-sm"><div className="grid gap-1 sm:grid-cols-2"><p>Total de peças: <b>{item.qtdPecas.toLocaleString("pt-BR")}</b></p><p>Volume: <b>{item.volume.toLocaleString("pt-BR", { minimumFractionDigits: 4, maximumFractionDigits: 6 })} m³</b></p><p>Valor deste produto: <b>{moeda(item.valor)}</b></p></div></div>
-        </div>)}
-        <div className="rounded-md border border-primary/30 bg-primary/5 p-4 text-sm"><h4 className="mb-2 font-semibold">Totais do romaneio</h4><p>Produtos: <b>{calculados.length}</b></p><p>Pacotes: <b>{totalPacotes.toLocaleString("pt-BR")}</b></p><p>Total de peças: <b>{totalPecas.toLocaleString("pt-BR")}</b></p><p>Volume total: <b>{totalVolume.toLocaleString("pt-BR", { minimumFractionDigits: 4, maximumFractionDigits: 6 })} m³</b></p><p>Valor total: <b>{moeda(totalValor)}</b></p></div>
-      </div>}
-      <div className="space-y-1.5"><Label>Forma de pagamento</Label><select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={formaPagamento} onChange={(e) => setFormaPagamento(e.target.value)}><option value="pix">PIX</option><option value="dinheiro">Dinheiro</option><option value="transferencia">Transferência</option><option value="cartao">Cartão</option><option value="boleto">Boleto</option><option value="prazo">A prazo</option><option value="outro">Outro</option></select></div>
-      <div className="space-y-1.5"><Label>Situação do pagamento</Label><select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={situacaoPagamento} onChange={(e) => setSituacaoPagamento(e.target.value as "pendente" | "pago")}><option value="pendente">Pendente</option><option value="pago">Pago</option></select></div>
-      <div className="sm:col-span-2 space-y-1.5"><Label>Observações</Label><Textarea value={observacoes} onChange={(e) => setObservacoes(e.target.value)} /></div>
-    </div>
-    <DialogFooter><Button onClick={save} disabled={saving || loadingItems}>{saving ? "Salvando..." : pacote ? "Salvar alterações" : "Salvar romaneio + QR"}</Button></DialogFooter>
-  </DialogContent>;
+          <div className="space-y-1.5"><Label>Quantidade ({f.unidade_venda === "ton" ? "toneladas" : "m³"}) *</Label><Input type="number" min="0.001" step="any" value={f.quantidade_venda} onChange={(e) => setF({ ...f, quantidade_venda: e.target.value })} placeholder={f.unidade_venda === "ton" ? "Ex.: 28,5" : "Ex.: 100"} /></div>
+          <div className="space-y-1.5"><Label>Preço por {f.unidade_venda === "ton" ? "tonelada" : "m³"} (R$)</Label><Input inputMode="decimal" value={f.valor_unitario} onChange={(e) => setF({ ...f, valor_unitario: e.target.value })} placeholder="Ex.: 120" /></div>
+          <div className="sm:col-span-3 rounded-md border border-primary/30 bg-primary/5 p-3 text-sm"><p>Quantidade da carga: <b>{quantidadeCavaco.toLocaleString("pt-BR")} {f.unidade_venda === "ton" ? "t" : "m³"}</b></p>{f.valor_unitario.trim() && <p>Valor total estimado: <b>{valorTotal.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</b></p>}<p className="text-muted-foreground">Esta carga será registrada como cavaco, sem exigir medidas de peças ou pacotes.</p></div>
+        </> : <>
+          <div className="space-y-1.5"><Label>Espessura (mm)</Label><Input inputMode="decimal" value={f.espessura_mm} onChange={(e) => setF({ ...f, espessura_mm: e.target.value })} placeholder="Ex.: 9" /></div>
+          <div className="space-y-1.5"><Label>Largura (mm)</Label><Input inputMode="decimal" value={f.largura_mm} onChange={(e) => setF({ ...f, largura_mm: e.target.value })} placeholder="Ex.: 90" /></div>
+          <div className="space-y-1.5"><Label>Comprimento (mm)</Label><Input inputMode="decimal" value={f.comprimento_mm} onChange={(e) => setF({ ...f, comprimento_mm: e.target.value })} placeholder="Ex.: 1200" /></div>
+          <div className="space-y-1.5"><Label>Quantidade de pacotes</Label><Input type="number" min="1" step="1" value={f.qtd_blocos} onChange={(e) => setF({ ...f, qtd_blocos: e.target.value })} placeholder="Ex.: 12" /></div>
+          <div className="space-y-1.5"><Label>Peças por pacote</Label><Input type="number" min="1" step="1" value={f.pecas_por_pacote} onChange={(e) => setF({ ...f, pecas_por_pacote: e.target.value })} placeholder="Ex.: 522" /></div>
+          <div className="space-y-1.5"><Label>Volume manual (m³, opcional)</Label><Input inputMode="decimal" value={f.volume_m3} placeholder={temMedidas ? auto.toFixed(4) : "Automático"} onChange={(e) => setF({ ...f, volume_m3: e.target.value })} /></div>
+          <div className="sm:col-span-3 rounded-md border border-primary/30 bg-primary/5 p-3 text-sm">{temMedidas ? <><p>Total de peças: <b>{totalPecas.toLocaleString("pt-BR")}</b></p><p>Volume por peça: <b>{(auto / Math.max(totalPecas, 1)).toFixed(6)} m³</b></p><p>Volume total calculado: <b>{auto.toLocaleString("pt-BR", { minimumFractionDigits: 4, maximumFractionDigits: 4 })} m³</b></p>{f.volume_m3.trim() && <p>Será usado o volume manual informado.</p>}</> : "Preencha as três medidas em mm, a quantidade de pacotes e as peças por pacote para calcular automaticamente."}</div>
+          <div className="space-y-1.5"><Label>Preço por m³ (R$), opcional</Label><Input inputMode="decimal" value={f.valor_unitario} onChange={(e) => setF({ ...f, valor_unitario: e.target.value })} placeholder="Preço de venda" /></div>
+          {f.valor_unitario.trim() && <div className="space-y-1.5"><Label>Valor total estimado</Label><div className="flex h-10 items-center rounded-md border bg-muted px-3 text-sm font-semibold">{valorTotal.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</div></div>}
+        </>}
+        <div className="space-y-1.5"><Label>Data de saída (opcional)</Label><Input type="date" value={f.data_saida_carga} onChange={(e) => setF({ ...f, data_saida_carga: e.target.value })} /></div>
+        <div className="space-y-1.5"><Label>Placa do caminhão (opcional)</Label><Input value={f.placa_caminhao} onChange={(e) => setF({ ...f, placa_caminhao: e.target.value.toUpperCase() })} placeholder="Ex.: ABC1D23" maxLength={8} /></div>
+        <div className="sm:col-span-3 space-y-1.5"><Label>Observações</Label><Textarea value={f.observacoes} onChange={(e) => setF({ ...f, observacoes: e.target.value })} /></div>
+      </div>
+      <DialogFooter><Button onClick={save} disabled={saving}>{saving ? "Salvando..." : pacote ? "Salvar alterações" : "Cadastrar carga + QR"}</Button></DialogFooter>
+    </DialogContent>
+  );
 }
