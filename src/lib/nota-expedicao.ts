@@ -35,6 +35,11 @@ export type PacoteNota = {
   forma_pagamento?: string | null;
   situacao_pagamento?: string | null;
   itens?: ItemRomaneioNota[];
+
+  // Dados opcionais para a nota de carga.
+  data_saida_carga?: string | null;
+  placa_caminhao?: string | null;
+
   espessura_cm: number | null;
   largura_cm: number | null;
   comprimento_m: number | null;
@@ -106,6 +111,22 @@ const forma = (v?: string | null) =>
     prazo: "A prazo",
     outro: "Outro",
   } as Record<string, string>)[v ?? ""] ?? "Não informado";
+
+// Formata datas sem deslocar datas simples de calendário.
+const formatarDataSaida = (valor: string) => {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(valor)) {
+    const [ano, mes, dia] = valor.split("-");
+    return `${dia}/${mes}/${ano}`;
+  }
+
+  const data = new Date(valor);
+
+  if (Number.isNaN(data.getTime())) {
+    return valor;
+  }
+
+  return data.toLocaleString("pt-BR");
+};
 
 export async function gerarNotaPacote(
   p: PacoteNota,
@@ -348,19 +369,22 @@ export async function gerarNotaPacote(
     const qrX = W - 14 - qrSize;
 
     doc.addImage(qr, "PNG", qrX, qrY, qrSize, qrSize);
-
   } catch {
     // QR Code opcional.
   }
 
-  // Reserva espaço para o QR Code à direita.
-  // As informações abaixo ficam na coluna esquerda.
-  y = qrY;
+  // Reserva espaço para o QR Code.
+  // No cavaco, o resumo começa abaixo do QR para evitar sobreposição.
+  if (isCavaco) {
+    y = qrY + 33;
+  } else {
+    y = qrY;
+  }
 
   const esquerdaX = 14;
   const larguraTexto = W - 75;
 
-  // Conferência de saída.
+  // Conferência de saída para madeira em pacotes.
   if (!isCavaco) {
     doc
       .setFont("helvetica", "bold")
@@ -415,38 +439,62 @@ export async function gerarNotaPacote(
       }).lastAutoTable.finalY + 7;
   }
 
-  // Se a tabela e o QR Code ocuparam muito espaço, inicia nova página.
+  // Reserva espaço para operador, data e placa.
+  if (y + 75 > H - 25) {
+    doc.addPage();
+    y = 18;
+  }
+
+  doc.setFont("helvetica", "normal").setFontSize(9);
+
+  // Operador.
+  if (p.operador_nome) {
+    doc.text(
+      `Operador: ${p.operador_nome}`,
+      esquerdaX,
+      y,
+      { maxWidth: larguraTexto }
+    );
+
+    y += 6;
+  }
+
+  // Data de saída opcional.
+  // Usa a data informada; se não houver, aproveita expedido_em.
+  const dataSaida = p.data_saida_carga || p.expedido_em;
+
+  if (dataSaida) {
+    doc.text(
+      `Data de saída: ${formatarDataSaida(dataSaida)}`,
+      esquerdaX,
+      y,
+      { maxWidth: larguraTexto }
+    );
+
+    y += 6;
+  }
+
+  // Placa do caminhão opcional.
+  if (p.placa_caminhao?.trim()) {
+    doc.text(
+      `Placa do caminhão: ${p.placa_caminhao.trim().toUpperCase()}`,
+      esquerdaX,
+      y,
+      { maxWidth: larguraTexto }
+    );
+
+    y += 6;
+  }
+
+  y += 3;
+
+  // Confere se o resumo cabe na página.
   if (y + 65 > H - 25) {
     doc.addPage();
     y = 18;
   }
 
-  // Operador e data de saída.
-  doc.setFont("helvetica", "normal").setFontSize(9);
-
-  doc.text(
-    `Operador: ${p.operador_nome ?? "________________________"}`,
-    esquerdaX,
-    y,
-    { maxWidth: larguraTexto }
-  );
-
-  y += 6;
-
-  doc.text(
-    `Data de saída: ${
-      p.expedido_em
-        ? new Date(p.expedido_em).toLocaleString("pt-BR")
-        : "____/____/______"
-    }`,
-    esquerdaX,
-    y,
-    { maxWidth: larguraTexto }
-  );
-
-  y += 8;
-
-  // Resumo abaixo da data de saída.
+  // Resumo do romaneio.
   doc.setDrawColor(180).line(14, y, W - 14, y);
 
   y += 7;
