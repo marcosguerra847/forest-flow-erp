@@ -5,15 +5,18 @@ import logoAsset from "@/assets/logo-bela-vista.png.asset.json";
 
 export type PacoteNota = {
   codigo: string; descricao: string; cliente_nome: string | null;
+  tipo_carga?: string | null; unidade_venda?: string | null; quantidade_venda?: number | null; quantidade_expedida?: number | null; valor_unitario?: number | null; valor_total?: number | null;
   espessura_cm: number | null; largura_cm: number | null; comprimento_m: number | null;
-  qtd_blocos: number; qtd_pecas: number; volume_m3: number;
+  qtd_blocos: number; pecas_por_pacote?: number | null; qtd_pecas: number; volume_m3: number;
   qtd_blocos_expedida: number | null; qtd_pecas_expedida: number | null; volume_expedido_m3: number | null;
   status: string; operador_nome: string | null; expedido_em: string | null; criado_em: string;
   observacoes?: string | null;
 };
 
 export function calcM3(esp: number, larg: number, comp: number, pecas: number) {
-  return (esp / 100) * (larg / 100) * comp * pecas;
+  // Todas as dimensões recebidas pela fórmula são milímetros.
+  // Converte mm³ para m³ dividindo por 1.000.000.000.
+  return (esp * larg * comp * pecas) / 1_000_000_000;
 }
 
 const n = (v: number | null | undefined, d = 2) => (v == null ? "—" : Number(v).toLocaleString("pt-BR", { minimumFractionDigits: d, maximumFractionDigits: d }));
@@ -42,16 +45,20 @@ export async function gerarNotaPacote(p: PacoteNota, link: string, autoPrint = f
   doc.text(`Cliente: ${p.cliente_nome ?? "—"}`, 14, 46);
   doc.text(`Status: ${p.status === "pronto" ? "Pronto para envio" : "Expedido"}`, 14, 51);
 
+  const isCavaco = p.tipo_carga === "cavaco";
+  const unidade = p.unidade_venda === "ton" ? "toneladas" : "m³";
   const medidas = p.espessura_cm && p.largura_cm && p.comprimento_m
-    ? `${n(p.espessura_cm, 1)} cm x ${n(p.largura_cm, 1)} cm x ${n(p.comprimento_m, 2)} m` : "—";
-  const m3Peca = p.espessura_cm && p.largura_cm && p.comprimento_m ? calcM3(p.espessura_cm, p.largura_cm, p.comprimento_m, 1) : null;
+    ? `${n(p.espessura_cm * 10, 1)} mm x ${n(p.largura_cm * 10, 1)} mm x ${n(p.comprimento_m * 1000, 1)} mm` : "—";
+  const m3Peca = p.espessura_cm && p.largura_cm && p.comprimento_m ? calcM3(p.espessura_cm * 10, p.largura_cm * 10, p.comprimento_m * 1000, 1) : null;
 
   autoTable(doc, {
     startY: 57,
-    head: [["Produto", "Medidas (E x L x C)", "m³/peça", "Blocos", "Peças", "Volume (m³)"]],
-    body: [[p.descricao, medidas, m3Peca != null ? n(m3Peca, 4) : "—", String(p.qtd_blocos), String(p.qtd_pecas), n(p.volume_m3, 3)]],
+    head: [isCavaco ? ["Produto", "Unidade de venda", "Quantidade", "Preço unitário", "Valor total"] : ["Produto", "Medidas (E x L x C, mm)", "m³/peça", "Pacotes", "Peças/pacote", "Total peças", "Volume (m³)"]],
+    body: [isCavaco
+      ? ["Cavaco", unidade, n(p.quantidade_venda ?? 0, 3), p.valor_unitario != null ? `R$ ${n(p.valor_unitario, 2)}` : "—", p.valor_total != null ? `R$ ${n(p.valor_total, 2)}` : "—"]
+      : [p.descricao, medidas, m3Peca != null ? n(m3Peca, 4) : "—", String(p.qtd_blocos), p.pecas_por_pacote != null ? String(p.pecas_por_pacote) : "—", String(p.qtd_pecas), n(p.volume_m3, 3)]],
     headStyles: { fillColor: [46, 82, 51], textColor: 255 },
-    styles: { fontSize: 9 },
+    styles: { fontSize: 7.5, cellPadding: 2 },
   });
   let y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 8;
 
@@ -60,9 +67,11 @@ export async function gerarNotaPacote(p: PacoteNota, link: string, autoPrint = f
     startY: y,
     head: [["", "Previsto", "Enviado"]],
     body: [
-      ["Blocos", String(p.qtd_blocos), p.qtd_blocos_expedida != null ? String(p.qtd_blocos_expedida) : "____"],
-      ["Peças", String(p.qtd_pecas), p.qtd_pecas_expedida != null ? String(p.qtd_pecas_expedida) : "____"],
-      ["Volume (m³)", n(p.volume_m3, 3), p.volume_expedido_m3 != null ? n(p.volume_expedido_m3, 3) : "____"],
+      ...(isCavaco ? [[`Quantidade (${unidade})`, n(p.quantidade_venda ?? 0, 3), p.quantidade_expedida != null ? n(p.quantidade_expedida, 3) : "____"]] : [
+        ["Blocos", String(p.qtd_blocos), p.qtd_blocos_expedida != null ? String(p.qtd_blocos_expedida) : "____"],
+        ["Peças", String(p.qtd_pecas), p.qtd_pecas_expedida != null ? String(p.qtd_pecas_expedida) : "____"],
+        ["Volume (m³)", n(p.volume_m3, 3), p.volume_expedido_m3 != null ? n(p.volume_expedido_m3, 3) : "____"],
+      ]),
     ],
     headStyles: { fillColor: [46, 82, 51], textColor: 255 },
     styles: { fontSize: 9 }, tableWidth: 110,
