@@ -52,7 +52,7 @@ export type PacoteNota = {
   observacoes?: string | null;
 };
 
-// Medidas em metros: comprimento x espessura x largura x quantidade de peças.
+// Cubagem: comprimento x espessura x largura x quantidade de peças.
 export function calcM3(
   comprimentoM: number,
   espessuraM: number,
@@ -62,7 +62,7 @@ export function calcM3(
   return comprimentoM * espessuraM * larguraM * pecas;
 }
 
-// Formatação numérica geral para o PDF.
+// Números para quantidades, volumes e valores numéricos.
 const n = (
   v: number | null | undefined,
   d = 2
@@ -74,7 +74,7 @@ const n = (
         maximumFractionDigits: d,
       });
 
-// Formatação das medidas: remove zeros desnecessários.
+// Medidas em metros sem zeros desnecessários.
 const medida = (v: number | null | undefined) =>
   v == null
     ? "—"
@@ -92,7 +92,7 @@ const comprimento = (v: number | null | undefined) =>
         maximumFractionDigits: 2,
       });
 
-// Formatação de valores em reais.
+// Valores em reais.
 const brl = (v: number | null | undefined) =>
   v == null
     ? "—"
@@ -101,7 +101,7 @@ const brl = (v: number | null | undefined) =>
         currency: "BRL",
       });
 
-// Tradução da forma de pagamento.
+// Forma de pagamento.
 const forma = (v?: string | null) =>
   ({
     pix: "PIX",
@@ -118,10 +118,15 @@ export async function gerarNotaPacote(
   link: string,
   autoPrint = false
 ) {
-  const doc = new jsPDF({ unit: "mm", format: "a4" });
-  const W = doc.internal.pageSize.getWidth();
+  const doc = new jsPDF({
+    unit: "mm",
+    format: "a4",
+  });
 
-  // Logo da Fazenda.
+  const W = doc.internal.pageSize.getWidth();
+  const H = doc.internal.pageSize.getHeight();
+
+  // Logo.
   try {
     const img = await fetch(logoAsset.url)
       .then((r) => r.blob())
@@ -136,7 +141,7 @@ export async function gerarNotaPacote(
 
     doc.addImage(img, "PNG", 14, 10, 20, 20);
   } catch {
-    // Logo opcional.
+    // A nota pode ser gerada sem o logo.
   }
 
   // Cabeçalho.
@@ -162,7 +167,9 @@ export async function gerarNotaPacote(
   doc
     .setFontSize(10)
     .setFont("helvetica", "normal")
-    .text(p.codigo, W - 14, 22, { align: "right" });
+    .text(p.codigo, W - 14, 22, {
+      align: "right",
+    });
 
   doc.text(
     `Emissão: ${new Date(p.criado_em).toLocaleDateString("pt-BR")}`,
@@ -173,7 +180,7 @@ export async function gerarNotaPacote(
 
   doc.setDrawColor(180).line(14, 34, W - 14, 34);
 
-  // Dados do cliente.
+  // Cliente e pagamento.
   doc
     .setFontSize(10)
     .setFont("helvetica", "bold")
@@ -191,18 +198,10 @@ export async function gerarNotaPacote(
     51
   );
 
-  doc.text(
-    `Pagamento: ${
-      p.situacao_pagamento === "pago" ? "PAGO" : "PENDENTE"
-    } · Forma: ${forma(p.forma_pagamento)}`,
-    14,
-    56
-  );
-
   const isCavaco = p.tipo_carga === "cavaco";
   const itens = p.itens ?? [];
 
-  // Tabela de cavaco e pó de serra.
+  // Tabela de produtos.
   if (isCavaco) {
     const unidade =
       p.unidade_venda === "ton" ? "toneladas" : "m³";
@@ -232,10 +231,7 @@ export async function gerarNotaPacote(
         cellPadding: 2,
       },
     });
-  }
-
-  // Tabela com vários produtos no mesmo romaneio.
-  else if (itens.length) {
+  } else if (itens.length > 0) {
     autoTable(doc, {
       startY: 63,
       head: [[
@@ -253,8 +249,8 @@ export async function gerarNotaPacote(
         `${comprimento(i.comprimento_m)} x ${medida(
           i.espessura_m
         )} x ${medida(i.largura_m)}`,
-        String(i.qtd_blocos),
-        String(i.pecas_por_pacote),
+        n(i.qtd_blocos, 0),
+        n(i.pecas_por_pacote, 0),
         n(i.qtd_pecas, 0),
         n(i.volume_m3, 4),
         brl(i.valor_unitario),
@@ -267,12 +263,15 @@ export async function gerarNotaPacote(
       styles: {
         fontSize: 6.5,
         cellPadding: 1.6,
+        overflow: "linebreak",
+      },
+      columnStyles: {
+        0: { cellWidth: 37 },
+        1: { cellWidth: 31 },
       },
     });
-  }
-
-  // Tabela de produto único, para romaneios antigos.
-  else {
+  } else {
+    // Compatibilidade com romaneios antigos de produto único.
     const temMedidas =
       p.espessura_cm != null &&
       p.largura_cm != null &&
@@ -310,8 +309,8 @@ export async function gerarNotaPacote(
         temMedidas
           ? `${comprimento(comp)} x ${medida(esp)} x ${medida(larg)}`
           : "—",
-        String(p.qtd_blocos),
-        String(p.pecas_por_pacote ?? "—"),
+        n(p.qtd_blocos, 0),
+        n(p.pecas_por_pacote, 0),
         n(p.qtd_pecas, 0),
         n(p.volume_m3, 4),
         brl(p.valor_unitario),
@@ -324,72 +323,31 @@ export async function gerarNotaPacote(
       styles: {
         fontSize: 6.5,
         cellPadding: 1.6,
+        overflow: "linebreak",
       },
     });
   }
 
-  // Resumo do romaneio.
+  // Posição abaixo da tabela.
   let y =
-    (doc as unknown as { lastAutoTable: { finalY: number } })
-      .lastAutoTable.finalY + 8;
-
-  if (y > 175) {
-    doc.addPage();
-    y = 18;
-  }
-
-  doc
-    .setFont("helvetica", "bold")
-    .setFontSize(11)
-    .text("RESUMO DO ROMANEIO", 14, y);
-
-  y += 7;
-
-  doc.setFont("helvetica", "normal").setFontSize(9);
-
-  doc.text(
-    `Total de pacotes: ${n(p.qtd_blocos, 0)}    ` +
-      `Total de peças: ${n(p.qtd_pecas, 0)}    ` +
-      `Volume total: ${n(p.volume_m3, 4)} m³`,
-    14,
-    y
-  );
-
-  y += 7;
-
-  doc
-    .setFont("helvetica", "bold")
-    .setFontSize(11)
-    .text(
-      `VALOR TOTAL: ${brl(p.valor_previsto ?? p.valor_total)}`,
-      14,
-      y
-    );
-
-  y += 7;
-
-  doc
-    .setFont("helvetica", "normal")
-    .setFontSize(9)
-    .text(
-      `Forma de pagamento: ${forma(p.forma_pagamento)} · ` +
-        `Situação: ${
-          p.situacao_pagamento === "pago" ? "Pago" : "Pendente"
-        }`,
-      14,
-      y
-    );
-
-  y += 7;
+    (doc as unknown as {
+      lastAutoTable: { finalY: number };
+    }).lastAutoTable.finalY + 8;
 
   // Conferência de saída.
   if (!isCavaco) {
+    // Mantém a conferência junta e evita que ela fique cortada.
+    if (y + 42 > H - 45) {
+      doc.addPage();
+      y = 18;
+    }
+
     doc
       .setFont("helvetica", "bold")
       .setFontSize(10)
       .text("CONFERÊNCIA DE SAÍDA", 14, y);
 
-    y += 2;
+    y += 3;
 
     autoTable(doc, {
       startY: y,
@@ -423,75 +381,168 @@ export async function gerarNotaPacote(
       },
       styles: {
         fontSize: 8,
+        cellPadding: 2,
       },
       tableWidth: 110,
+      margin: {
+        left: 14,
+      },
     });
 
     y =
-      (doc as unknown as { lastAutoTable: { finalY: number } })
-        .lastAutoTable.finalY + 7;
+      (doc as unknown as {
+        lastAutoTable: { finalY: number };
+      }).lastAutoTable.finalY + 8;
   }
 
   // Operador e data de saída.
-  doc.setFont("helvetica", "normal").setFontSize(8);
-
-  doc.text(
-    `Operador: ${p.operador_nome ?? "________________________"}   ` +
-      `Data de saída: ${
-        p.expedido_em
-          ? new Date(p.expedido_em).toLocaleString("pt-BR")
-          : "____/____/______"
-      }`,
-    14,
-    Math.min(y, 222)
-  );
-
-  if (p.observacoes) {
-    doc.text(
-      doc.splitTextToSize(
-        `Observações: ${p.observacoes}`,
-        W - 28
-      ),
-      14,
-      Math.min(y + 6, 230)
-    );
+  // O resumo aparece abaixo destas informações.
+  if (y + 75 > H - 40) {
+    doc.addPage();
+    y = 18;
   }
 
-  // QR Code para conferência.
+  doc.setFont("helvetica", "normal").setFontSize(9);
+
+  doc.text(
+    `Operador: ${p.operador_nome ?? "________________________"}`,
+    14,
+    y
+  );
+
+  y += 6;
+
+  doc.text(
+    `Data de saída: ${
+      p.expedido_em
+        ? new Date(p.expedido_em).toLocaleString("pt-BR")
+        : "____/____/______"
+    }`,
+    14,
+    y
+  );
+
+  y += 8;
+
+  // Resumo abaixo da data de saída.
+  doc.setDrawColor(180).line(14, y, W - 14, y);
+
+  y += 7;
+
+  doc
+    .setFont("helvetica", "bold")
+    .setFontSize(11)
+    .text("RESUMO DO ROMANEIO", 14, y);
+
+  y += 8;
+
+  doc.setFont("helvetica", "normal").setFontSize(9);
+
+  doc.text(
+    `Total de pacotes: ${n(p.qtd_blocos, 0)}`,
+    14,
+    y
+  );
+
+  doc.text(
+    `Total de peças: ${n(p.qtd_pecas, 0)}`,
+    75,
+    y
+  );
+
+  doc.text(
+    `Volume total: ${n(p.volume_m3, 4)} m³`,
+    135,
+    y
+  );
+
+  y += 10;
+
+  doc
+    .setFont("helvetica", "bold")
+    .setFontSize(12)
+    .text(
+      `VALOR TOTAL: ${brl(p.valor_previsto ?? p.valor_total)}`,
+      14,
+      y
+    );
+
+  y += 8;
+
+  doc.setFont("helvetica", "normal").setFontSize(9);
+
+  doc.text(
+    `Forma de pagamento: ${forma(p.forma_pagamento)}`,
+    14,
+    y
+  );
+
+  y += 6;
+
+  doc.text(
+    `Situação do pagamento: ${
+      p.situacao_pagamento === "pago" ? "PAGO" : "PENDENTE"
+    }`,
+    14,
+    y
+  );
+
+  // Observações abaixo do resumo.
+  if (p.observacoes) {
+    y += 7;
+
+    const linhas = doc.splitTextToSize(
+      `Observações: ${p.observacoes}`,
+      W - 28
+    );
+
+    if (y + linhas.length * 4 > H - 32) {
+      doc.addPage();
+      y = 18;
+    }
+
+    doc.text(linhas, 14, y);
+    y += linhas.length * 4 + 4;
+  }
+
+  // QR Code de conferência.
   try {
     const qr = await QRCode.toDataURL(link, {
       width: 300,
       margin: 1,
     });
 
-    doc.addImage(qr, "PNG", W - 50, 218, 36, 36);
+    // Mantém o QR Code na parte inferior direita.
+    doc.addImage(qr, "PNG", W - 50, H - 42, 32, 32);
   } catch {
     // QR Code opcional.
   }
 
-  // Assinaturas.
-  const ys = 258;
+  // Assinaturas no rodapé da última página.
+  const ys = H - 15;
 
+  doc.setDrawColor(100);
   doc.line(20, ys, 90, ys);
   doc.line(W - 90, ys, W - 20, ys);
 
   doc
+    .setFont("helvetica", "normal")
     .setFontSize(8)
     .text(
       "Fazenda Bela Vista (expedição)",
       55,
-      ys + 5,
+      ys + 4,
       { align: "center" }
     );
 
   doc.text(
     "Recebedor / cliente",
     W - 55,
-    ys + 5,
+    ys + 4,
     { align: "center" }
   );
 
-  // Imprimir ou baixar o PDF.
+  // Imprimir ou baixar.
   if (autoPrint) {
     doc.autoPrint();
     window.open(doc.output("bloburl"), "_blank");
