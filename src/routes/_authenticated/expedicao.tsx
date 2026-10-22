@@ -175,6 +175,7 @@ function ExpedicaoPage() {
             </DialogTrigger>
 
             <RomaneioForm
+              key={String(open)}
               onSaved={(p) => {
                 setOpen(false);
                 qc.invalidateQueries({ queryKey: ["pacotes"] });
