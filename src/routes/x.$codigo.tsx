@@ -8,21 +8,27 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { obterPacote, expedirPacote } from "@/lib/expedicao.functions";
+import { RomaneioPublico } from "@/components/RomaneioPublico";
+import type { PacoteNota } from "@/lib/nota-expedicao";
 
 export const Route = createFileRoute("/x/$codigo")({
   ssr: false,
   validateSearch: z.object({ t: z.string().optional() }),
   head: ({ params }) => ({
     meta: [
-      { title: `Expedição ${params.codigo} · Fazenda Bela Vista` },
-      { name: "description", content: "Conferência e baixa de saída do pacote pelo celular." },
+      { title: `Romaneio ${params.codigo} · Fazenda Bela Vista` },
+      { name: "description", content: "Nota de carga com produtos, medidas, quantidades e valores da Fazenda Bela Vista." },
+      { property: "og:title", content: `Romaneio ${params.codigo} · Fazenda Bela Vista` },
+      { property: "og:description", content: "Visualização da nota de carga e conferência de expedição." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex" },
     ],
   }),
   component: ExpedicaoPublica,
 });
 
-type P = Record<string, string | number | null>;
+type P = PacoteNota;
 
 function ExpedicaoPublica() {
   const { codigo } = Route.useParams();
@@ -78,7 +84,7 @@ function ExpedicaoPublica() {
 
   return (
     <main className="min-h-screen bg-background px-4 py-6">
-      <div className="mx-auto max-w-md space-y-4">
+      <div className="mx-auto max-w-4xl space-y-4">
         <header className="flex items-center gap-3">
           <div className="grid h-10 w-10 place-items-center rounded-md bg-[image:var(--gradient-accent)]">
             <TreePine className="h-5 w-5 text-primary-foreground" />
@@ -93,17 +99,7 @@ function ExpedicaoPublica() {
           <p className="rounded-xl border border-destructive/40 bg-destructive/5 p-4 text-sm">QR inválido ou pacote não encontrado.</p>
         ) : !p ? <p className="text-sm text-muted-foreground">Carregando…</p> : (
           <>
-            <section className="rounded-2xl border border-border bg-card p-5">
-              <div className="font-display text-lg font-semibold">{codigo}</div>
-              <div className="text-sm text-primary">{String(p.descricao)}</div>
-              <dl className="mt-3 grid grid-cols-2 gap-2 text-sm">
-                {linha("Cliente", p.cliente_nome)}
-                {linha("Status", p.status === "pronto" ? "Pronto para envio" : p.status === "expedido" ? "Saiu para o cliente" : p.status)}
-                {linha("Blocos previstos", p.qtd_blocos)}
-                {linha("Peças previstas", p.qtd_pecas)}
-                {linha("Volume previsto", `${Number(p.volume_m3 ?? 0).toFixed(2)} m³`)}
-              </dl>
-            </section>
+            <RomaneioPublico pacote={p} link={`https://forest-flow-erp.lovable.app/x/${encodeURIComponent(codigo)}?t=${encodeURIComponent(t)}`} />
 
             {p.status === "pronto" ? (
               <section className="space-y-3 rounded-2xl border border-primary/40 bg-card p-5">
