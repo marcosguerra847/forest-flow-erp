@@ -36,7 +36,6 @@ export type PacoteNota = {
   situacao_pagamento?: string | null;
   itens?: ItemRomaneioNota[];
 
-  // Dados opcionais para a nota de carga.
   data_saida_carga?: string | null;
   placa_caminhao?: string | null;
 
@@ -57,13 +56,26 @@ export type PacoteNota = {
   observacoes?: string | null;
 };
 
+/**
+ * Calcula a cubagem em metros cúbicos.
+ * Todas as medidas devem ser informadas em METROS.
+ *
+ * Exemplo:
+ * 1.20 x 0.08 x 0.019 x 5490 peças
+ * Resultado: 10.00512 m³
+ */
 export function calcM3(
   comprimentoM: number,
   espessuraM: number,
   larguraM: number,
   pecas: number
-) {
-  return comprimentoM * espessuraM * larguraM * pecas;
+): number {
+  const comprimento = Number(comprimentoM) || 0;
+  const espessura = Number(espessuraM) || 0;
+  const largura = Number(larguraM) || 0;
+  const quantidade = Number(pecas) || 0;
+
+  return comprimento * espessura * largura * quantidade;
 }
 
 const n = (
@@ -247,7 +259,7 @@ export async function gerarNotaPacote(
       },
     });
   } else if (itens.length > 0) {
-    // Vários produtos no mesmo romaneio.
+    // Produtos em metros, com cubagem recalculada.
     autoTable(doc, {
       startY: 63,
       head: [[
@@ -260,18 +272,30 @@ export async function gerarNotaPacote(
         "Preço/m³",
         "Valor total",
       ]],
-      body: itens.map((i) => [
-        i.descricao,
-        `${comprimento(i.comprimento_m)} x ${medida(
-          i.espessura_m
-        )} x ${medida(i.largura_m)}`,
-        n(i.qtd_blocos, 0),
-        n(i.pecas_por_pacote, 0),
-        n(i.qtd_pecas, 0),
-        n(i.volume_m3, 4),
-        brl(i.valor_unitario),
-        brl(i.valor_total),
-      ]),
+      body: itens.map((i) => {
+        const volumeCalculado = calcM3(
+          i.comprimento_m,
+          i.espessura_m,
+          i.largura_m,
+          i.qtd_pecas
+        );
+
+        const valorCalculado =
+          volumeCalculado * Number(i.valor_unitario || 0);
+
+        return [
+          i.descricao,
+          `${comprimento(i.comprimento_m)} x ${medida(
+            i.espessura_m
+          )} x ${medida(i.largura_m)}`,
+          n(i.qtd_blocos, 0),
+          n(i.pecas_por_pacote, 0),
+          n(i.qtd_pecas, 0),
+          n(volumeCalculado, 5),
+          brl(i.valor_unitario),
+          brl(valorCalculado),
+        ];
+      }),
       headStyles: {
         fillColor: [46, 82, 51],
         textColor: 255,
@@ -288,6 +312,7 @@ export async function gerarNotaPacote(
     });
   } else {
     // Compatibilidade com romaneios antigos.
+    // O banco antigo guarda espessura e largura em centímetros.
     const temMedidas =
       p.espessura_cm != null &&
       p.largura_cm != null &&
@@ -307,6 +332,13 @@ export async function gerarNotaPacote(
     const comp = temMedidas
       ? Number(p.comprimento_m)
       : 0;
+
+    const volumeCalculado = temMedidas
+      ? calcM3(comp, esp, larg, p.qtd_pecas)
+      : Number(p.volume_m3 || 0);
+
+    const valorCalculado =
+      volumeCalculado * Number(p.valor_unitario || 0);
 
     autoTable(doc, {
       startY: 63,
@@ -328,9 +360,9 @@ export async function gerarNotaPacote(
         n(p.qtd_blocos, 0),
         n(p.pecas_por_pacote, 0),
         n(p.qtd_pecas, 0),
-        n(p.volume_m3, 4),
+        n(volumeCalculado, 5),
         brl(p.valor_unitario),
-        brl(p.valor_total ?? p.valor_previsto),
+        brl(temMedidas ? valorCalculado : p.valor_total ?? p.valor_previsto),
       ]],
       headStyles: {
         fillColor: [46, 82, 51],
@@ -350,8 +382,7 @@ export async function gerarNotaPacote(
       lastAutoTable: { finalY: number };
     }).lastAutoTable.finalY + 8;
 
-  // QR Code à direita, abaixo da tabela de produtos.
-  // Se faltar espaço, abre uma nova página.
+  // QR Code à direita, abaixo da tabela.
   let qrY = y;
 
   if (qrY + 31 > H - 42) {
@@ -374,7 +405,6 @@ export async function gerarNotaPacote(
   }
 
   // Reserva espaço para o QR Code.
-  // No cavaco, o resumo começa abaixo do QR para evitar sobreposição.
   if (isCavaco) {
     y = qrY + 33;
   } else {
@@ -384,7 +414,7 @@ export async function gerarNotaPacote(
   const esquerdaX = 14;
   const larguraTexto = W - 75;
 
-  // Conferência de saída para madeira em pacotes.
+  // Conferência de saída para madeira.
   if (!isCavaco) {
     doc
       .setFont("helvetica", "bold")
@@ -413,9 +443,9 @@ export async function gerarNotaPacote(
         ],
         [
           "Volume (m³)",
-          n(p.volume_m3, 4),
+          n(p.volume_m3, 5),
           p.volume_expedido_m3 != null
-            ? n(p.volume_expedido_m3, 4)
+            ? n(p.volume_expedido_m3, 5)
             : "________",
         ],
       ],
@@ -447,7 +477,6 @@ export async function gerarNotaPacote(
 
   doc.setFont("helvetica", "normal").setFontSize(9);
 
-  // Operador.
   if (p.operador_nome) {
     doc.text(
       `Operador: ${p.operador_nome}`,
@@ -459,8 +488,6 @@ export async function gerarNotaPacote(
     y += 6;
   }
 
-  // Data de saída opcional.
-  // Usa a data informada; se não houver, aproveita expedido_em.
   const dataSaida = p.data_saida_carga || p.expedido_em;
 
   if (dataSaida) {
@@ -474,7 +501,6 @@ export async function gerarNotaPacote(
     y += 6;
   }
 
-  // Placa do caminhão opcional.
   if (p.placa_caminhao?.trim()) {
     doc.text(
       `Placa do caminhão: ${p.placa_caminhao.trim().toUpperCase()}`,
@@ -488,7 +514,6 @@ export async function gerarNotaPacote(
 
   y += 3;
 
-  // Confere se o resumo cabe na página.
   if (y + 65 > H - 25) {
     doc.addPage();
     y = 18;
@@ -521,7 +546,7 @@ export async function gerarNotaPacote(
   );
 
   doc.text(
-    `Volume total: ${n(p.volume_m3, 4)} m³`,
+    `Volume total: ${n(p.volume_m3, 5)} m³`,
     135,
     y
   );
