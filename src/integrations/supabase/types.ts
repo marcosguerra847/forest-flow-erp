@@ -532,6 +532,62 @@ export type Database = {
           },
         ]
       }
+      itens_romaneio: {
+        Row: {
+          comprimento_m: number
+          criado_em: string
+          descricao: string
+          espessura_m: number
+          id: string
+          largura_m: number
+          pecas_por_pacote: number
+          qtd_blocos: number
+          qtd_pecas: number
+          romaneio_id: string
+          valor_total: number
+          valor_unitario: number
+          volume_m3: number
+        }
+        Insert: {
+          comprimento_m?: number
+          criado_em?: string
+          descricao?: string
+          espessura_m?: number
+          id?: string
+          largura_m?: number
+          pecas_por_pacote?: number
+          qtd_blocos?: number
+          qtd_pecas?: number
+          romaneio_id: string
+          valor_total?: number
+          valor_unitario?: number
+          volume_m3?: number
+        }
+        Update: {
+          comprimento_m?: number
+          criado_em?: string
+          descricao?: string
+          espessura_m?: number
+          id?: string
+          largura_m?: number
+          pecas_por_pacote?: number
+          qtd_blocos?: number
+          qtd_pecas?: number
+          romaneio_id?: string
+          valor_total?: number
+          valor_unitario?: number
+          volume_m3?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "itens_romaneio_romaneio_id_fkey"
+            columns: ["romaneio_id"]
+            isOneToOne: false
+            referencedRelation: "pacotes_expedicao"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lotes_patio: {
         Row: {
           atualizado_em: string
@@ -1011,20 +1067,32 @@ export type Database = {
           codigo: string
           comprimento_m: number | null
           criado_em: string
+          data_saida_carga: string | null
           descricao: string
           espessura_cm: number | null
           expedido_em: string | null
+          forma_pagamento: string | null
           id: string
           largura_cm: number | null
           observacoes: string | null
           operador_nome: string | null
+          pecas_por_pacote: number | null
+          placa_caminhao: string | null
           produto_acabado_id: string | null
           qtd_blocos: number
           qtd_blocos_expedida: number | null
           qtd_pecas: number
           qtd_pecas_expedida: number | null
+          quantidade_expedida: number | null
+          quantidade_venda: number | null
+          situacao_pagamento: string
           status: string
+          tipo_carga: string | null
           token: string
+          unidade_venda: string | null
+          valor_previsto: number | null
+          valor_total: number | null
+          valor_unitario: number | null
           volume_expedido_m3: number | null
           volume_m3: number
         }
@@ -1034,20 +1102,32 @@ export type Database = {
           codigo: string
           comprimento_m?: number | null
           criado_em?: string
+          data_saida_carga?: string | null
           descricao: string
           espessura_cm?: number | null
           expedido_em?: string | null
+          forma_pagamento?: string | null
           id?: string
           largura_cm?: number | null
           observacoes?: string | null
           operador_nome?: string | null
+          pecas_por_pacote?: number | null
+          placa_caminhao?: string | null
           produto_acabado_id?: string | null
           qtd_blocos?: number
           qtd_blocos_expedida?: number | null
           qtd_pecas?: number
           qtd_pecas_expedida?: number | null
+          quantidade_expedida?: number | null
+          quantidade_venda?: number | null
+          situacao_pagamento?: string
           status?: string
+          tipo_carga?: string | null
           token?: string
+          unidade_venda?: string | null
+          valor_previsto?: number | null
+          valor_total?: number | null
+          valor_unitario?: number | null
           volume_expedido_m3?: number | null
           volume_m3?: number
         }
@@ -1057,20 +1137,32 @@ export type Database = {
           codigo?: string
           comprimento_m?: number | null
           criado_em?: string
+          data_saida_carga?: string | null
           descricao?: string
           espessura_cm?: number | null
           expedido_em?: string | null
+          forma_pagamento?: string | null
           id?: string
           largura_cm?: number | null
           observacoes?: string | null
           operador_nome?: string | null
+          pecas_por_pacote?: number | null
+          placa_caminhao?: string | null
           produto_acabado_id?: string | null
           qtd_blocos?: number
           qtd_blocos_expedida?: number | null
           qtd_pecas?: number
           qtd_pecas_expedida?: number | null
+          quantidade_expedida?: number | null
+          quantidade_venda?: number | null
+          situacao_pagamento?: string
           status?: string
+          tipo_carga?: string | null
           token?: string
+          unidade_venda?: string | null
+          valor_previsto?: number | null
+          valor_total?: number | null
+          valor_unitario?: number | null
           volume_expedido_m3?: number | null
           volume_m3?: number
         }
