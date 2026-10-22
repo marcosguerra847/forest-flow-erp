@@ -97,8 +97,10 @@ export const Route = createFileRoute("/_authenticated/expedicao")({
   component: ExpedicaoPage,
 });
 
+// Endereço público do site publicado: abre de qualquer celular sem login.
+const SITE_PUBLICO = "https://forest-flow-erp.lovable.app";
 const linkOperador = (p: Pacote) =>
-  `${typeof window !== "undefined" ? window.location.origin : ""}/x/${encodeURIComponent(p.codigo)}?t=${p.token}`;
+  `${SITE_PUBLICO}/x/${encodeURIComponent(p.codigo)}?t=${p.token}`;
 
 async function pacoteComItens(p: Pacote): Promise<Pacote> {
   if (p.tipo_carga === "cavaco") return p;
@@ -195,8 +197,13 @@ function ExpedicaoPage() {
         />
 
         <KpiCard
-          label="Romaneios expedidos"
-          value={exp.length}
+          label={`Valor expedido (${exp.length})`}
+          value={moeda(
+            exp.reduce(
+              (s, r) => s + Number(r.valor_previsto ?? r.valor_total ?? 0),
+              0,
+            ),
+          )}
           icon={Package2}
           tone="success"
         />
@@ -226,6 +233,14 @@ function ExpedicaoPage() {
               render: (r) => (
                 <span className="font-mono text-xs">{r.codigo}</span>
               ),
+            },
+            {
+              key: "criado_em",
+              label: "Data registro",
+              render: (r) =>
+                r.criado_em
+                  ? new Date(r.criado_em).toLocaleDateString("pt-BR")
+                  : "—",
             },
             {
               key: "descricao",
