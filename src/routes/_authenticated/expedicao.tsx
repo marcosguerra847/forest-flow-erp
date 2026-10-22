@@ -30,6 +30,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { QrDisplay } from "@/components/QrDisplay";
+import { Switch } from "@/components/ui/switch";
+import { estadoExpedicao } from "@/lib/romaneio-status";
 import {
   gerarNotaPacote,
   calcM3,
@@ -92,6 +94,10 @@ export const Route = createFileRoute("/_authenticated/expedicao")({
         name: "description",
         content: "Romaneios de expedição com múltiplos produtos.",
       },
+      { property: "og:title", content: "Expedição · Fazenda Bela Vista" },
+      { property: "og:description", content: "Romaneios de madeira e cavaco e controle de expedição." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: ExpedicaoPage,
@@ -458,7 +464,7 @@ function ExpedicaoPage() {
                       qr.situacao_pagamento === "pago" ? "Pago" : "Pendente",
                   },
                 ]}
-                notaEtiqueta="Operador: escaneie com o celular para conferir e dar baixa de saída."
+                notaEtiqueta="Romaneio da carga"
               />
 
               <div className="flex flex-wrap justify-center gap-2">
@@ -504,6 +510,7 @@ function RomaneioForm({
   pacote?: Pacote;
 }) {
   const [tipo, setTipo] = useState(pacote?.tipo_carga ?? "madeira");
+  const [expedido, setExpedido] = useState(pacote?.status === "expedido");
   const [cliente, setCliente] = useState(pacote?.cliente_nome ?? "");
   const [observacoes, setObservacoes] = useState(pacote?.observacoes ?? "");
 
@@ -782,6 +789,13 @@ function RomaneioForm({
         observacoes: observacoes.trim() || null,
       };
 
+      Object.assign(base, estadoExpedicao(expedido ? "expedido" : "pronto", {
+        qtd_blocos: Number(base.qtd_blocos),
+        qtd_pecas: Number(base.qtd_pecas),
+        volume_m3: Number(base.volume_m3),
+        quantidade_venda: Number(base.quantidade_venda),
+      }, new Date().toISOString(), pacote));
+
       let saved: Pacote;
 
       if (pacote) {
@@ -879,6 +893,10 @@ function RomaneioForm({
       </DialogHeader>
 
       <div className="grid gap-4 sm:grid-cols-2">
+        <div className="flex items-center justify-between gap-3 sm:col-span-2">
+          <Label htmlFor="romaneio-expedido">{expedido ? "Expedido" : "Não expedido"}</Label>
+          <Switch id="romaneio-expedido" checked={expedido} onCheckedChange={setExpedido} />
+        </div>
         <div className="space-y-1.5">
           <Label>Tipo de carga</Label>
           <select

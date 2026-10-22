@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import type { PacoteNota, ItemRomaneioNota } from "@/lib/nota-expedicao";
 
 const base = z.object({ codigo: z.string().min(3).max(40), token: z.string().min(8).max(64) });
 
@@ -8,16 +9,22 @@ export const obterPacote = createServerFn({ method: "POST" })
   .inputValidator((raw) => base.parse(raw))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: p } = await supabaseAdmin
+    const { data: p, error } = await supabaseAdmin
       .from("pacotes_expedicao" as never)
-      .select("codigo,token,descricao,cliente_nome,qtd_blocos,qtd_pecas,volume_m3,qtd_blocos_expedida,qtd_pecas_expedida,volume_expedido_m3,status,operador_nome,expedido_em,observacoes")
+      .select("id,codigo,descricao,cliente_nome,tipo_carga,unidade_venda,quantidade_venda,quantidade_expedida,valor_unitario,valor_total,valor_previsto,forma_pagamento,situacao_pagamento,data_saida_carga,placa_caminhao,espessura_cm,largura_cm,comprimento_m,pecas_por_pacote,qtd_blocos,qtd_pecas,volume_m3,qtd_blocos_expedida,qtd_pecas_expedida,volume_expedido_m3,status,operador_nome,expedido_em,criado_em,observacoes")
       .eq("codigo", data.codigo.toUpperCase())
+      .eq("token", data.token)
       .maybeSingle();
-    const row = p as Record<string, unknown> | null;
-    if (!row || row.token !== data.token) return { ok: false as const };
-    const { token: _t, ...rest } = row;
-    void _t;
-    return { ok: true as const, pacote: rest as Record<string, string | number | null> };
+    if (error) throw new Error("Não foi possível carregar o romaneio.");
+    const row = p as PacoteNota | null;
+    if (!row?.id) return { ok: false as const };
+    const { data: itens, error: itemError } = await supabaseAdmin
+      .from("itens_romaneio" as never)
+      .select("descricao,comprimento_m,espessura_m,largura_m,qtd_blocos,pecas_por_pacote,qtd_pecas,volume_m3,valor_unitario,valor_total")
+      .eq("romaneio_id", row.id)
+      .order("criado_em", { ascending: true });
+    if (itemError) throw new Error("Não foi possível carregar os produtos do romaneio.");
+    return { ok: true as const, pacote: { ...row, itens: (itens ?? []) as unknown as ItemRomaneioNota[] } };
   });
 
 export const expedirPacote = createServerFn({ method: "POST" })
