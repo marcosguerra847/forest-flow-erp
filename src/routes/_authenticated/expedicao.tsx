@@ -27,11 +27,18 @@ import {
   Printer,
   Pencil,
   PlusCircle,
+  CalendarDays,
 } from "lucide-react";
 import { toast } from "sonner";
 import { QrDisplay } from "@/components/QrDisplay";
 import { Switch } from "@/components/ui/switch";
 import { estadoExpedicao } from "@/lib/romaneio-status";
+import {
+  filtrarPorData,
+  periodo,
+  type CampoDataRomaneio,
+  type PresetDataRomaneio,
+} from "@/lib/romaneio-filtro";
 import {
   gerarNotaPacote,
   calcM3,
@@ -108,6 +115,14 @@ const SITE_PUBLICO = "https://forest-flow-erp.lovable.app";
 const linkOperador = (p: Pacote) =>
   `${SITE_PUBLICO}/x/${encodeURIComponent(p.codigo)}?t=${p.token}`;
 
+const PRESETS: { id: PresetDataRomaneio; label: string }[] = [
+  { id: "hoje", label: "Hoje" },
+  { id: "7dias", label: "7 dias" },
+  { id: "30dias", label: "30 dias" },
+  { id: "mes", label: "Este mês" },
+  { id: "tudo", label: "Tudo" },
+];
+
 async function pacoteComItens(p: Pacote): Promise<Pacote> {
   if (p.tipo_carga === "cavaco") return p;
 
@@ -130,6 +145,10 @@ function ExpedicaoPage() {
   const [open, setOpen] = useState(false);
   const [qr, setQr] = useState<Pacote | null>(null);
   const [editing, setEditing] = useState<Pacote | null>(null);
+  const [campoData, setCampoData] = useState<CampoDataRomaneio>("saida");
+  const [preset, setPreset] = useState<PresetDataRomaneio>("tudo");
+  const [de, setDe] = useState("");
+  const [ate, setAte] = useState("");
 
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ["pacotes"],
@@ -146,8 +165,16 @@ function ExpedicaoPage() {
     },
   });
 
-  const prontos = rows.filter((r) => r.status === "pronto");
-  const exp = rows.filter((r) => r.status !== "pronto");
+  const filtrados = filtrarPorData(rows, { campo: campoData, de, ate });
+  const prontos = filtrados.filter((r) => r.status === "pronto");
+  const exp = filtrados.filter((r) => r.status !== "pronto");
+
+  const aplicarPreset = (id: PresetDataRomaneio) => {
+    setPreset(id);
+    const p = periodo(id);
+    setDe(p.de);
+    setAte(p.ate);
+  };
 
   const abrirPdf = async (p: Pacote, imprimir = false) => {
     try {
@@ -185,6 +212,89 @@ function ExpedicaoPage() {
           </Dialog>
         }
       />
+
+      <div className="flex flex-wrap items-end gap-3 rounded-xl border border-border/60 bg-card p-4">
+        <div className="flex items-center gap-2 pb-2 text-xs font-medium uppercase tracking-widest text-muted-foreground">
+          <CalendarDays className="h-4 w-4" />
+          Controle por data
+        </div>
+
+        <div className="space-y-1.5">
+          <Label className="text-[11px] uppercase tracking-widest text-muted-foreground">
+            Data de
+          </Label>
+          <select
+            className="flex h-9 rounded-md border border-input bg-background px-3 py-1.5 text-sm"
+            value={campoData}
+            onChange={(e) =>
+              setCampoData(e.target.value as CampoDataRomaneio)
+            }
+          >
+            <option value="saida">Saída da carga</option>
+            <option value="registro">Registro</option>
+            <option value="expedicao">Expedição</option>
+          </select>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label className="text-[11px] uppercase tracking-widest text-muted-foreground">
+            De
+          </Label>
+          <Input
+            type="date"
+            className="h-9 w-[150px]"
+            value={de}
+            onChange={(e) => {
+              setDe(e.target.value);
+              setPreset("tudo");
+            }}
+          />
+        </div>
+
+        <div className="space-y-1.5">
+          <Label className="text-[11px] uppercase tracking-widest text-muted-foreground">
+            Até
+          </Label>
+          <Input
+            type="date"
+            className="h-9 w-[150px]"
+            value={ate}
+            onChange={(e) => {
+              setAte(e.target.value);
+              setPreset("tudo");
+            }}
+          />
+        </div>
+
+        <div className="flex flex-wrap items-center gap-1.5 pb-1">
+          {PRESETS.map((p) => {
+            const ativo =
+              p.id === "tudo" ? !de && !ate : preset === p.id && !(!de && !ate);
+            return (
+              <Button
+                key={p.id}
+                size="sm"
+                variant={ativo ? "default" : "outline"}
+                onClick={() => aplicarPreset(p.id)}
+              >
+                {p.label}
+              </Button>
+            );
+          })}
+        </div>
+
+        <div className="ml-auto pb-1 text-right">
+          <p className="text-sm font-semibold">
+            {filtrados.length}{" "}
+            <span className="text-xs font-normal text-muted-foreground">
+              de {rows.length} romaneios
+            </span>
+          </p>
+          <p className="text-[11px] text-muted-foreground">
+            Os valores abaixo consideram o período
+          </p>
+        </div>
+      </div>
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <KpiCard
@@ -232,7 +342,7 @@ function ExpedicaoPage() {
         <div className="text-sm text-muted-foreground">Carregando...</div>
       ) : (
         <DataTable
-          rows={rows}
+          rows={filtrados}
           columns={[
             {
               key: "codigo",
@@ -243,7 +353,7 @@ function ExpedicaoPage() {
             },
             {
               key: "criado_em",
-              label: "Data registro",
+              label: "Registro",
               render: (r) =>
                 r.criado_em
                   ? new Date(r.criado_em).toLocaleDateString("pt-BR")
@@ -260,6 +370,24 @@ function ExpedicaoPage() {
               ),
             },
             { key: "cliente_nome", label: "Cliente" },
+            {
+              key: "data_saida_carga",
+              label: "Saída",
+              render: (r) =>
+                r.data_saida_carga
+                  ? new Date(
+                      `${r.data_saida_carga}T12:00:00`,
+                    ).toLocaleDateString("pt-BR")
+                  : "—",
+            },
+            {
+              key: "expedido_em",
+              label: "Expedido em",
+              render: (r) =>
+                r.expedido_em
+                  ? new Date(r.expedido_em).toLocaleDateString("pt-BR")
+                  : "—",
+            },
             {
               key: "qtd_blocos",
               label: "Pacotes",
@@ -310,13 +438,7 @@ function ExpedicaoPage() {
                 <StatusBadge
                   tone={r.status === "pronto" ? "warning" : "success"}
                 >
-                  {r.status === "pronto"
-                    ? "Pronto"
-                    : `Expedido ${
-                        r.expedido_em
-                          ? new Date(r.expedido_em).toLocaleDateString("pt-BR")
-                          : ""
-                      }`}
+                  {r.status === "pronto" ? "Pronto" : "Expedido"}
                 </StatusBadge>
               ),
             },
