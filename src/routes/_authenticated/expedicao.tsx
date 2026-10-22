@@ -340,6 +340,12 @@ function ExpedicaoPage() {
 
       {isLoading ? (
         <div className="text-sm text-muted-foreground">Carregando...</div>
+      ) : filtrados.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-border/60 bg-card p-10 text-center text-sm text-muted-foreground">
+          {de || ate
+            ? "Nenhum romaneio no período selecionado."
+            : "Nenhum romaneio cadastrado ainda."}
+        </div>
       ) : (
         <DataTable
           rows={filtrados}
