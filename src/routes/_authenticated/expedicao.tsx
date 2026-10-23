@@ -111,7 +111,7 @@ export const Route = createFileRoute("/_authenticated/expedicao")({
 });
 
 // Endereço público do site publicado: abre de qualquer celular sem login.
-const SITE_PUBLICO = "https://forest-flow-erp.lovable.app";
+const SITE_PUBLICO = "https://sistemafazendabelavista.lovable.app";
 const linkOperador = (p: Pacote) =>
   `${SITE_PUBLICO}/x/${encodeURIComponent(p.codigo)}?t=${p.token}`;
 
