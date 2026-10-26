@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/PageHeader";
 import { DataTable } from "@/components/DataTable";
 import { Button } from "@/components/ui/button";
-import { FileBarChart, Download, Factory, Boxes, Scissors, AlertTriangle, Package2, Receipt, Wallet, PiggyBank, Users, TrendingUp } from "lucide-react";
+import { FileBarChart, Download, Factory, Boxes, Scissors, AlertTriangle, Package2, Receipt, Wallet, PiggyBank, Users, TrendingUp, Truck, ClipboardList } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/relatorios")({
   head: () => ({ meta: [{ title: "Relatórios · Fazenda Bela Vista" }] }),
@@ -14,6 +14,7 @@ export const Route = createFileRoute("/_authenticated/relatorios")({
 
 type RelKey =
   | "rendimento" | "estoque" | "ocs" | "divergencias" | "produtos"
+  | "expedicoes" | "expedicao_clientes"
   | "contas" | "fluxo" | "dre" | "notas" | "faturamento";
 
 type Rel = { key: RelKey; titulo: string; descricao: string; icon: typeof Factory; grupo: "Operacionais" | "Financeiros" };
@@ -24,6 +25,8 @@ const RELATORIOS: Rel[] = [
   { key: "ocs", titulo: "Ordens de Colheita", descricao: "Previsto vs colhido por OC", icon: Scissors, grupo: "Operacionais" },
   { key: "divergencias", titulo: "Divergências de carga", descricao: "Histórico completo de alertas", icon: AlertTriangle, grupo: "Operacionais" },
   { key: "produtos", titulo: "Produtos acabados", descricao: "Lotes de PA com volume e peças", icon: Package2, grupo: "Operacionais" },
+  { key: "expedicoes", titulo: "Expedições (romaneios)", descricao: "Todos os romaneios com datas, medidas, quantidades, valores e situação", icon: Truck, grupo: "Operacionais" },
+  { key: "expedicao_clientes", titulo: "Expedição por cliente", descricao: "Romaneios, m³/ton expedidos e valores por cliente", icon: ClipboardList, grupo: "Financeiros" },
   { key: "contas", titulo: "Contas a pagar e receber", descricao: "Vencimentos, status, atrasos e saldo em aberto", icon: Wallet, grupo: "Financeiros" },
   { key: "fluxo", titulo: "Fluxo de caixa", descricao: "Entradas, saídas e saldo acumulado por lançamento", icon: PiggyBank, grupo: "Financeiros" },
   { key: "dre", titulo: "DRE por centro de custo", descricao: "Receitas, custos (colheita, transporte, serraria) e resultado", icon: TrendingUp, grupo: "Financeiros" },
@@ -168,6 +171,55 @@ function RelatorioView({ tipo }: { tipo: RelKey }) {
           Criado: r.criado_em ? new Date(r.criado_em).toLocaleDateString("pt-BR") : "",
         }));
       }
+      if (tipo === "expedicoes" || tipo === "expedicao_clientes") {
+        const { data, error } = await supabase.from("pacotes_expedicao")
+          .select("codigo,descricao,cliente_nome,tipo_carga,unidade_venda,quantidade_venda,quantidade_expedida,valor_unitario,valor_total,valor_previsto,forma_pagamento,situacao_pagamento,data_saida_carga,placa_caminhao,espessura_cm,largura_cm,comprimento_m,qtd_blocos,qtd_pecas,volume_m3,qtd_blocos_expedida,qtd_pecas_expedida,volume_expedido_m3,status,operador_nome,expedido_em,criado_em")
+          .order("criado_em", { ascending: false });
+        if (error) throw error;
+        const d = (v: string | null) => v ? new Date(v.length === 10 ? v + "T00:00:00" : v).toLocaleDateString("pt-BR") : "—";
+        const valor = (r: { valor_total: number | null; valor_previsto: number | null }) => Number(r.valor_total ?? r.valor_previsto ?? 0);
+        if (tipo === "expedicoes") {
+          return (data ?? []).map(r => ({
+            Romaneio: r.codigo,
+            Registro: d(r.criado_em),
+            Saída: d(r.data_saida_carga),
+            "Expedido em": d(r.expedido_em),
+            Cliente: r.cliente_nome ?? "—",
+            Tipo: r.tipo_carga === "cavaco" ? "Cavaco" : "Madeira",
+            Produto: r.descricao,
+            Medidas: r.espessura_cm || r.largura_cm || r.comprimento_m ? `${r.espessura_cm ?? "—"}×${r.largura_cm ?? "—"} cm × ${r.comprimento_m ?? "—"} m` : "—",
+            Blocos: r.qtd_blocos,
+            Peças: r.qtd_pecas,
+            "Volume (m³)": Number(r.volume_m3 || 0).toFixed(3),
+            "Quantidade venda": r.quantidade_venda != null ? `${Number(r.quantidade_venda).toLocaleString("pt-BR")} ${r.unidade_venda === "ton" ? "ton" : "m³"}` : "—",
+            "Blocos expedidos": r.qtd_blocos_expedida ?? 0,
+            "Peças expedidas": r.qtd_pecas_expedida ?? 0,
+            "Expedido (m³)": Number(r.volume_expedido_m3 || 0).toFixed(3),
+            "Valor unit. (R$)": brl(r.valor_unitario),
+            "Valor total (R$)": brl(valor(r)),
+            Pagamento: r.forma_pagamento ?? "—",
+            "Situação pagto.": r.situacao_pagamento ?? "—",
+            Placa: r.placa_caminhao ?? "—",
+            Operador: r.operador_nome ?? "—",
+            Status: r.status === "expedido" ? "Expedido" : "Não expedido",
+          }));
+        }
+        const g = new Map<string, { n: number; exp: number; m3: number; m3e: number; ton: number; tot: number; totE: number; pago: number }>();
+        for (const r of data ?? []) {
+          const k = r.cliente_nome?.trim() || "Sem cliente";
+          const x = g.get(k) ?? { n: 0, exp: 0, m3: 0, m3e: 0, ton: 0, tot: 0, totE: 0, pago: 0 };
+          const v = valor(r); const e = r.status === "expedido";
+          x.n++; x.m3 += Number(r.volume_m3 || 0); x.tot += v;
+          if (e) { x.exp++; x.m3e += Number(r.volume_expedido_m3 ?? r.volume_m3 ?? 0); x.totE += v; if (r.unidade_venda === "ton") x.ton += Number(r.quantidade_expedida ?? r.quantidade_venda ?? 0); }
+          if (r.situacao_pagamento === "pago") x.pago += v;
+          g.set(k, x);
+        }
+        return [...g.entries()].sort((a, b) => b[1].tot - a[1].tot).map(([k, x]) => ({
+          Cliente: k, Romaneios: x.n, Expedidos: x.exp,
+          "Volume (m³)": x.m3.toFixed(3), "Expedido (m³)": x.m3e.toFixed(3), "Expedido (ton)": x.ton.toFixed(2),
+          "Valor total (R$)": brl(x.tot), "Valor expedido (R$)": brl(x.totE), "Pago (R$)": brl(x.pago), "Em aberto (R$)": brl(x.tot - x.pago),
+        }));
+      }
       if (tipo === "contas") {
         const { data } = await supabase.from("contas_financeiras")
           .select("tipo,descricao,categoria,valor,vencimento,data_pagamento,status,fornecedor,clientes(nome),centros_custo(nome)")
@@ -306,7 +358,7 @@ function RelatorioView({ tipo }: { tipo: RelKey }) {
           rows={rows}
           columns={Object.keys(rows[0]).map(k => ({
             key: k, label: k,
-            align: /m³|%|Peças|Toras/.test(k) ? "right" as const : undefined,
+            align: /m³|%|Peças|Toras|Blocos|R\$|ton|Romaneios|Expedidos/.test(k) ? "right" as const : undefined,
             render: (r) => String(r[k] ?? "—"),
           }))}
         />
