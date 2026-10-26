@@ -43,7 +43,7 @@ function AuthPage() {
     setLoading(false);
 
     if (error) {
-      toast.error(error.message);
+      toast.error(traduzErro(error.message));
       return;
     }
 
@@ -56,8 +56,8 @@ function AuthPage() {
 
     setLoading(true);
 
-    const { error } = await supabase.auth.signUp({
-      email,
+    const { data, error } = await supabase.auth.signUp({
+      email: email.trim(),
       password,
       options: {
         emailRedirectTo: window.location.origin,
@@ -70,10 +70,15 @@ function AuthPage() {
     setLoading(false);
 
     if (error) {
-      toast.error(error.message);
+      toast.error(traduzErro(error.message));
       return;
     }
 
+    if (data.session) {
+      toast.success("Conta criada! Bem-vindo.");
+      router.navigate({ to: "/" });
+      return;
+    }
     toast.success("Conta criada. Você já pode entrar.");
     setTab("login");
   };
@@ -239,6 +244,18 @@ function AuthPage() {
       </div>
     </div>
   );
+}
+
+function traduzErro(msg: string) {
+  const m = msg.toLowerCase();
+  if (m.includes("invalid login")) return "E-mail ou senha incorretos.";
+  if (m.includes("email not confirmed")) return "E-mail ainda não confirmado. Tente novamente em instantes.";
+  if (m.includes("weak") || m.includes("easy to guess")) return "Senha muito fraca ou conhecida. Use uma senha mais forte (letras, números e símbolos).";
+  if (m.includes("already registered")) return "Este e-mail já tem conta. Use a aba Entrar.";
+  if (m.includes("seconds") || m.includes("rate limit")) return "Muitas tentativas. Aguarde alguns segundos e tente de novo.";
+  if (m.includes("at least")) return "A senha precisa ter pelo menos 6 caracteres.";
+  if (m.includes("fetch")) return "Sem conexão com o servidor. Verifique sua internet.";
+  return msg;
 }
 
 function Feature({
