@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { obterPacote, expedirPacote } from "@/lib/expedicao.functions";
 import { RomaneioPublico } from "@/components/RomaneioPublico";
+import { linkRomaneio } from "@/lib/site-url";
 import type { PacoteNota } from "@/lib/nota-expedicao";
 
 export const Route = createFileRoute("/x/$codigo")({
@@ -99,7 +100,7 @@ function ExpedicaoPublica() {
           <p className="rounded-xl border border-destructive/40 bg-destructive/5 p-4 text-sm">QR inválido ou pacote não encontrado.</p>
         ) : !p ? <p className="text-sm text-muted-foreground">Carregando…</p> : (
           <>
-            <RomaneioPublico pacote={p} link={`https://sistemafazendabelavista.lovable.app/x/${encodeURIComponent(codigo)}?t=${encodeURIComponent(t)}`} />
+            <RomaneioPublico pacote={p} link={linkRomaneio(codigo, t)} />
 
             {p.status === "pronto" ? (
               <section className="space-y-3 rounded-2xl border border-primary/40 bg-card p-5">
