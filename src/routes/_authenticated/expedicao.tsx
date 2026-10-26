@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { linkRomaneio } from "@/lib/site-url";
 import { PageHeader } from "@/components/PageHeader";
 import { DataTable, StatusBadge } from "@/components/DataTable";
 import { KpiCard } from "@/components/KpiCard";
@@ -110,10 +111,8 @@ export const Route = createFileRoute("/_authenticated/expedicao")({
   component: ExpedicaoPage,
 });
 
-// Endereço público do site publicado: abre de qualquer celular sem login.
-const SITE_PUBLICO = "https://sistemafazendabelavista.lovable.app";
-const linkOperador = (p: Pacote) =>
-  `${SITE_PUBLICO}/x/${encodeURIComponent(p.codigo)}?t=${p.token}`;
+// Endereço público do site (domínio próprio): abre de qualquer celular sem login.
+const linkOperador = (p: Pacote) => linkRomaneio(p.codigo, p.token);
 
 const PRESETS: { id: PresetDataRomaneio; label: string }[] = [
   { id: "hoje", label: "Hoje" },
