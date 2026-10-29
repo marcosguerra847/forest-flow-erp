@@ -123,7 +123,7 @@ const PRESETS: { id: PresetDataRomaneio; label: string }[] = [
 ];
 
 async function pacoteComItens(p: Pacote): Promise<Pacote> {
-  if (p.tipo_carga === "cavaco") return p;
+  if (["cavaco","po_serra"].includes(p.tipo_carga ?? "")) return p;
 
   const { data, error } = await supabase
     .from("itens_romaneio" as never)
@@ -370,7 +370,7 @@ function ExpedicaoPage() {
               render: (r) => (
                 <span>
                   {r.descricao ||
-                    (r.tipo_carga === "cavaco" ? "Cavaco" : "Romaneio")}
+                    (r.tipo_carga === "cavaco" ? "Cavaco" : r.tipo_carga === "po_serra" ? "Pó de serra" : "Romaneio")}
                 </span>
               ),
             },
@@ -670,7 +670,7 @@ function RomaneioForm({
   );
 
   const [loadingItems, setLoadingItems] = useState(
-    Boolean(pacote && pacote.tipo_carga !== "cavaco"),
+    Boolean(pacote && !["cavaco","po_serra"].includes(pacote.tipo_carga ?? "")),
   );
 
   const [saving, setSaving] = useState(false);
@@ -678,7 +678,7 @@ function RomaneioForm({
   useEffect(() => {
     let active = true;
 
-    if (!pacote || pacote.tipo_carga === "cavaco") {
+    if (!pacote || ["cavaco","po_serra"].includes(pacote.tipo_carga ?? "")) {
       setLoadingItems(false);
       return;
     }
@@ -774,7 +774,7 @@ function RomaneioForm({
   const totalVolume = calculados.reduce((s, i) => s + i.volume, 0);
 
   const totalValor =
-    tipo === "cavaco"
+    (tipo === "cavaco" || tipo === "po_serra")
       ? num(quantidadeCavaco) * num(precoCavaco)
       : calculados.reduce((s, i) => s + i.valor, 0);
 
@@ -794,7 +794,7 @@ function RomaneioForm({
       return toast.error("Informe o cliente ou comprador");
     }
 
-    if (tipo !== "cavaco") {
+    if ((tipo !== "cavaco" && tipo !== "po_serra")) {
       if (!calculados.length) {
         return toast.error("Adicione pelo menos um produto");
       }
@@ -837,24 +837,24 @@ function RomaneioForm({
       }
     } else {
       if (num(quantidadeCavaco) <= 0) {
-        return toast.error("Informe a quantidade de cavaco");
+        return toast.error(tipo === "po_serra" ? "Informe a quantidade de pó de serra" : "Informe a quantidade de cavaco");
       }
 
       if (num(precoCavaco) < 0) {
-        return toast.error("O preço do cavaco não pode ser negativo");
+        return toast.error("O preço não pode ser negativo");
       }
     }
 
     setSaving(true);
 
     try {
-      const isCavaco = tipo === "cavaco";
+      const isCavaco = (tipo === "cavaco" || tipo === "po_serra");
 
       const base: Record<string, unknown> = {
         tipo_carga: tipo,
 
         descricao: isCavaco
-          ? "Cavaco"
+          ? (tipo === "po_serra" ? "Pó de serra" : "Cavaco")
           : calculados.length === 1
             ? calculados[0].descricao.trim()
             : `Romaneio com ${calculados.length} produtos`,
@@ -1034,6 +1034,7 @@ function RomaneioForm({
           >
             <option value="madeira">Madeira / produtos por peças</option>
             <option value="cavaco">Cavaco (por m³ ou tonelada)</option>
+            <option value="po_serra">Pó de serra (por m³ ou tonelada)</option>
           </select>
         </div>
 
@@ -1067,7 +1068,7 @@ function RomaneioForm({
           />
         </div>
 
-        {tipo === "cavaco" ? (
+        {(tipo === "cavaco" || tipo === "po_serra") ? (
           <>
             <div className="space-y-1.5">
               <Label>Unidade de venda</Label>
