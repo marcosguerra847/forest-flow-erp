@@ -225,7 +225,7 @@ export async function gerarNotaPacote(
     51
   );
 
-  const isCavaco = p.tipo_carga === "cavaco";
+  const isCavaco = (p.tipo_carga === "cavaco" || p.tipo_carga === "po_serra");
   const itens = p.itens ?? [];
 
   // Tabela de cavaco ou pó de serra.
@@ -243,7 +243,7 @@ export async function gerarNotaPacote(
         "Valor total",
       ]],
       body: [[
-        p.descricao || "Cavaco",
+        p.descricao || (p.tipo_carga === "po_serra" ? "Pó de serra" : "Cavaco"),
         unidade,
         n(p.quantidade_venda ?? 0, 3),
         brl(p.valor_unitario),

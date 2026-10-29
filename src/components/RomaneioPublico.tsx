@@ -18,7 +18,7 @@ export function RomaneioPublico({ pacote: p, link }: { pacote: PacoteNota; link:
     catch { setErro("Não foi possível gerar a nota. Tente novamente."); }
     finally { setBusy(false); }
   };
-  const cavaco = p.tipo_carga === "cavaco";
+  const cavaco = (p.tipo_carga === "cavaco" || p.tipo_carga === "po_serra");
   return <section className="space-y-4 border-y border-border py-5">
     <header className="flex flex-wrap items-center justify-between gap-3">
       <div><h1 className="font-display text-xl font-semibold">Nota de carga / Romaneio</h1><p className="font-mono text-sm text-primary">{p.codigo}</p></div>

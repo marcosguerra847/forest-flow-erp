@@ -185,7 +185,7 @@ function RelatorioView({ tipo }: { tipo: RelKey }) {
             Saída: d(r.data_saida_carga),
             "Expedido em": d(r.expedido_em),
             Cliente: r.cliente_nome ?? "—",
-            Tipo: r.tipo_carga === "cavaco" ? "Cavaco" : "Madeira",
+            Tipo: r.tipo_carga === "cavaco" ? "Cavaco" : r.tipo_carga === "po_serra" ? "Pó de serra" : "Madeira",
             Produto: r.descricao,
             Medidas: r.espessura_cm || r.largura_cm || r.comprimento_m ? `${r.espessura_cm ?? "—"}×${r.largura_cm ?? "—"} cm × ${r.comprimento_m ?? "—"} m` : "—",
             Blocos: r.qtd_blocos,
