@@ -1067,7 +1067,7 @@ function RomaneioForm({
           </select>
         </div>
 
-        <div className="space-y-1.5 sm:col-span-2">
+        <div className="space-y-1.5">
           <Label htmlFor="romaneio-cliente">Cliente / comprador</Label>
           <div className="relative">
             <Input
