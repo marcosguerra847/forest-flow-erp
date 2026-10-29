@@ -648,7 +648,28 @@ function RomaneioForm({
   const [tipo, setTipo] = useState(pacote?.tipo_carga ?? "madeira");
   const [expedido, setExpedido] = useState(pacote?.status === "expedido");
   const [cliente, setCliente] = useState(pacote?.cliente_nome ?? "");
+  const [focoCliente, setFocoCliente] = useState(false);
   const [observacoes, setObservacoes] = useState(pacote?.observacoes ?? "");
+
+  const { data: clientesCadastrados = [] } = useQuery({
+    queryKey: ["clientes"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("clientes")
+        .select("id, nome")
+        .order("nome");
+      if (error) throw error;
+      return (data ?? []) as { id: string; nome: string }[];
+    },
+  });
+
+  const sugestoesCliente = useMemo(() => {
+    const alvo = normalizar(cliente);
+    return clientesCadastrados
+      .filter((c) => normalizar(c.nome) !== alvo)
+      .filter((c) => (alvo ? normalizar(c.nome).includes(alvo) : true))
+      .slice(0, 8);
+  }, [cliente, clientesCadastrados]);
 
   const [dataSaida, setDataSaida] = useState(
     pacote?.data_saida_carga ?? dataLocalISO(),
