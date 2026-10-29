@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { linkRomaneio } from "@/lib/site-url";
@@ -29,6 +29,7 @@ import {
   Pencil,
   PlusCircle,
   CalendarDays,
+  Users,
 } from "lucide-react";
 import { toast } from "sonner";
 import { QrDisplay } from "@/components/QrDisplay";
@@ -79,6 +80,13 @@ const novoItem = (): ItemForm => ({
 
 const num = (s: string | number | null | undefined) =>
   Number(String(s ?? "").replace(",", ".")) || 0;
+
+const normalizar = (s: string) =>
+  s
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
 
 const moeda = (v: number) =>
   v.toLocaleString("pt-BR", {
