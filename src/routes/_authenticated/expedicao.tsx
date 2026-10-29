@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { linkRomaneio } from "@/lib/site-url";
@@ -29,6 +29,7 @@ import {
   Pencil,
   PlusCircle,
   CalendarDays,
+  Users,
 } from "lucide-react";
 import { toast } from "sonner";
 import { QrDisplay } from "@/components/QrDisplay";
@@ -79,6 +80,13 @@ const novoItem = (): ItemForm => ({
 
 const num = (s: string | number | null | undefined) =>
   Number(String(s ?? "").replace(",", ".")) || 0;
+
+const normalizar = (s: string) =>
+  s
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
 
 const moeda = (v: number) =>
   v.toLocaleString("pt-BR", {
@@ -640,7 +648,28 @@ function RomaneioForm({
   const [tipo, setTipo] = useState(pacote?.tipo_carga ?? "madeira");
   const [expedido, setExpedido] = useState(pacote?.status === "expedido");
   const [cliente, setCliente] = useState(pacote?.cliente_nome ?? "");
+  const [focoCliente, setFocoCliente] = useState(false);
   const [observacoes, setObservacoes] = useState(pacote?.observacoes ?? "");
+
+  const { data: clientesCadastrados = [] } = useQuery({
+    queryKey: ["clientes"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("clientes")
+        .select("id, nome")
+        .order("nome");
+      if (error) throw error;
+      return (data ?? []) as { id: string; nome: string }[];
+    },
+  });
+
+  const sugestoesCliente = useMemo(() => {
+    const alvo = normalizar(cliente);
+    return clientesCadastrados
+      .filter((c) => normalizar(c.nome) !== alvo)
+      .filter((c) => (alvo ? normalizar(c.nome).includes(alvo) : true))
+      .slice(0, 8);
+  }, [cliente, clientesCadastrados]);
 
   const [dataSaida, setDataSaida] = useState(
     pacote?.data_saida_carga ?? dataLocalISO(),
@@ -1039,12 +1068,48 @@ function RomaneioForm({
         </div>
 
         <div className="space-y-1.5">
-          <Label>Cliente / comprador</Label>
-          <Input
-            value={cliente}
-            onChange={(e) => setCliente(e.target.value)}
-            placeholder="Nome do cliente"
-          />
+          <Label htmlFor="romaneio-cliente">Cliente / comprador</Label>
+          <div className="relative">
+            <Input
+              id="romaneio-cliente"
+              value={cliente}
+              autoComplete="off"
+              onChange={(e) => {
+                setCliente(e.target.value);
+                setFocoCliente(true);
+              }}
+              onFocus={() => setFocoCliente(true)}
+              onBlur={() =>
+                window.setTimeout(() => setFocoCliente(false), 150)
+              }
+              placeholder="Escolha um cliente cadastrado ou digite o nome"
+            />
+            {focoCliente && sugestoesCliente.length > 0 && (
+              <ul className="absolute z-20 mt-1 max-h-56 w-full overflow-auto rounded-md border bg-background shadow-lg">
+                {sugestoesCliente.map((c) => (
+                  <li key={c.id}>
+                    <button
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => {
+                        setCliente(c.nome);
+                        setFocoCliente(false);
+                      }}
+                      className="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left text-sm hover:bg-accent"
+                    >
+                      <Users className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                      <span className="truncate">{c.nome}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {clientesCadastrados.length > 0
+              ? "Selecione um cliente cadastrado ou digite o nome de quem você quiser."
+              : "Digite o nome do cliente ou comprador."}
+          </p>
         </div>
 
         <div className="space-y-1.5">
