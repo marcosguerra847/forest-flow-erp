@@ -1067,13 +1067,49 @@ function RomaneioForm({
           </select>
         </div>
 
-        <div className="space-y-1.5">
-          <Label>Cliente / comprador</Label>
-          <Input
-            value={cliente}
-            onChange={(e) => setCliente(e.target.value)}
-            placeholder="Nome do cliente"
-          />
+        <div className="space-y-1.5 sm:col-span-2">
+          <Label htmlFor="romaneio-cliente">Cliente / comprador</Label>
+          <div className="relative">
+            <Input
+              id="romaneio-cliente"
+              value={cliente}
+              autoComplete="off"
+              onChange={(e) => {
+                setCliente(e.target.value);
+                setFocoCliente(true);
+              }}
+              onFocus={() => setFocoCliente(true)}
+              onBlur={() =>
+                window.setTimeout(() => setFocoCliente(false), 150)
+              }
+              placeholder="Escolha um cliente cadastrado ou digite o nome"
+            />
+            {focoCliente && sugestoesCliente.length > 0 && (
+              <ul className="absolute z-20 mt-1 max-h-56 w-full overflow-auto rounded-md border bg-background shadow-lg">
+                {sugestoesCliente.map((c) => (
+                  <li key={c.id}>
+                    <button
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => {
+                        setCliente(c.nome);
+                        setFocoCliente(false);
+                      }}
+                      className="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left text-sm hover:bg-accent"
+                    >
+                      <Users className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                      <span className="truncate">{c.nome}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {clientesCadastrados.length > 0
+              ? "Selecione um cliente cadastrado ou digite o nome de quem você quiser."
+              : "Digite o nome do cliente ou comprador."}
+          </p>
         </div>
 
         <div className="space-y-1.5">
