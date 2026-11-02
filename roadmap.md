@@ -6,4 +6,5 @@
 - [x] Remove Lovable branding from site code: farm's own domain in every romaneio link/QR, badge hidden.
 - [x] In the romaneio form, suggest registered clients while still allowing any free-text client name.
 - [x] Add "Permuta" payment status to romaneios, excluded from the "Valor expedido" total.
+- [x] Count ready romaneios across all cargo types, including unpaid loads with no blocks.
 - [ ] Publish the app so the new romaneio link (farm domain) reaches the live site.
