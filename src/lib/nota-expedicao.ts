@@ -576,7 +576,11 @@ export async function gerarNotaPacote(
 
   doc.text(
     `Situação do pagamento: ${
-      p.situacao_pagamento === "pago" ? "PAGO" : "PENDENTE"
+      p.situacao_pagamento === "pago"
+        ? "PAGO"
+        : p.situacao_pagamento === "permuta"
+          ? "PERMUTA"
+          : "PENDENTE"
     }`,
     14,
     y

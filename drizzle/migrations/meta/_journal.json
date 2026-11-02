@@ -15,6 +15,13 @@
       "when": 1791925979228,
       "tag": "0001_pacotes_medidas",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793659929200,
+      "tag": "0002_permuta_situacao_pagamento_romaneio",
+      "breakpoints": true
     }
   ]
 }

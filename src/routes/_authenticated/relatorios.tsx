@@ -198,7 +198,7 @@ function RelatorioView({ tipo }: { tipo: RelKey }) {
             "Valor unit. (R$)": brl(r.valor_unitario),
             "Valor total (R$)": brl(valor(r)),
             Pagamento: r.forma_pagamento ?? "—",
-            "Situação pagto.": r.situacao_pagamento ?? "—",
+            "Situação pagto.": r.situacao_pagamento === "pago" ? "Pago" : r.situacao_pagamento === "permuta" ? "Permuta" : r.situacao_pagamento === "pendente" ? "Pendente" : "—",
             Placa: r.placa_caminhao ?? "—",
             Operador: r.operador_nome ?? "—",
             Status: r.status === "expedido" ? "Expedido" : "Não expedido",
