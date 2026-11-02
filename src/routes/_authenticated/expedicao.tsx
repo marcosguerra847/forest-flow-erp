@@ -35,6 +35,7 @@ import { toast } from "sonner";
 import { QrDisplay } from "@/components/QrDisplay";
 import { Switch } from "@/components/ui/switch";
 import { estadoExpedicao } from "@/lib/romaneio-status";
+import { contarPacotesProntos } from "@/lib/romaneio-contagem";
 import {
   filtrarPorData,
   periodo,
@@ -315,10 +316,7 @@ function ExpedicaoPage() {
 
         <KpiCard
           label="Pacotes prontos"
-          value={prontos.reduce(
-            (s, r) => s + Number(r.qtd_blocos || 0),
-            0,
-          )}
+          value={contarPacotesProntos(filtrados)}
           icon={Package2}
         />
 
