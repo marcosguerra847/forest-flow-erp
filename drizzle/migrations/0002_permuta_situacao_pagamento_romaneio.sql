@@ -1,0 +1,2 @@
+ALTER TABLE public.pacotes_expedicao DROP CONSTRAINT pacotes_expedicao_situacao_pagamento_check;
+ALTER TABLE public.pacotes_expedicao ADD CONSTRAINT pacotes_expedicao_situacao_pagamento_check CHECK (situacao_pagamento = ANY (ARRAY['pendente'::text, 'pago'::text, 'permuta'::text]));

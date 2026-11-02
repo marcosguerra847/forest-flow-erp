@@ -52,7 +52,7 @@ type Pacote = PacoteNota & {
   id: string;
   token: string;
   forma_pagamento?: string | null;
-  situacao_pagamento?: "pendente" | "pago" | null;
+  situacao_pagamento?: "pendente" | "pago" | "permuta" | null;
   valor_previsto?: number | null;
   data_saida_carga?: string | null;
   placa_caminhao?: string | null;
@@ -175,6 +175,8 @@ function ExpedicaoPage() {
   const filtrados = filtrarPorData(rows, { campo: campoData, de, ate });
   const prontos = filtrados.filter((r) => r.status === "pronto");
   const exp = filtrados.filter((r) => r.status !== "pronto");
+  // Permuta (troca por máquina/serviço) não entra na soma de valor expedido.
+  const expValor = exp.filter((r) => r.situacao_pagamento !== "permuta");
 
   const aplicarPreset = (id: PresetDataRomaneio) => {
     setPreset(id);
@@ -321,9 +323,9 @@ function ExpedicaoPage() {
         />
 
         <KpiCard
-          label={`Valor expedido (${exp.length})`}
+          label={`Valor expedido (${expValor.length})`}
           value={moeda(
-            exp.reduce(
+            expValor.reduce(
               (s, r) => s + Number(r.valor_previsto ?? r.valor_total ?? 0),
               0,
             ),
@@ -437,10 +439,18 @@ function ExpedicaoPage() {
               render: (r) => (
                 <StatusBadge
                   tone={
-                    r.situacao_pagamento === "pago" ? "success" : "warning"
+                    r.situacao_pagamento === "pago"
+                      ? "success"
+                      : r.situacao_pagamento === "permuta"
+                        ? "info"
+                        : "warning"
                   }
                 >
-                  {r.situacao_pagamento === "pago" ? "Pago" : "Pendente"}
+                  {r.situacao_pagamento === "pago"
+                    ? "Pago"
+                    : r.situacao_pagamento === "permuta"
+                      ? "Permuta"
+                      : "Pendente"}
                 </StatusBadge>
               ),
             },
@@ -597,7 +607,11 @@ function ExpedicaoPage() {
                   {
                     label: "Pagamento",
                     value:
-                      qr.situacao_pagamento === "pago" ? "Pago" : "Pendente",
+                      qr.situacao_pagamento === "pago"
+                        ? "Pago"
+                        : qr.situacao_pagamento === "permuta"
+                          ? "Permuta"
+                          : "Pendente",
                   },
                 ]}
                 notaEtiqueta="Romaneio da carga"
@@ -684,8 +698,14 @@ function RomaneioForm({
   );
 
   const [situacaoPagamento, setSituacaoPagamento] = useState<
-    "pendente" | "pago"
-  >(pacote?.situacao_pagamento === "pago" ? "pago" : "pendente");
+    "pendente" | "pago" | "permuta"
+  >(
+    pacote?.situacao_pagamento === "pago"
+      ? "pago"
+      : pacote?.situacao_pagamento === "permuta"
+        ? "permuta"
+        : "pendente",
+  );
 
   const [itens, setItens] = useState<ItemForm[]>([novoItem()]);
   const [unidade, setUnidade] = useState(pacote?.unidade_venda ?? "m3");
@@ -1420,12 +1440,13 @@ function RomaneioForm({
             value={situacaoPagamento}
             onChange={(e) =>
               setSituacaoPagamento(
-                e.target.value as "pendente" | "pago",
+                e.target.value as "pendente" | "pago" | "permuta",
               )
             }
           >
             <option value="pendente">Pendente</option>
             <option value="pago">Pago</option>
+            <option value="permuta">Permuta (troca)</option>
           </select>
         </div>
 

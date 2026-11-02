@@ -47,7 +47,7 @@ export function RomaneioPublico({ pacote: p, link }: { pacote: PacoteNota; link:
       {!cavaco && <p>{numero(p.qtd_blocos, 0)} pacotes · {numero(p.qtd_pecas, 0)} peças · {numero(p.volume_m3, 5)} m³</p>}
       <p className="text-lg font-semibold">Valor total: {moeda(p.valor_previsto ?? p.valor_total)}</p>
       <p>Forma de pagamento: {formas[p.forma_pagamento ?? ""] ?? "Não informado"}</p>
-      <p>Situação do pagamento: {p.situacao_pagamento === "pago" ? "Pago" : "Pendente"}</p>
+      <p>Situação do pagamento: {p.situacao_pagamento === "pago" ? "Pago" : p.situacao_pagamento === "permuta" ? "Permuta" : "Pendente"}</p>
       {p.observacoes && <p className="whitespace-pre-wrap break-words">Observações: {p.observacoes}</p>}
     </div>
   </section>;
