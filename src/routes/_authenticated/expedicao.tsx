@@ -379,7 +379,7 @@ function ExpedicaoPage() {
               render: (r) => (
                 <span>
                   {r.descricao ||
-                    (r.tipo_carga === "cavaco" ? "Cavaco" : r.tipo_carga === "po_serra" ? "Pó de serra" : r.tipo_carga === "cilindrica" ? "Madeira cilíndrica" : "Romaneio")}
+                    (r.tipo_carga === "cavaco" ? "Cavaco" : r.tipo_carga === "po_serra" ? "Pó de serra" : r.tipo_carga === "cilindrica" ? "Eucalipto cilíndrico / roliço" : "Romaneio")}
                 </span>
               ),
             },
@@ -1090,7 +1090,7 @@ function RomaneioForm({
             <option value="madeira">Madeira / produtos por peças</option>
             <option value="cavaco">Cavaco (por m³ ou tonelada)</option>
             <option value="po_serra">Pó de serra (por m³ ou tonelada)</option>
-            <option value="cilindrica">Madeira roliça / cilíndrica (escoras, eucalipto tratado)</option>
+            <option value="cilindrica">Madeira de eucalipto cilíndrica / roliça</option>
           </select>
         </div>
 
@@ -1259,7 +1259,7 @@ function RomaneioForm({
                       onChange={(e) =>
                         atualizaItem(index, "descricao", e.target.value)
                       }
-                      placeholder={cilindrica ? "Ex.: Escora de eucalipto tratado" : "Ex.: Ripinha de eucalipto"}
+                      placeholder={cilindrica ? "Ex.: Escora de eucalipto, mourão, roliço" : "Ex.: Ripinha de eucalipto"}
                     />
                   </div>
 
