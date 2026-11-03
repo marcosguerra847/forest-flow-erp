@@ -1090,7 +1090,7 @@ function RomaneioForm({
             <option value="madeira">Madeira / produtos por peças</option>
             <option value="cavaco">Cavaco (por m³ ou tonelada)</option>
             <option value="po_serra">Pó de serra (por m³ ou tonelada)</option>
-            <option value="cilindrica">Madeira roliça / cilíndrica (escoras, eucalipto tratado)</option>
+            <option value="cilindrica">Madeira de eucalipto cilíndrica / roliça</option>
           </select>
         </div>
 
