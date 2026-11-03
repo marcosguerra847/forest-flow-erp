@@ -35,6 +35,7 @@ import { toast } from "sonner";
 import { QrDisplay } from "@/components/QrDisplay";
 import { Switch } from "@/components/ui/switch";
 import { estadoExpedicao } from "@/lib/romaneio-status";
+import { calcM3Cilindrico, ehCilindrica } from "@/lib/volume-cilindrico";
 import { contarPacotesProntos } from "@/lib/romaneio-contagem";
 import {
   filtrarPorData,
@@ -792,17 +793,22 @@ function RomaneioForm({
     };
   }, [pacote]);
 
-  const calculados = itens.map((i) => {
+  const cilindrica = ehCilindrica(tipo);
+  const calculados = itens.map((i0) => {
+    // Na madeira cilíndrica o diâmetro fica em "espessura" e é repetido em "largura".
+    const i = cilindrica ? { ...i0, largura_m: i0.espessura_m } : i0;
     const qtdBlocos = num(i.qtd_blocos);
     const pecasPorPacote = num(i.pecas_por_pacote);
     const qtdPecas = qtdBlocos * pecasPorPacote;
 
-    const volume = calcM3(
-      num(i.comprimento_m),
-      num(i.espessura_m),
-      num(i.largura_m),
-      qtdPecas,
-    );
+    const volume = cilindrica
+      ? calcM3Cilindrico(num(i.comprimento_m), num(i.espessura_m), qtdPecas)
+      : calcM3(
+          num(i.comprimento_m),
+          num(i.espessura_m),
+          num(i.largura_m),
+          qtdPecas,
+        );
 
     const valor = volume * num(i.valor_unitario);
 
