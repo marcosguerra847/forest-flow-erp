@@ -10,3 +10,4 @@
 - [ ] Publish the app so the new romaneio link (farm domain) reaches the live site.
 - [x] Add round/cylindrical wood load type (circular-area volume) to romaneios.
 - [x] Rename the cylindrical load type to "Madeira de eucalipto cilíndrica / roliça", one description covering escoras, roliço, tratado and mourões.
+- [x] Botão Imprimir nota do romaneio abre a impressão na própria página (sem nova aba bloqueada)
