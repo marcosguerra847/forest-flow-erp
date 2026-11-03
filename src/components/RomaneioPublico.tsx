@@ -34,12 +34,12 @@ export function RomaneioPublico({ pacote: p, link }: { pacote: PacoteNota; link:
     <div className="overflow-x-auto">
       <table className="w-full text-left text-sm">
         <thead className="border-b border-border text-xs text-muted-foreground"><tr>
-          {(cavaco ? ["Produto", "Quantidade", "Preço unitário", "Valor total"] : ["Produto", "C × E × L (m)", "Pacotes", "Peças/pacote", "Peças", "m³", "Preço/m³", "Valor total"]).map(label => <th className="whitespace-nowrap px-2 py-3" key={label}>{label}</th>)}
+          {(cavaco ? ["Produto", "Quantidade", "Preço unitário", "Valor total"] : ["Produto", p.tipo_carga === "cilindrica" ? "C × Ø (m)" : "C × E × L (m)", "Pacotes", "Peças/pacote", "Peças", "m³", "Preço/m³", "Valor total"]).map(label => <th className="whitespace-nowrap px-2 py-3" key={label}>{label}</th>)}
         </tr></thead>
         <tbody>{cavaco ? <tr className="border-b border-border">
           <td className="px-2 py-3">{p.descricao}</td><td className="whitespace-nowrap px-2 py-3">{numero(p.quantidade_venda)} {p.unidade_venda === "ton" ? "t" : "m³"}</td><td className="whitespace-nowrap px-2 py-3">{moeda(p.valor_unitario)}</td><td className="whitespace-nowrap px-2 py-3">{moeda(p.valor_total ?? p.valor_previsto)}</td>
         </tr> : (p.itens?.length ? p.itens : [{ descricao: p.descricao, comprimento_m: p.comprimento_m ?? 0, espessura_m: Number(p.espessura_cm ?? 0) / 100, largura_m: Number(p.largura_cm ?? 0) / 100, qtd_blocos: p.qtd_blocos, pecas_por_pacote: p.pecas_por_pacote ?? 0, qtd_pecas: p.qtd_pecas, volume_m3: p.volume_m3, valor_unitario: p.valor_unitario ?? 0, valor_total: p.valor_total ?? p.valor_previsto ?? 0 }]).map((i, index) => <tr key={index} className="border-b border-border">
-          {[i.descricao, `${numero(i.comprimento_m, 4)} × ${numero(i.espessura_m, 4)} × ${numero(i.largura_m, 4)}`, numero(i.qtd_blocos, 0), numero(i.pecas_por_pacote, 0), numero(i.qtd_pecas, 0), numero(i.volume_m3, 5), moeda(i.valor_unitario), moeda(i.valor_total)].map((v, col) => <td key={col} className="px-2 py-3">{v}</td>)}
+          {[i.descricao, p.tipo_carga === "cilindrica" ? `${numero(i.comprimento_m, 4)} × Ø ${numero(i.espessura_m, 4)}` : `${numero(i.comprimento_m, 4)} × ${numero(i.espessura_m, 4)} × ${numero(i.largura_m, 4)}`, numero(i.qtd_blocos, 0), numero(i.pecas_por_pacote, 0), numero(i.qtd_pecas, 0), numero(i.volume_m3, 5), moeda(i.valor_unitario), moeda(i.valor_total)].map((v, col) => <td key={col} className="px-2 py-3">{v}</td>)}
         </tr>)}</tbody>
       </table>
     </div>

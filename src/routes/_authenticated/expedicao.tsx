@@ -379,7 +379,7 @@ function ExpedicaoPage() {
               render: (r) => (
                 <span>
                   {r.descricao ||
-                    (r.tipo_carga === "cavaco" ? "Cavaco" : r.tipo_carga === "po_serra" ? "Pó de serra" : "Romaneio")}
+                    (r.tipo_carga === "cavaco" ? "Cavaco" : r.tipo_carga === "po_serra" ? "Pó de serra" : r.tipo_carga === "cilindrica" ? "Madeira cilíndrica" : "Romaneio")}
                 </span>
               ),
             },
@@ -867,7 +867,9 @@ function RomaneioForm({
           )
         ) {
           return toast.error(
-            `Informe as três medidas em metros do produto ${i + 1}`,
+            cilindrica
+              ? `Informe o comprimento e o diâmetro em metros do produto ${i + 1}`
+              : `Informe as três medidas em metros do produto ${i + 1}`,
           );
         }
 
@@ -1088,6 +1090,7 @@ function RomaneioForm({
             <option value="madeira">Madeira / produtos por peças</option>
             <option value="cavaco">Cavaco (por m³ ou tonelada)</option>
             <option value="po_serra">Pó de serra (por m³ ou tonelada)</option>
+            <option value="cilindrica">Madeira roliça / cilíndrica (escoras, eucalipto tratado)</option>
           </select>
         </div>
 
@@ -1256,7 +1259,7 @@ function RomaneioForm({
                       onChange={(e) =>
                         atualizaItem(index, "descricao", e.target.value)
                       }
-                      placeholder="Ex.: Ripinha de eucalipto"
+                      placeholder={cilindrica ? "Ex.: Escora de eucalipto tratado" : "Ex.: Ripinha de eucalipto"}
                     />
                   </div>
 
@@ -1278,7 +1281,7 @@ function RomaneioForm({
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label>Espessura (m)</Label>
+                      <Label>{cilindrica ? "Diâmetro (m)" : "Espessura (m)"}</Label>
                       <Input
                         inputMode="decimal"
                         value={item.espessura_m}
@@ -1289,11 +1292,11 @@ function RomaneioForm({
                             e.target.value,
                           )
                         }
-                        placeholder="0,08"
+                        placeholder={cilindrica ? "0,10" : "0,08"}
                       />
                     </div>
 
-                    <div className="space-y-1.5">
+                    {!cilindrica && <div className="space-y-1.5">
                       <Label>Largura (m)</Label>
                       <Input
                         inputMode="decimal"
@@ -1307,7 +1310,7 @@ function RomaneioForm({
                         }
                         placeholder="0,019"
                       />
-                    </div>
+                    </div>}
 
                     <div className="space-y-1.5">
                       <Label>Quantidade de pacotes</Label>
@@ -1361,6 +1364,7 @@ function RomaneioForm({
                   </div>
 
                   <div className="rounded-md bg-muted p-3 text-sm">
+                    {cilindrica && <p className="mb-1 text-xs text-muted-foreground">Cálculo da madeira roliça: π × (diâmetro ÷ 2)² × comprimento × peças</p>}
                     <div className="grid gap-1 sm:grid-cols-2">
                       <p>
                         Total de peças:{" "}
