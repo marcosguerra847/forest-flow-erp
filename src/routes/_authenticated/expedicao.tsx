@@ -1259,7 +1259,7 @@ function RomaneioForm({
                       onChange={(e) =>
                         atualizaItem(index, "descricao", e.target.value)
                       }
-                      placeholder={cilindrica ? "Ex.: Escora de eucalipto tratado" : "Ex.: Ripinha de eucalipto"}
+                      placeholder={cilindrica ? "Ex.: Escora de eucalipto, mourão, roliço" : "Ex.: Ripinha de eucalipto"}
                     />
                   </div>
 
