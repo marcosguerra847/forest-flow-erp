@@ -1,4 +1,4 @@
-// Madeira roliça / cilíndrica (escoras, eucalipto tratado): volume pela área circular.
+// Madeira de eucalipto cilíndrica / roliça (escoras, roliço, tratado, mourões): volume pela área circular.
 // V = π × (diâmetro / 2)² × comprimento × peças. Medidas em METROS.
 export function calcM3Cilindrico(comprimentoM: number, diametroM: number, pecas: number): number {
   const c = Number(comprimentoM) || 0;
