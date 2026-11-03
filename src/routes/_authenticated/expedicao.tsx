@@ -189,7 +189,19 @@ function ExpedicaoPage() {
 
   const abrirPdf = async (p: Pacote, imprimir = false) => {
     try {
-      await gerarNotaPacote(await pacoteComItens(p), linkOperador(p), imprimir);
+      const base = await pacoteComItens(p);
+      let cliente_info = null;
+      const nome = p.cliente_nome?.trim();
+      if (nome) {
+        const { data } = await supabase
+          .from("clientes")
+          .select("documento,telefone,email,endereco,cidade,uf")
+          .ilike("nome", nome)
+          .limit(1)
+          .maybeSingle();
+        if (data && Object.values(data).some((v) => v)) cliente_info = data;
+      }
+      await gerarNotaPacote({ ...base, cliente_info }, linkOperador(p), imprimir);
     } catch (e) {
       toast.error(
         `Não foi possível gerar a nota: ${(e as Error).message}`,

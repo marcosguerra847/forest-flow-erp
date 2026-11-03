@@ -26,6 +26,14 @@ export type PacoteNota = {
   codigo: string;
   descricao: string;
   cliente_nome: string | null;
+  cliente_info?: {
+    documento?: string | null;
+    telefone?: string | null;
+    email?: string | null;
+    endereco?: string | null;
+    cidade?: string | null;
+    uf?: string | null;
+  } | null;
   tipo_carga?: string | null;
   unidade_venda?: string | null;
   quantidade_venda?: number | null;
@@ -217,6 +225,25 @@ export async function gerarNotaPacote(
   doc.setFont("helvetica", "normal").setFontSize(9);
 
   doc.text(`Cliente: ${p.cliente_nome ?? "—"}`, 14, 46);
+
+  // Dados do cadastro do cliente (só quando existirem).
+  const ci = p.cliente_info;
+  if (ci) {
+    const local = [ci.endereco, [ci.cidade, ci.uf].filter(Boolean).join("/")]
+      .filter(Boolean)
+      .join(" - ");
+    const linhas = [
+      ci.documento ? `CPF/CNPJ: ${ci.documento}` : "",
+      [ci.telefone ? `Tel.: ${ci.telefone}` : "", ci.email ? `E-mail: ${ci.email}` : ""]
+        .filter(Boolean)
+        .join("   "),
+      local ? `Endereço: ${local}` : "",
+    ].filter(Boolean);
+    linhas.slice(0, 3).forEach((l, i) => {
+      const t = doc.splitTextToSize(l, 95)[0];
+      doc.text(t, 105, 46 + i * 5);
+    });
+  }
 
   doc.text(
     `Status da expedição: ${
