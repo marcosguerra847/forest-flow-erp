@@ -635,8 +635,25 @@ export async function gerarNotaPacote(
 
   // Baixar ou imprimir o PDF.
   if (autoPrint) {
-    doc.autoPrint();
-    window.open(doc.output("bloburl"), "_blank");
+    // Imprime por um quadro oculto na própria página: abrir nova aba
+    // depois do carregamento é bloqueado pelo navegador.
+    const url = URL.createObjectURL(doc.output("blob"));
+    const frame = document.createElement("iframe");
+    frame.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0";
+    frame.src = url;
+    frame.onload = () => {
+      try {
+        frame.contentWindow?.focus();
+        frame.contentWindow?.print();
+      } catch {
+        window.open(url, "_blank");
+      }
+      setTimeout(() => {
+        frame.remove();
+        URL.revokeObjectURL(url);
+      }, 60000);
+    };
+    document.body.appendChild(frame);
   } else {
     doc.save(`romaneio-${p.codigo}.pdf`);
   }
