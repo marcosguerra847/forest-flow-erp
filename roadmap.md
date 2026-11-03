@@ -9,3 +9,4 @@
 - [x] Keep the "Pacotes prontos" counter on block-carrying romaneios only, so it does not repeat "Prontos p/ envio".
 - [ ] Publish the app so the new romaneio link (farm domain) reaches the live site.
 - [x] Add round/cylindrical wood load type (circular-area volume) to romaneios.
+- [x] Rename the cylindrical load type to "Madeira de eucalipto cilíndrica / roliça", one description covering escoras, roliço, tratado and mourões.
