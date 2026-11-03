@@ -379,7 +379,7 @@ function ExpedicaoPage() {
               render: (r) => (
                 <span>
                   {r.descricao ||
-                    (r.tipo_carga === "cavaco" ? "Cavaco" : r.tipo_carga === "po_serra" ? "Pó de serra" : r.tipo_carga === "cilindrica" ? "Madeira cilíndrica" : "Romaneio")}
+                    (r.tipo_carga === "cavaco" ? "Cavaco" : r.tipo_carga === "po_serra" ? "Pó de serra" : r.tipo_carga === "cilindrica" ? "Eucalipto cilíndrico / roliço" : "Romaneio")}
                 </span>
               ),
             },
