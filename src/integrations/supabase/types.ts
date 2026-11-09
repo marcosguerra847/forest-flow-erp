@@ -1303,6 +1303,24 @@ export type Database = {
         }
         Relationships: []
       }
+      qr_acessos: {
+        Row: {
+          codigo: string
+          criado_em: string
+          token: string
+        }
+        Insert: {
+          codigo: string
+          criado_em?: string
+          token?: string
+        }
+        Update: {
+          codigo?: string
+          criado_em?: string
+          token?: string
+        }
+        Relationships: []
+      }
       recebimentos_patio: {
         Row: {
           carga_id: string
@@ -1494,6 +1512,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      emitir_acesso_qr: { Args: { _codigo: string }; Returns: string }
       has_any_role: {
         Args: {
           _roles: Database["public"]["Enums"]["app_role"][]
