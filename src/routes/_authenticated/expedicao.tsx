@@ -175,7 +175,13 @@ function ExpedicaoPage() {
     },
   });
 
-  const filtrados = filtrarPorData(rows, { campo: campoData, de, ate });
+  const produtos = Array.from(
+    new Set(rows.map((r) => r.descricao?.trim()).filter(Boolean)),
+  ).sort((a, b) => a.localeCompare(b, "pt-BR")) as string[];
+
+  const filtrados = filtrarPorData(rows, { campo: campoData, de, ate }).filter(
+    (r) => !produtoFiltro || r.descricao?.trim() === produtoFiltro,
+  );
   const prontos = filtrados.filter((r) => r.status === "pronto");
   const exp = filtrados.filter((r) => r.status !== "pronto");
   // Permuta (troca por máquina/serviço) não entra na soma de valor expedido.
