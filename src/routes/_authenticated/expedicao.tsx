@@ -158,6 +158,7 @@ function ExpedicaoPage() {
   const [preset, setPreset] = useState<PresetDataRomaneio>("tudo");
   const [de, setDe] = useState("");
   const [ate, setAte] = useState("");
+  const [produtoFiltro, setProdutoFiltro] = useState("");
 
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ["pacotes"],
@@ -174,7 +175,13 @@ function ExpedicaoPage() {
     },
   });
 
-  const filtrados = filtrarPorData(rows, { campo: campoData, de, ate });
+  const produtos = Array.from(
+    new Set(rows.map((r) => r.descricao?.trim()).filter(Boolean)),
+  ).sort((a, b) => a.localeCompare(b, "pt-BR")) as string[];
+
+  const filtrados = filtrarPorData(rows, { campo: campoData, de, ate }).filter(
+    (r) => !produtoFiltro || r.descricao?.trim() === produtoFiltro,
+  );
   const prontos = filtrados.filter((r) => r.status === "pronto");
   const exp = filtrados.filter((r) => r.status !== "pronto");
   // Permuta (troca por máquina/serviço) não entra na soma de valor expedido.
@@ -289,6 +296,24 @@ function ExpedicaoPage() {
           />
         </div>
 
+        <div className="space-y-1.5">
+          <Label className="text-[11px] uppercase tracking-widest text-muted-foreground">
+            Produto
+          </Label>
+          <select
+            className="flex h-9 max-w-[220px] rounded-md border border-input bg-background px-3 py-1.5 text-sm"
+            value={produtoFiltro}
+            onChange={(e) => setProdutoFiltro(e.target.value)}
+          >
+            <option value="">Todos os produtos</option>
+            {produtos.map((p) => (
+              <option key={p} value={p}>
+                {p}
+              </option>
+            ))}
+          </select>
+        </div>
+
         <div className="flex flex-wrap items-center gap-1.5 pb-1">
           {PRESETS.map((p) => {
             const ativo =
@@ -314,7 +339,7 @@ function ExpedicaoPage() {
             </span>
           </p>
           <p className="text-[11px] text-muted-foreground">
-            Os valores abaixo consideram o período
+            Os valores abaixo consideram os filtros
           </p>
         </div>
       </div>
