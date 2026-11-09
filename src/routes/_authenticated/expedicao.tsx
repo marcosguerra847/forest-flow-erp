@@ -339,7 +339,7 @@ function ExpedicaoPage() {
             </span>
           </p>
           <p className="text-[11px] text-muted-foreground">
-            Os valores abaixo consideram o período
+            Os valores abaixo consideram os filtros
           </p>
         </div>
       </div>
