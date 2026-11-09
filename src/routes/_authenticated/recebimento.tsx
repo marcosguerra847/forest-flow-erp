@@ -1,3 +1,4 @@
+import { farmPageHead } from "@/lib/page-head";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -23,7 +24,9 @@ type Recebimento = {
   divergencia_volume_m3: number; divergencia_toras: number; data: string; observacoes: string | null;
 };
 
-export const Route = createFileRoute("/_authenticated/recebimento")({ component: RecebimentoPage });
+export const Route = createFileRoute("/_authenticated/recebimento")({
+  head: () => farmPageHead("Recebimento no Pátio", "Conferência das cargas recebidas no pátio."),
+  component: RecebimentoPage });
 
 function RecebimentoPage() {
   const qc = useQueryClient();

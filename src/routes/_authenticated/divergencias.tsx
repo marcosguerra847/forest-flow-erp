@@ -1,3 +1,4 @@
+import { farmPageHead } from "@/lib/page-head";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -18,7 +19,9 @@ type Div = {
   status: "aberta" | "justificada" | "resolvida"; criado_em: string;
 };
 
-export const Route = createFileRoute("/_authenticated/divergencias")({ component: DivPage });
+export const Route = createFileRoute("/_authenticated/divergencias")({
+  head: () => farmPageHead("Divergências", "Conferência e resolução de divergências nas cargas."),
+  component: DivPage });
 
 function DivPage() {
   const qc = useQueryClient();

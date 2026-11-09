@@ -1,3 +1,4 @@
+import { farmPageHead } from "@/lib/page-head";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -5,6 +6,8 @@ import { TreePine, Truck, Boxes, Package2, Scissors, Factory, ExternalLink } fro
 import { EventoQrForm } from "@/components/EventoQrForm";
 
 export const Route = createFileRoute("/_authenticated/qr/$tipo/$codigo")({
+  head: () => farmPageHead("Identificação da Madeira", "Consulta interna das etiquetas e cargas de madeira."),
+ 
   ssr: false,
   component: QrLanding,
 });

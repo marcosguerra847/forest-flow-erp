@@ -1,3 +1,4 @@
+import { farmPageHead } from "@/lib/page-head";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,7 +12,7 @@ type Etapa = { etapa: string; info: string; local?: string; data?: string; icon:
 type EventoQr = { id: string; etapa: string; descricao: string | null; observacao: string | null; usuario_nome: string | null; latitude: number | null; longitude: number | null; foto_url: string | null; criado_em: string };
 
 export const Route = createFileRoute("/_authenticated/rastreabilidade")({
-  head: () => ({ meta: [{ title: "Rastreabilidade · Fazenda Bela Vista" }] }),
+  head: () => farmPageHead("Rastreabilidade", "Histórico e origem da madeira da fazenda."),
   component: Rastreabilidade,
 });
 
