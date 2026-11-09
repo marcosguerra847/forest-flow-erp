@@ -75,7 +75,7 @@ function UsuariosPage() {
       {meIsAdmin === false && (
         <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4 text-sm">
           <ShieldCheck className="mb-2 h-4 w-4 text-amber-500" />
-          Apenas administradores podem alterar papéis. Você consegue visualizar mas não editar.
+          Apenas administradores podem visualizar outros usuários e alterar seus papéis.
         </div>
       )}
 
