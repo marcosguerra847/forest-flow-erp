@@ -1,3 +1,4 @@
+import { farmPageHead } from "@/lib/page-head";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -27,7 +28,9 @@ const statusLabels: Record<Talhao["status"], string> = {
   em_corte: "Em corte", cortado: "Cortado", finalizado: "Finalizado",
 };
 
-export const Route = createFileRoute("/_authenticated/talhoes")({ component: TalhoesPage });
+export const Route = createFileRoute("/_authenticated/talhoes")({
+  head: () => farmPageHead("Talhões", "Cadastro e acompanhamento dos talhões florestais."),
+  component: TalhoesPage });
 
 function TalhoesPage() {
   const qc = useQueryClient();

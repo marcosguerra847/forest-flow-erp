@@ -1,3 +1,4 @@
+import { farmPageHead } from "@/lib/page-head";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -24,7 +25,9 @@ type OC = {
 };
 type Talhao = { id: string; codigo: string; especie: string; volume_estimado_m3: number; fazenda_id: string };
 
-export const Route = createFileRoute("/_authenticated/ordens-colheita")({ component: OCPage });
+export const Route = createFileRoute("/_authenticated/ordens-colheita")({
+  head: () => farmPageHead("Ordens de Colheita", "Acompanhamento das ordens e volumes de colheita."),
+  component: OCPage });
 
 function OCPage() {
   const qc = useQueryClient();

@@ -1,3 +1,4 @@
+import { farmPageHead } from "@/lib/page-head";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -30,7 +31,9 @@ type OC = {
   talhoes?: { codigo: string; especie: string; fazendas?: { nome: string; local: string | null } | null } | null;
 };
 
-export const Route = createFileRoute("/_authenticated/cargas")({ component: CargasPage });
+export const Route = createFileRoute("/_authenticated/cargas")({
+  head: () => farmPageHead("Cargas", "Cargas de madeira e acompanhamento do transporte."),
+  component: CargasPage });
 
 function CargasPage() {
   const qc = useQueryClient();

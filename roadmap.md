@@ -1,4 +1,5 @@
 # Tasks
+- [x] Restrict farm data to approved roles, remove automatic signup privileges, secure public QR and verify access rules.
 - [x] Link log entries to their source plot and show recorded volume by plot.
 - [x] Allow shipped/unshipped selection for wood and chip manifests and validate saved quantities.
 - [x] Show the complete manifest through its public QR link, including PDF download and printing.

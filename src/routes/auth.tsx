@@ -1,3 +1,4 @@
+import { farmPageHead } from "@/lib/page-head";
 import { createFileRoute, useRouter, redirect, Link } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,6 +11,8 @@ import { toast } from "sonner";
 import logoAsset from "@/assets/logo-bela-vista.png.asset.json";
 
 export const Route = createFileRoute("/auth")({
+  head: () => farmPageHead("Entrar e criar conta", "Acesso ao sistema de gestão da Fazenda Bela Vista."),
+ 
   ssr: false,
   beforeLoad: async () => {
     const { data } = await supabase.auth.getUser();
@@ -225,8 +228,7 @@ function AuthPage() {
                 </Button>
 
                 <p className="text-[11px] text-muted-foreground">
-                  O primeiro usuário cadastrado vira{" "}
-                  <strong>admin</strong> automaticamente.
+                  O acesso aos dados é liberado por um administrador da fazenda.
                 </p>
               </form>
             </TabsContent>

@@ -24,6 +24,7 @@ export const Route = createFileRoute("/x/$codigo")({
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex" },
+      { name: "referrer", content: "no-referrer" },
     ],
   }),
   component: ExpedicaoPublica,

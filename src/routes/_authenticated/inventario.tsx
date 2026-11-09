@@ -1,3 +1,4 @@
+import { farmPageHead } from "@/lib/page-head";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -23,7 +24,9 @@ type Parcela = {
 };
 type TalhaoOpt = { id: string; codigo: string; fazendas: { nome: string } | null };
 
-export const Route = createFileRoute("/_authenticated/inventario")({ component: InventarioPage });
+export const Route = createFileRoute("/_authenticated/inventario")({
+  head: () => farmPageHead("Inventário Florestal", "Medições e inventário das parcelas florestais."),
+  component: InventarioPage });
 
 function InventarioPage() {
   const qc = useQueryClient();

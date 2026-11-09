@@ -1,3 +1,4 @@
+import { farmPageHead } from "@/lib/page-head";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -17,7 +18,9 @@ type Profile = {
 const ROLES = ["admin", "gestor", "campo", "patio", "serraria", "comercial"] as const;
 type AppRole = typeof ROLES[number];
 
-export const Route = createFileRoute("/_authenticated/usuarios")({ component: UsuariosPage });
+export const Route = createFileRoute("/_authenticated/usuarios")({
+  head: () => farmPageHead("Usuários e Papéis", "Administração dos usuários e permissões de acesso."),
+  component: UsuariosPage });
 
 function UsuariosPage() {
   const qc = useQueryClient();
@@ -75,7 +78,7 @@ function UsuariosPage() {
       {meIsAdmin === false && (
         <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4 text-sm">
           <ShieldCheck className="mb-2 h-4 w-4 text-amber-500" />
-          Apenas administradores podem alterar papéis. Você consegue visualizar mas não editar.
+          Apenas administradores podem visualizar outros usuários e alterar seus papéis.
         </div>
       )}
 

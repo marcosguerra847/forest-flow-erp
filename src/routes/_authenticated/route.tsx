@@ -23,6 +23,7 @@ function AuthLayout() {
   const router = useRouter();
   const [nome, setNome] = useState<string>(user.email ?? "");
   const [roles, setRoles] = useState<string[]>([]);
+  const [accessLoaded, setAccessLoaded] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -32,6 +33,7 @@ function AuthLayout() {
       ]);
       if (p?.nome) setNome(p.nome);
       if (r) setRoles(r.map((x: { role: string }) => x.role));
+      setAccessLoaded(true);
     })();
   }, [user.id]);
 
@@ -61,7 +63,16 @@ function AuthLayout() {
             </div>
           </header>
           <main className="flex-1 px-4 py-6 sm:px-8 sm:py-8">
-            <Outlet />
+            {!accessLoaded ? <p className="text-sm text-muted-foreground">Verificando acesso…</p> : roles.length === 0 ? (
+              <div className="mx-auto max-w-lg space-y-3 py-12">
+                <h1 className="font-display text-xl font-semibold">Conta aguardando liberação</h1>
+                <p className="text-sm text-muted-foreground">Sua conta foi criada. Um administrador da fazenda precisa atribuir seu cargo para liberar o acesso aos dados.</p>
+                <Button variant="outline" onClick={async () => {
+                  const { data } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
+                  setRoles(data?.map((row) => row.role) ?? []);
+                }}>Verificar novamente</Button>
+              </div>
+            ) : <Outlet />}
           </main>
         </div>
       </div>

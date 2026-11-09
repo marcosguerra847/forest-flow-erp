@@ -8,10 +8,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Camera, CheckCircle2, Loader2, MapPin, PackageCheck } from "lucide-react";
 import { toast } from "sonner";
 import { confirmarEntrega } from "@/lib/entregas.functions";
+import { enviarFotoEntrega } from "@/lib/rastreio.functions";
 
-type Props = { codigo: string; onDone?: () => void };
+type Props = { codigo: string; token: string; onDone?: () => void };
 
-export function DeliveryConfirmForm({ codigo, onDone }: Props) {
+export function DeliveryConfirmForm({ codigo, token, onDone }: Props) {
   const [nome, setNome] = useState("");
   const [observacao, setObservacao] = useState("");
   const [foto, setFoto] = useState<File | null>(null);
@@ -20,6 +21,7 @@ export function DeliveryConfirmForm({ codigo, onDone }: Props) {
   const [saving, setSaving] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const confirmar = useServerFn(confirmarEntrega);
+  const enviarFoto = useServerFn(enviarFotoEntrega);
 
   useEffect(() => {
     if ("geolocation" in navigator) {
@@ -43,16 +45,20 @@ export function DeliveryConfirmForm({ codigo, onDone }: Props) {
     try {
       let foto_url: string | null = null;
       if (foto) {
-        // Upload no caminho público "entregas/<codigo>/..." (policy permite anon insert somente aqui)
-        const ext = foto.name.split(".").pop() || "jpg";
-        const path = `entregas/${codigo}/${Date.now()}.${ext}`;
-        const up = await supabase.storage.from("qr-eventos").upload(path, foto, { contentType: foto.type });
-        if (up.error) throw up.error;
-        const { data: signed } = await supabase.storage.from("qr-eventos").createSignedUrl(path, 60 * 60 * 24 * 365);
-        foto_url = signed?.signedUrl ?? null;
+        if (foto.size > 5_000_000) throw new Error("A foto deve ter até 5 MB.");
+        const imagem = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result).split(",")[1] ?? "");
+          reader.onerror = () => reject(new Error("Não foi possível ler a foto."));
+          reader.readAsDataURL(foto);
+        });
+        if (!["image/jpeg", "image/png", "image/webp"].includes(foto.type)) throw new Error("Use uma foto JPG, PNG ou WebP.");
+        const result = await enviarFoto({ data: { codigo, token, imagem, mime: foto.type as "image/jpeg" | "image/png" | "image/webp" } });
+        foto_url = result.foto_url;
       }
       await confirmar({ data: {
         codigo,
+        token,
         recebedor_nome: nome.trim(),
         foto_url,
         latitude: coords?.lat ?? null,

@@ -1,3 +1,4 @@
+import { farmPageHead } from "@/lib/page-head";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -20,7 +21,9 @@ type PA = {
   qtd_pecas: number; volume_m3: number; status: string; ordem_producao_id: string; criado_em: string;
 };
 
-export const Route = createFileRoute("/_authenticated/produtos-acabados")({ component: PAPage });
+export const Route = createFileRoute("/_authenticated/produtos-acabados")({
+  head: () => farmPageHead("Produtos Acabados", "Estoque dos produtos de madeira prontos."),
+  component: PAPage });
 
 function PAPage() {
   const qc = useQueryClient();

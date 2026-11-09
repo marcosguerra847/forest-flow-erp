@@ -1,3 +1,4 @@
+import { farmPageHead } from "@/lib/page-head";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -23,7 +24,9 @@ type OP = {
 };
 type Lote = { id: string; codigo: string; volume_m3: number; especie: string | null; status: string };
 
-export const Route = createFileRoute("/_authenticated/ordens-producao")({ component: OPPage });
+export const Route = createFileRoute("/_authenticated/ordens-producao")({
+  head: () => farmPageHead("Ordens de Produção", "Produção da serraria e controle do rendimento."),
+  component: OPPage });
 
 function OPPage() {
   const qc = useQueryClient();

@@ -1,3 +1,4 @@
+import { farmPageHead } from "@/lib/page-head";
 import { createFileRoute } from "@tanstack/react-router";
 import { PageHeader } from "@/components/PageHeader";
 import { DataTable, StatusBadge } from "@/components/DataTable";
@@ -6,7 +7,7 @@ import { Truck, MapPin, Package, Clock } from "lucide-react";
 import { entregas } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/_authenticated/logistica")({
-  head: () => ({ meta: [{ title: "Logística · SilvaCore" }] }),
+  head: () => farmPageHead("Logística", "Controle do transporte e entregas de madeira."),
   component: Logistica,
 });
 

@@ -1,3 +1,4 @@
+import { farmPageHead } from "@/lib/page-head";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,7 +9,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { MapaFazenda } from "@/components/MapaFazenda";
 
 export const Route = createFileRoute("/_authenticated/")({
-  head: () => ({ meta: [{ title: "Dashboard · Fazenda Bela Vista" }] }),
+  head: () => farmPageHead("Dashboard", "Indicadores operacionais e acompanhamento da Fazenda Bela Vista."),
   component: Dashboard,
 });
 

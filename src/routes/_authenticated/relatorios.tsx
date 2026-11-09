@@ -1,3 +1,4 @@
+import { farmPageHead } from "@/lib/page-head";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -8,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { FileBarChart, Download, Factory, Boxes, Scissors, AlertTriangle, Package2, Receipt, Wallet, PiggyBank, Users, TrendingUp, Truck, ClipboardList } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/relatorios")({
-  head: () => ({ meta: [{ title: "Relatórios · Fazenda Bela Vista" }] }),
+  head: () => farmPageHead("Relatórios", "Relatórios operacionais, comerciais e financeiros."),
   component: Relatorios,
 });
 

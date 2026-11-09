@@ -1,3 +1,4 @@
+import { farmPageHead } from "@/lib/page-head";
 import { createFileRoute } from "@tanstack/react-router";
 import { PageHeader } from "@/components/PageHeader";
 import { DataTable, StatusBadge } from "@/components/DataTable";
@@ -6,7 +7,7 @@ import { Trees, MapPin, Sprout, Axe } from "lucide-react";
 import { fazendas, talhoes } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/_authenticated/florestal")({
-  head: () => ({ meta: [{ title: "Florestal · SilvaCore" }] }),
+  head: () => farmPageHead("Florestal", "Acompanhamento do plantio e manejo florestal."),
   component: Florestal,
 });
 

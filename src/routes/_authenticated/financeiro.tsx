@@ -1,3 +1,4 @@
+import { farmPageHead } from "@/lib/page-head";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useMemo, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -56,7 +57,7 @@ type Centro = { id: string; nome: string; tipo: string };
 type Banco = { id: string; banco: string; agencia: string | null; conta: string | null; saldo_inicial: number; ativo: boolean };
 
 export const Route = createFileRoute("/_authenticated/financeiro")({
-  head: () => ({ meta: [{ title: "Financeiro · Fazenda Bela Vista" }] }),
+  head: () => farmPageHead("Financeiro", "Contas, documentos fiscais e movimentações financeiras."),
   component: FinanceiroPage,
 });
 

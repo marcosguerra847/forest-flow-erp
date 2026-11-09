@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+import { obterRastreio } from "@/lib/rastreio.functions";
 import { TreePine, MapPin, Camera, Clock, User, ExternalLink, ChevronRight } from "lucide-react";
 import { EventoQrForm } from "@/components/EventoQrForm";
 import { DeliveryConfirmForm } from "@/components/DeliveryConfirmForm";
@@ -8,10 +10,16 @@ import { tipoFromCodigo, ETAPAS } from "@/lib/etapas";
 
 export const Route = createFileRoute("/r/$codigo")({
   ssr: false,
+  validateSearch: z.object({ t: z.string().optional() }),
   head: ({ params }) => ({
     meta: [
       { title: `${params.codigo} · Rastreabilidade · Fazenda Bela Vista` },
       { name: "description", content: `Consulta pública do QR Code ${params.codigo} — histórico e etapas.` },
+      { property: "og:title", content: `${params.codigo} · Rastreabilidade · Fazenda Bela Vista` },
+      { property: "og:description", content: "Consulta autorizada da carga e histórico de entrega." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      { name: "referrer", content: "no-referrer" },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -46,103 +54,35 @@ function PublicQrPage() {
   const [eventos, setEventos] = useState<Evento[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const { t = "" } = Route.useSearch();
+  const obter = useServerFn(obterRastreio);
+  const [erro, setErro] = useState(false);
   const carregarEventos = async () => {
-    const { data } = await supabase
-      .from("eventos_qr" as never)
-      .select("*")
-      .eq("codigo", codigo)
-      .order("criado_em", { ascending: true })
-      .returns<Evento[]>();
-    setEventos(data ?? []);
+    try {
+      const result = await obter({ data: { codigo, token: t } });
+      if (!result.ok) { setErro(true); setEnt(null); setEventos([]); return; }
+      setEnt(result.entidade);
+      setEventos(result.eventos);
+      setErro(false);
+    } catch { setErro(true); setEnt(null); setEventos([]); }
+    finally { setLoading(false); }
   };
 
   useEffect(() => {
-    (async () => {
-      try {
-        // Resolver a entidade pelo prefixo do código
-        if (tipo === "CG") {
-          const { data } = await supabase.from("cargas")
-            .select("codigo,placa_veiculo,motorista,volume_carregado_m3,qtd_toras,status,data_saida,ordens_colheita(codigo,talhoes(codigo,especie,fazendas(nome,local)))")
-            .eq("codigo", codigo).maybeSingle();
-          if (data) {
-            const oc = data.ordens_colheita as { codigo?: string; talhoes?: { codigo?: string; especie?: string; fazendas?: { nome?: string; local?: string } } } | null;
-            setEnt({
-              titulo: `Carga ${data.codigo}`,
-              linhas: [
-                { label: "Placa", value: data.placa_veiculo ?? "—" },
-                { label: "Motorista", value: data.motorista ?? "—" },
-                { label: "Volume", value: `${Number(data.volume_carregado_m3 ?? 0).toFixed(2)} m³` },
-                { label: "Toras", value: String(data.qtd_toras ?? "—") },
-                { label: "Origem", value: oc?.talhoes?.fazendas?.nome ?? "—" },
-                { label: "Talhão", value: oc?.talhoes?.codigo ?? "—" },
-                { label: "Espécie", value: oc?.talhoes?.especie ?? "—" },
-                { label: "Status", value: String(data.status ?? "—") },
-              ],
-            });
-          }
-        } else if (tipo === "LP") {
-          const { data } = await supabase.from("lotes_patio")
-            .select("codigo,especie,volume_m3,qtd_toras,status,localizacao").eq("codigo", codigo).maybeSingle();
-          if (data) setEnt({
-            titulo: `Lote ${data.codigo}`,
-            linhas: [
-              { label: "Espécie", value: data.especie ?? "—" },
-              { label: "Volume", value: `${Number(data.volume_m3 ?? 0).toFixed(2)} m³` },
-              { label: "Toras", value: String(data.qtd_toras ?? "—") },
-              { label: "Localização", value: data.localizacao ?? "—" },
-              { label: "Status", value: String(data.status ?? "—") },
-            ],
-          });
-        } else if (tipo === "PA") {
-          const { data } = await supabase.from("produtos_acabados")
-            .select("codigo,descricao,dimensoes,qtd_pecas,volume_m3,status").eq("codigo", codigo).maybeSingle();
-          if (data) setEnt({
-            titulo: `Produto ${data.codigo}`,
-            linhas: [
-              { label: "Descrição", value: data.descricao ?? "—" },
-              { label: "Dimensões", value: data.dimensoes ?? "—" },
-              { label: "Peças", value: String(data.qtd_pecas ?? "—") },
-              { label: "Volume", value: `${Number(data.volume_m3 ?? 0).toFixed(2)} m³` },
-              { label: "Status", value: String(data.status ?? "—") },
-            ],
-          });
-        } else if (tipo === "OC") {
-          const { data } = await supabase.from("ordens_colheita")
-            .select("codigo,status,volume_previsto_m3,volume_colhido_m3,talhoes(codigo,especie,fazendas(nome,local))").eq("codigo", codigo).maybeSingle();
-          if (data) {
-            const t = data.talhoes as { codigo?: string; especie?: string; fazendas?: { nome?: string; local?: string } } | null;
-            setEnt({
-              titulo: `Ordem de Colheita ${data.codigo}`,
-              linhas: [
-                { label: "Status", value: String(data.status ?? "—") },
-                { label: "Vol. previsto", value: `${Number(data.volume_previsto_m3 ?? 0).toFixed(2)} m³` },
-                { label: "Vol. colhido", value: `${Number(data.volume_colhido_m3 ?? 0).toFixed(2)} m³` },
-                { label: "Fazenda", value: t?.fazendas?.nome ?? "—" },
-                { label: "Talhão", value: t?.codigo ?? "—" },
-                { label: "Espécie", value: t?.especie ?? "—" },
-              ],
-            });
-          }
-        } else if (tipo === "OP") {
-          const { data } = await supabase.from("ordens_producao")
-            .select("codigo,status,volume_entrada_m3,volume_produzido_m3,rendimento_pct").eq("codigo", codigo).maybeSingle();
-          if (data) setEnt({
-            titulo: `Ordem de Produção ${data.codigo}`,
-            linhas: [
-              { label: "Status", value: String(data.status ?? "—") },
-              { label: "Vol. entrada", value: `${Number(data.volume_entrada_m3 ?? 0).toFixed(2)} m³` },
-              { label: "Vol. produzido", value: `${Number(data.volume_produzido_m3 ?? 0).toFixed(2)} m³` },
-              { label: "Rendimento", value: `${Number(data.rendimento_pct ?? 0).toFixed(1)}%` },
-            ],
-          });
-        }
-        await carregarEventos();
-      } finally {
-        setLoading(false);
-      }
-    })();
+    setLoading(true);
+    void carregarEventos();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [codigo]);
+  }, [codigo, t]);
+
+  if (erro) return (
+    <main className="min-h-screen bg-background px-4 py-8">
+      <div className="mx-auto max-w-lg space-y-4">
+        <h1 className="font-display text-lg font-semibold">Fazenda Bela Vista</h1>
+        <p className="text-sm text-muted-foreground">QR sem autorização ou inválido. Solicite uma nova etiqueta ao responsável da fazenda.</p>
+        <Link to="/auth" className="text-sm text-primary">Entrar no sistema</Link>
+      </div>
+    </main>
+  );
 
   // Progresso: quais etapas já registradas
   const etapasRegistradas = new Set(eventos.map((e) => e.etapa));
@@ -244,7 +184,7 @@ function PublicQrPage() {
 
         {/* Confirmação de entrega pelo cliente (sem login) — só para cargas ainda não confirmadas */}
         {(tipo === "CG" || tipo === "PA") && !etapasRegistradas.has("entregue") && (
-          <DeliveryConfirmForm codigo={codigo} onDone={carregarEventos} />
+          <DeliveryConfirmForm codigo={codigo} token={t} onDone={carregarEventos} />
         )}
 
         {/* Formulário interno — só aparece para usuário logado */}
