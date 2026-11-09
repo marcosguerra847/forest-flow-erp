@@ -296,6 +296,24 @@ function ExpedicaoPage() {
           />
         </div>
 
+        <div className="space-y-1.5">
+          <Label className="text-[11px] uppercase tracking-widest text-muted-foreground">
+            Produto
+          </Label>
+          <select
+            className="flex h-9 max-w-[220px] rounded-md border border-input bg-background px-3 py-1.5 text-sm"
+            value={produtoFiltro}
+            onChange={(e) => setProdutoFiltro(e.target.value)}
+          >
+            <option value="">Todos os produtos</option>
+            {produtos.map((p) => (
+              <option key={p} value={p}>
+                {p}
+              </option>
+            ))}
+          </select>
+        </div>
+
         <div className="flex flex-wrap items-center gap-1.5 pb-1">
           {PRESETS.map((p) => {
             const ativo =
