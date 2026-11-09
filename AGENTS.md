@@ -1,4 +1,5 @@
 # Project rules
+- Content routes use leaf-level farmPageHead metadata or an equivalent unique head; shared defaults never replace route-specific titles and descriptions.
 - Farm tables use database-enforced approved-role access with admin-only deletion; signup creates a profile without roles, and public tracking reads/writes require a per-code secret so registration is not farm authorization.
 - Public delivery photos are uploaded through a secret-validated server function; anonymous storage listing and uploads are forbidden to avoid leaking operational files.
 - Log entries keep an optional foreign key to their source plot; cumulative received volume is calculated independently of stock status in a shared tested helper to preserve harvest totals.

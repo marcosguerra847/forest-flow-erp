@@ -13,6 +13,7 @@ let admin;
 let user;
 let userId;
 let ready;
+let budgetId;
 
 async function setup() {
   if (ready) return ready;
@@ -34,6 +35,7 @@ async function setup() {
 
 after(async () => {
   if (admin && userId) {
+    if (budgetId) await admin.from("orcamentos").delete().eq("id", budgetId);
     const deleted = await admin.auth.admin.deleteUser(userId);
     assert.equal(Boolean(deleted.error), false, "temporary account is removed");
   }
@@ -75,4 +77,20 @@ test("anonymous callers cannot list manifests, access secrets or download QR fil
   }
   const files = await anon.storage.from("qr-eventos").list("entregas");
   assert.ok(files.error || files.data?.length === 0);
+});
+
+test("commercial staff can read budgets but cannot delete them", { skip: !enabled }, async () => {
+  await setup();
+  const granted = await admin.from("user_roles").insert({ user_id: userId, role: "comercial" });
+  assert.equal(Boolean(granted.error), false);
+  const created = await admin.from("orcamentos").insert({ codigo: `TEST-${crypto.randomUUID()}`, cliente_nome: "Security test", itens: [] }).select("id").single();
+  assert.equal(Boolean(created.error), false);
+  budgetId = created.data?.id;
+  assert.ok(budgetId);
+  const readable = await user.from("orcamentos").select("id").eq("id", budgetId);
+  assert.equal(readable.data?.length, 1);
+  const deletion = await user.from("orcamentos").delete().eq("id", budgetId).select("id");
+  assert.deepEqual(deletion.data, []);
+  const retained = await admin.from("orcamentos").select("id").eq("id", budgetId);
+  assert.equal(retained.data?.length, 1);
 });
