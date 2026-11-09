@@ -67,7 +67,10 @@ function AuthLayout() {
               <div className="mx-auto max-w-lg space-y-3 py-12">
                 <h1 className="font-display text-xl font-semibold">Conta aguardando liberação</h1>
                 <p className="text-sm text-muted-foreground">Sua conta foi criada. Um administrador da fazenda precisa atribuir seu cargo para liberar o acesso aos dados.</p>
-                <Button variant="outline" onClick={() => router.invalidate()}>Verificar novamente</Button>
+                <Button variant="outline" onClick={async () => {
+                  const { data } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
+                  setRoles(data?.map((row) => row.role) ?? []);
+                }}>Verificar novamente</Button>
               </div>
             ) : <Outlet />}
           </main>
