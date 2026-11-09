@@ -8,6 +8,7 @@ import { KpiCard } from "@/components/KpiCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -20,6 +21,10 @@ import { Package, Layers, DollarSign, Warehouse, Plus, Trash2 } from "lucide-rea
 import { toast } from "sonner";
 import { proximoCodigo } from "@/lib/codigo";
 import { calcM3Cilindrico } from "@/lib/volume-cilindrico";
+import { resumirTorasTalhao } from "@/lib/toras-talhao";
+
+type TalhaoOrigem = { id: string; codigo: string; fazendas: { nome: string } | null };
+const nomeTalhao = (talhao: TalhaoOrigem) => `${talhao.codigo}${talhao.fazendas?.nome ? ` · ${talhao.fazendas.nome}` : ""}`;
 
 type Tora = {
   id: string;
@@ -35,22 +40,39 @@ type Tora = {
   status: string;
   observacoes: string | null;
   criado_em: string;
+  talhao_id: string | null;
 };
 
 export const Route = createFileRoute("/_authenticated/toras")({
-  head: () => ({ meta: [{ title: "Estoque de Toras · Fazenda Bela Vista" }] }),
+  head: () => ({ meta: [
+    { title: "Estoque de Toras · Fazenda Bela Vista" },
+    { name: "description", content: "Entradas de toras, volume circular e controle de origem por talhão na Fazenda Bela Vista." },
+    { property: "og:title", content: "Estoque de Toras · Fazenda Bela Vista" },
+    { property: "og:description", content: "Controle de toras e volume recebido por talhão." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: Toras,
 });
 
 function Toras() {
   const qc = useQueryClient();
   const [novo, setNovo] = useState(false);
+  const [filtroTalhao, setFiltroTalhao] = useState("todos");
+  const { data: talhoes = [], isError: erroTalhoes } = useQuery({
+    queryKey: ["talhoes-origem-toras"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("talhoes").select("id,codigo,fazendas(nome)").order("codigo");
+      if (error) throw error;
+      return data as TalhaoOrigem[];
+    },
+  });
 
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ["toras"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("toras" as never)
+        .from("toras")
         .select("*")
         .order("criado_em", { ascending: false });
       if (error) throw error;
@@ -60,7 +82,7 @@ function Toras() {
 
   const del = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("toras" as never).delete().eq("id", id);
+      const { error } = await supabase.from("toras").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -70,7 +92,8 @@ function Toras() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const emPatio = rows.filter((t) => t.status === "em_patio");
+  const filtradas = filtroTalhao === "todos" ? rows : rows.filter((t) => t.talhao_id === (filtroTalhao === "sem" ? null : filtroTalhao));
+  const emPatio = filtradas.filter((t) => t.status === "em_patio");
   const volTotal = emPatio.reduce((s, t) => s + Number(t.volume_m3 || 0), 0);
   const qtdTotal = emPatio.reduce((s, t) => s + t.quantidade, 0);
   const valorTotal = emPatio.reduce((s, t) => s + Number(t.valor || 0), 0);
@@ -90,6 +113,7 @@ function Toras() {
               </Button>
             </DialogTrigger>
             <NovaToraForm
+              talhoes={talhoes}
               onSaved={() => {
                 setNovo(false);
                 qc.invalidateQueries({ queryKey: ["toras"] });
@@ -110,14 +134,37 @@ function Toras() {
         <KpiCard label="Pilhas ativas" value={pilhas} icon={Warehouse} />
       </div>
 
+      <div className="flex flex-wrap items-center gap-3">
+        <Label htmlFor="filtro-talhao">Talhão de origem</Label>
+        <Select value={filtroTalhao} onValueChange={setFiltroTalhao}>
+          <SelectTrigger id="filtro-talhao" className="w-full sm:w-72"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todos">Todos os talhões</SelectItem>
+            <SelectItem value="sem">Sem talhão informado</SelectItem>
+            {talhoes.map((t) => <SelectItem key={t.id} value={t.id}>{nomeTalhao(t)}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <span className="text-sm text-muted-foreground">Total de entradas: {filtradas.reduce((s, t) => s + Number(t.volume_m3), 0).toFixed(3)} m³</span>
+      </div>
+      {erroTalhoes && <p className="text-sm text-destructive">Não foi possível carregar os talhões. Tente novamente.</p>}
+      {talhoes.length > 0 && <div className="space-y-3">
+        <h2 className="text-base font-semibold">Volume recebido por talhão — acumulado</h2>
+        <DataTable rows={talhoes.filter((t) => filtroTalhao === "todos" || filtroTalhao === t.id).map((t) => ({ ...t, ...resumirTorasTalhao(rows, t.id) }))} columns={[
+          { key: "codigo", label: "Talhão", render: (t) => nomeTalhao(t) },
+          { key: "quantidade", label: "Toras recebidas", align: "right" },
+          { key: "volume_m3", label: "Total recebido (m³)", align: "right", render: (t) => t.volume_m3.toFixed(3) },
+        ]} />
+      </div>}
+
       {isLoading ? (
         <p className="text-sm text-muted-foreground">Carregando...</p>
       ) : (
         <DataTable
-          rows={rows}
+          rows={filtradas}
           columns={[
             { key: "codigo", label: "Código", render: (r) => <span className="font-mono text-xs">{r.codigo}</span> },
             { key: "especie", label: "Espécie" },
+            { key: "talhao_id", label: "Talhão", render: (r) => { const talhao = talhoes.find((t) => t.id === r.talhao_id); return talhao ? nomeTalhao(talhao) : "—"; } },
             { key: "diametro_cm", label: "Ø (cm)", align: "right", render: (r) => Number(r.diametro_cm).toFixed(1) },
             { key: "comprimento_m", label: "Comp. (m)", align: "right", render: (r) => Number(r.comprimento_m).toFixed(2) },
             { key: "quantidade", label: "Toras", align: "right" },
@@ -164,7 +211,7 @@ function Toras() {
   );
 }
 
-function NovaToraForm({ onSaved }: { onSaved: () => void }) {
+function NovaToraForm({ onSaved, talhoes }: { onSaved: () => void; talhoes: TalhaoOrigem[] }) {
   const [form, setForm] = useState({
     especie: "Eucalipto",
     diametro_cm: "",
@@ -173,6 +220,7 @@ function NovaToraForm({ onSaved }: { onSaved: () => void }) {
     valor: "",
     patio: "",
     observacoes: "",
+    talhao_id: "sem",
   });
   const [saving, setSaving] = useState(false);
 
@@ -190,7 +238,7 @@ function NovaToraForm({ onSaved }: { onSaved: () => void }) {
     setSaving(true);
     try {
       const codigo = await proximoCodigo("TR");
-      const { error } = await supabase.from("toras" as never).insert({
+      const { error } = await supabase.from("toras").insert({
         codigo,
         especie: form.especie.trim() || "Eucalipto",
         diametro_cm: Number(form.diametro_cm),
@@ -201,7 +249,8 @@ function NovaToraForm({ onSaved }: { onSaved: () => void }) {
         patio: form.patio.trim() || null,
         observacoes: form.observacoes.trim() || null,
         status: "em_patio",
-      } as never);
+        talhao_id: form.talhao_id === "sem" ? null : form.talhao_id,
+      });
       if (error) throw error;
       toast.success(`Entrada ${codigo} registrada · ${volume.toFixed(3)} m³`);
       onSaved();
@@ -217,6 +266,16 @@ function NovaToraForm({ onSaved }: { onSaved: () => void }) {
         <DialogTitle>Registrar entrada de toras</DialogTitle>
       </DialogHeader>
       <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-1.5 sm:col-span-2">
+          <Label htmlFor="talhao-origem">Talhão de origem</Label>
+          <Select value={form.talhao_id} onValueChange={(v) => setForm({ ...form, talhao_id: v })}>
+            <SelectTrigger id="talhao-origem"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="sem">Sem talhão informado</SelectItem>
+              {talhoes.map((t) => <SelectItem key={t.id} value={t.id}>{nomeTalhao(t)}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
         <div className="space-y-1.5 sm:col-span-2">
           <Label>Espécie</Label>
           <Input

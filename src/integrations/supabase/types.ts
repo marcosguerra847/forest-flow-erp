@@ -1422,6 +1422,7 @@ export type Database = {
           patio: string | null
           quantidade: number
           status: string
+          talhao_id: string | null
           valor: number | null
           volume_m3: number
         }
@@ -1437,6 +1438,7 @@ export type Database = {
           patio?: string | null
           quantidade?: number
           status?: string
+          talhao_id?: string | null
           valor?: number | null
           volume_m3?: number
         }
@@ -1452,10 +1454,19 @@ export type Database = {
           patio?: string | null
           quantidade?: number
           status?: string
+          talhao_id?: string | null
           valor?: number | null
           volume_m3?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "toras_talhao_id_fkey"
+            columns: ["talhao_id"]
+            isOneToOne: false
+            referencedRelation: "talhoes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
