@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import QRCode from "qrcode";
 import { Button } from "@/components/ui/button";
 import { Printer, Download } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { SITE_PUBLICO } from "@/lib/site-url";
 
 type Props = {
   /** Tipo da entidade — usado na URL pública de rastreio: cg | lp | pa | oc | op */
@@ -25,15 +27,22 @@ export function QrDisplay({ tipo, codigo, value, size = 200, label, details, tit
   const [dataUrl, setDataUrl] = useState<string>("");
   // A partir da evolução do QR: aponta para a página pública /r/<codigo>
   // (funciona com ou sem login; o código é a identidade permanente da madeira)
-  const target =
-    value ??
-    (typeof window !== "undefined"
-      ? `${window.location.origin}/r/${encodeURIComponent(codigo)}`
-      : `/r/${encodeURIComponent(codigo)}`);
+  const [secureTarget, setSecureTarget] = useState("");
+  const target = value ?? secureTarget;
   void tipo;
 
   useEffect(() => {
-    if (!ref.current) return;
+    if (value) return;
+    let active = true;
+    setSecureTarget("");
+    supabase.rpc("emitir_acesso_qr", { _codigo: codigo }).then(({ data, error }) => {
+      if (active && !error && data) setSecureTarget(`${SITE_PUBLICO}/r/${encodeURIComponent(codigo)}?t=${encodeURIComponent(data)}`);
+    });
+    return () => { active = false; };
+  }, [codigo, value]);
+
+  useEffect(() => {
+    if (!ref.current || !target) return;
     QRCode.toCanvas(ref.current, target, {
       width: size,
       margin: 1,
@@ -108,8 +117,8 @@ export function QrDisplay({ tipo, codigo, value, size = 200, label, details, tit
         <div className="mt-2 text-center font-mono text-[10px] tracking-wide text-neutral-700">{codigo}</div>
       </div>
       <div className="flex gap-2">
-        <Button size="sm" variant="outline" onClick={print}><Printer className="mr-1 h-3.5 w-3.5" /> Imprimir</Button>
-        <Button size="sm" variant="outline" onClick={download}><Download className="mr-1 h-3.5 w-3.5" /> PNG</Button>
+        <Button size="sm" variant="outline" onClick={print} disabled={!target || !dataUrl}><Printer className="mr-1 h-3.5 w-3.5" /> Imprimir</Button>
+        <Button size="sm" variant="outline" onClick={download} disabled={!target || !dataUrl}><Download className="mr-1 h-3.5 w-3.5" /> PNG</Button>
       </div>
       {label && <p className="max-w-xs text-center text-xs text-muted-foreground">{label}</p>}
     </div>

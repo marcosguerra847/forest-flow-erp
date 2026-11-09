@@ -52,8 +52,9 @@ export const expedirPacote = createServerFn({ method: "POST" })
       status: "expedido", operador_nome: data.operador_nome, expedido_em: agora,
       qtd_blocos_expedida: data.qtd_blocos, qtd_pecas_expedida: data.qtd_pecas,
       volume_expedido_m3: data.volume_m3, observacoes: data.observacao ?? null,
-    } as never).eq("id", row.id);
+    } as never).eq("id", row.id).eq("status", "pronto").select("id");
     if (upd.error) throw new Error(upd.error.message);
+    if (!upd.data?.length) throw new Error("Este pacote já teve baixa de saída.");
     await supabaseAdmin.from("eventos_qr").insert({
       codigo, tipo: "PX", etapa: "em_entrega",
       descricao: `Saída para o cliente: ${data.qtd_blocos} blocos · ${data.qtd_pecas} peças · ${data.volume_m3} m³`,
