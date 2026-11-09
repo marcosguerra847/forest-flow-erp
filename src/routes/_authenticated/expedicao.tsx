@@ -158,6 +158,7 @@ function ExpedicaoPage() {
   const [preset, setPreset] = useState<PresetDataRomaneio>("tudo");
   const [de, setDe] = useState("");
   const [ate, setAte] = useState("");
+  const [produtoFiltro, setProdutoFiltro] = useState("");
 
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ["pacotes"],
