@@ -1409,6 +1409,54 @@ export type Database = {
           },
         ]
       }
+      toras: {
+        Row: {
+          codigo: string
+          comprimento_m: number
+          criado_em: string
+          diametro_cm: number
+          entrada_em: string
+          especie: string
+          id: string
+          observacoes: string | null
+          patio: string | null
+          quantidade: number
+          status: string
+          valor: number | null
+          volume_m3: number
+        }
+        Insert: {
+          codigo: string
+          comprimento_m: number
+          criado_em?: string
+          diametro_cm: number
+          entrada_em?: string
+          especie?: string
+          id?: string
+          observacoes?: string | null
+          patio?: string | null
+          quantidade?: number
+          status?: string
+          valor?: number | null
+          volume_m3?: number
+        }
+        Update: {
+          codigo?: string
+          comprimento_m?: number
+          criado_em?: string
+          diametro_cm?: number
+          entrada_em?: string
+          especie?: string
+          id?: string
+          observacoes?: string | null
+          patio?: string | null
+          quantidade?: number
+          status?: string
+          valor?: number | null
+          volume_m3?: number
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           criado_em: string
