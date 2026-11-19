@@ -1,5 +1,22 @@
 import type { ItemRomaneioNota, PacoteNota } from "./nota-expedicao";
 
+const numeroMedida = (valor: number, casas = 4) =>
+  Number(valor).toLocaleString("pt-BR", { maximumFractionDigits: casas });
+
+export function dimensoesProdutoEtiqueta(produto: ItemRomaneioNota, cilindrica: boolean) {
+  const comprimento = Number(produto.comprimento_m).toLocaleString("pt-BR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+  return cilindrica
+    ? `${comprimento} × Ø ${numeroMedida(produto.espessura_m)} m`
+    : `${comprimento} × ${numeroMedida(produto.espessura_m)} × ${numeroMedida(produto.largura_m)} m`;
+}
+
+export function descricaoProdutoEtiqueta(produto: ItemRomaneioNota, cilindrica: boolean) {
+  return `${produto.descricao} — ${dimensoesProdutoEtiqueta(produto, cilindrica)}`;
+}
+
 /** Monta uma nota individual sem alterar o romaneio completo aberto pelo QR. */
 export function selecionarProdutoRomaneio(
   pacote: PacoteNota,

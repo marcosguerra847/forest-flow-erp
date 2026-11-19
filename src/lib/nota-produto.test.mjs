@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { selecionarProdutoRomaneio } from "./nota-produto.ts";
+import { descricaoProdutoEtiqueta, selecionarProdutoRomaneio } from "./nota-produto.ts";
 
 const itens = [
   { descricao: "Ripa de eucalipto", comprimento_m: 2, espessura_m: 0.02, largura_m: 0.05, qtd_blocos: 4, pecas_por_pacote: 20, qtd_pecas: 80, volume_m3: 0.16, valor_unitario: 700, valor_total: 112 },
@@ -24,6 +24,14 @@ test("a etiqueta de um produto usa somente quantidades e valores desse produto",
   assert.equal(nota.qtd_blocos_expedida, null);
   assert.equal(nota.codigo, "PX-2026-0099");
   assert.equal(nota.cliente_nome, "Cliente Teste");
+});
+
+test("a descrição da etiqueta inclui comprimento, espessura e largura", () => {
+  assert.equal(descricaoProdutoEtiqueta(itens[0], false), "Ripa de eucalipto — 2,00 × 0,02 × 0,05 m");
+});
+
+test("a descrição cilíndrica inclui comprimento e diâmetro", () => {
+  assert.equal(descricaoProdutoEtiqueta(itens[1], true), "Escora de eucalipto — 2,50 × Ø 0,1 m");
 });
 
 test("sem seleção a nota conserva todos os produtos e totais do romaneio", () => {

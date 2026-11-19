@@ -37,6 +37,7 @@ import { Switch } from "@/components/ui/switch";
 import { estadoExpedicao } from "@/lib/romaneio-status";
 import { calcM3Cilindrico, ehCilindrica } from "@/lib/volume-cilindrico";
 import { contarPacotesProntos } from "@/lib/romaneio-contagem";
+import { descricaoProdutoEtiqueta } from "@/lib/nota-produto";
 import {
   filtrarPorData,
   periodo,
@@ -224,6 +225,9 @@ function ExpedicaoPage() {
 
   const indiceProdutoEtiqueta = produtoEtiqueta === "todos" ? null : Number(produtoEtiqueta);
   const itemEtiqueta = indiceProdutoEtiqueta == null ? null : produtosEtiqueta[indiceProdutoEtiqueta] ?? null;
+  const descricaoEtiqueta = itemEtiqueta
+    ? descricaoProdutoEtiqueta(itemEtiqueta, ehCilindrica(qr?.tipo_carga ?? ""))
+    : "";
 
   const abrirPdf = async (p: Pacote, imprimir = false, indiceProduto?: number) => {
     try {
@@ -638,7 +642,7 @@ function ExpedicaoPage() {
                     <option value="todos">Todos os produtos (romaneio completo)</option>
                     {produtosEtiqueta.map((item, index) => (
                       <option key={item.id ?? `${item.descricao}-${index}`} value={index}>
-                        {item.descricao} — {item.qtd_blocos} pacotes
+                        {descricaoProdutoEtiqueta(item, ehCilindrica(qr.tipo_carga ?? ""))} — {item.qtd_blocos} pacotes
                       </option>
                     ))}
                   </select>
@@ -656,12 +660,12 @@ function ExpedicaoPage() {
                 codigo={qr.codigo}
                 value={linkOperador(qr)}
                 size={220}
-                label={itemEtiqueta ? `Produto desta etiqueta: ${itemEtiqueta.descricao}` : undefined}
+                label={descricaoEtiqueta ? `Produto desta etiqueta: ${descricaoEtiqueta}` : undefined}
                 tituloEtiqueta={itemEtiqueta ? "Etiqueta de produto do romaneio" : "Romaneio para expedição"}
                 details={[
                   {
                     label: itemEtiqueta ? "Produto" : "Produtos",
-                    value: itemEtiqueta?.descricao || qr.descricao || "Romaneio de produtos",
+                    value: descricaoEtiqueta || qr.descricao || "Romaneio de produtos",
                   },
                   {
                     label: "Cliente",
