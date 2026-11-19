@@ -338,6 +338,22 @@ function FinanceiroPage() {
     });
   };
 
+  const abrirReciboAvulso = () => {
+    const data = today();
+    setRecibo({
+      numero: numeroRecibo(crypto.randomUUID(), data),
+      cliente_nome: "",
+      cliente_documento: null,
+      cliente_endereco: null,
+      valor: 0,
+      data_pagamento: data,
+      referencia: "",
+      forma_pagamento: "",
+      documento_fiscal: null,
+      observacoes: null,
+    });
+  };
+
   return (
     <div className="space-y-8">
       <PageHeader
@@ -366,6 +382,7 @@ function FinanceiroPage() {
           <TabsTrigger value="caixa">Fluxo de Caixa</TabsTrigger>
           <TabsTrigger value="bancos">Bancos</TabsTrigger>
           <TabsTrigger value="dre">DRE</TabsTrigger>
+          <TabsTrigger value="recibos">Recibos</TabsTrigger>
         </TabsList>
 
         <TabsContent value="contas" className="space-y-3">
@@ -548,6 +565,26 @@ function FinanceiroPage() {
           <p className="text-xs text-muted-foreground">
             Baseado nas movimentações do período agrupadas pelo tipo do centro de custo (colheita, transporte, serraria, administrativo, comercial). Lançamentos sem centro de custo entram em “Outros”.
           </p>
+        </TabsContent>
+
+        <TabsContent value="recibos" className="space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="font-display text-lg font-semibold">Recibos</h2>
+              <p className="text-sm text-muted-foreground">Emita um recibo para qualquer recebimento, mesmo sem uma conta cadastrada.</p>
+            </div>
+            <Button onClick={abrirReciboAvulso}><ReceiptText className="mr-1 h-4 w-4" /> Novo recibo</Button>
+          </div>
+          <div className="rounded-xl border border-dashed border-border p-8 text-center">
+            <ReceiptText className="mx-auto mb-3 h-9 w-9 text-primary" />
+            <h3 className="font-display text-base font-semibold">Recibo avulso, sem vínculo com contas</h3>
+            <p className="mx-auto mt-2 max-w-xl text-sm text-muted-foreground">
+              Informe livremente o cliente, o valor, a referência e a forma de pagamento. O recibo sai em PDF com duas vias e não cria nenhuma conta ou movimentação no caixa.
+            </p>
+            <Button variant="outline" className="mt-5" onClick={abrirReciboAvulso}>
+              <Printer className="mr-1 h-4 w-4" /> Gerar recibo avulso
+            </Button>
+          </div>
         </TabsContent>
       </Tabs>
 
