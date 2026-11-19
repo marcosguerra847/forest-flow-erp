@@ -664,6 +664,8 @@ function ReciboForm({ dados, clientes, onSaved }: { dados: DadosRecibo & { id?: 
     setForm((old) => ({ ...old, cliente_nome: c.nome, cliente_documento: c.documento ?? old.cliente_documento ?? null, cliente_endereco: endereco || old.cliente_endereco || null }));
   };
   const [gerando, setGerando] = useState(false);
+  const [valorTexto, setValorTexto] = useState(dados.valor ? String(dados.valor).replace(".", ",") : "");
+  const lerValor = (t: string) => { const v = t.trim(); const n = Number(v.includes(",") ? v.replace(/\./g, "").replace(",", ".") : v); return Number.isFinite(n) ? n : 0; };
   const atualiza = (campo: keyof DadosRecibo, valor: string | number) =>
     setForm((old) => ({ ...old, [campo]: valor }));
 
@@ -728,7 +730,7 @@ function ReciboForm({ dados, clientes, onSaved }: { dados: DadosRecibo & { id?: 
         </div>
         <div className="col-span-2"><Label>Cliente / pagador *</Label><Input value={form.cliente_nome} onChange={(e) => atualiza("cliente_nome", e.target.value)} /></div>
         <div><Label>CPF/CNPJ</Label><Input value={form.cliente_documento ?? ""} onChange={(e) => atualiza("cliente_documento", e.target.value)} /></div>
-        <div><Label>Valor recebido (R$) *</Label><Input type="number" min="0.01" step="0.01" value={form.valor} onChange={(e) => atualiza("valor", Number(e.target.value))} /></div>
+        <div><Label>Valor recebido (R$) *</Label><Input inputMode="decimal" placeholder="0,00" value={valorTexto} onChange={(e) => { const t = e.target.value.replace(/[^\d.,]/g, ""); setValorTexto(t); atualiza("valor", lerValor(t)); }} /></div>
         <div className="col-span-2"><Label>Endereço</Label><Input value={form.cliente_endereco ?? ""} onChange={(e) => atualiza("cliente_endereco", e.target.value)} /></div>
         <div className="col-span-2"><Label>Referência do pagamento *</Label><Input value={form.referencia} onChange={(e) => atualiza("referencia", e.target.value)} placeholder="Ex.: Venda de madeira — Pedido PED-2026-0001" /></div>
         <div className="col-span-2">
