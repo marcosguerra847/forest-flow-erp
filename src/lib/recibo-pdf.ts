@@ -36,32 +36,35 @@ function desenharVia(doc: jsPDF, dados: DadosRecibo, logo: string | null, y: num
   doc.setFont("helvetica", "bold").setFontSize(8).text(via, W - 14, y + 31, { align: "right" });
 
   doc.setFont("helvetica", "normal").setFontSize(10);
-  const cliente = doc.splitTextToSize(`Recebi(emos) de ${dados.cliente_nome}`, W - 28);
-  doc.text(cliente.slice(0, 2), 14, y + 40);
+  const frase = `Recebemos de ${dados.cliente_nome} a importância referente aos serviços prestados, dando plena e total quitação do valor recebido.`;
+  const linhasFrase = doc.splitTextToSize(frase, W - 28);
+  doc.text(linhasFrase.slice(0, 3), 14, y + 40);
+  // Cada linha a mais do texto empurra o restante da via para baixo.
+  const desl = Math.max(0, Math.min(linhasFrase.length, 3) - 2) * 4.5;
 
-  if (dados.cliente_documento) doc.text(`CPF/CNPJ: ${dados.cliente_documento}`, 14, y + 51);
+  if (dados.cliente_documento) doc.text(`CPF/CNPJ: ${dados.cliente_documento}`, 14, y + 51 + desl);
   if (dados.cliente_endereco) {
     const endereco = doc.splitTextToSize(`Endereço: ${dados.cliente_endereco}`, W - 28);
-    doc.text(endereco[0], 14, y + 56);
+    doc.text(endereco[0], 14, y + 56 + desl);
   }
 
-  doc.setFont("helvetica", "bold").setFontSize(13).text(`Valor recebido: ${moeda(dados.valor)}`, 14, y + 66);
+  doc.setFont("helvetica", "bold").setFontSize(13).text(`Valor recebido: ${moeda(dados.valor)}`, 14, y + 66 + desl);
   doc.setFont("helvetica", "normal").setFontSize(9);
   const extenso = doc.splitTextToSize(`(${valorPorExtenso(dados.valor)})`, W - 28);
-  doc.text(extenso.slice(0, 2), 14, y + 72);
+  doc.text(extenso.slice(0, 2), 14, y + 72 + desl);
 
   doc.setFontSize(10);
   const referencia = doc.splitTextToSize(`Referente a: ${dados.referencia}`, W - 28);
-  doc.text(referencia.slice(0, 2), 14, y + 84);
+  doc.text(referencia.slice(0, 2), 14, y + 84 + desl);
 
   doc.setFontSize(9);
-  doc.text(`Forma de pagamento: ${dados.forma_pagamento}`, 14, y + 95);
-  doc.text(`Data do pagamento: ${dataRecibo(dados.data_pagamento)}`, 112, y + 95);
-  if (dados.documento_fiscal) doc.text(`Documento vinculado: ${dados.documento_fiscal}`, 14, y + 102);
+  doc.text(`Forma de pagamento: ${dados.forma_pagamento}`, 14, y + 95 + desl);
+  doc.text(`Data do pagamento: ${dataRecibo(dados.data_pagamento)}`, 112, y + 95 + desl);
+  if (dados.documento_fiscal) doc.text(`Documento vinculado: ${dados.documento_fiscal}`, 14, y + 102 + desl);
 
   if (dados.observacoes) {
     const observacoes = doc.splitTextToSize(`Observações: ${dados.observacoes}`, W - 28);
-    doc.text(observacoes.slice(0, 2), 14, y + 109);
+    doc.text(observacoes.slice(0, 2), 14, y + 109 + desl);
   }
 
   const assinaturaY = y + 125;
