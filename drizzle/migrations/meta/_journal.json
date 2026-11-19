@@ -50,6 +50,13 @@
       "when": 1795054019868,
       "tag": "0006_lotes_medidas_pedidos_produtos",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1795098579152,
+      "tag": "0007_create_recibos",
+      "breakpoints": true
     }
   ]
 }

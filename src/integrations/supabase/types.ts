@@ -1407,6 +1407,65 @@ export type Database = {
           },
         ]
       }
+      recibos: {
+        Row: {
+          cliente_documento: string | null
+          cliente_endereco: string | null
+          cliente_id: string | null
+          cliente_nome: string
+          criado_em: string
+          criado_por: string | null
+          data_pagamento: string
+          documento_fiscal: string | null
+          forma_pagamento: string
+          id: string
+          numero: string
+          observacoes: string | null
+          referencia: string
+          valor: number
+        }
+        Insert: {
+          cliente_documento?: string | null
+          cliente_endereco?: string | null
+          cliente_id?: string | null
+          cliente_nome: string
+          criado_em?: string
+          criado_por?: string | null
+          data_pagamento: string
+          documento_fiscal?: string | null
+          forma_pagamento?: string
+          id?: string
+          numero: string
+          observacoes?: string | null
+          referencia?: string
+          valor?: number
+        }
+        Update: {
+          cliente_documento?: string | null
+          cliente_endereco?: string | null
+          cliente_id?: string | null
+          cliente_nome?: string
+          criado_em?: string
+          criado_por?: string | null
+          data_pagamento?: string
+          documento_fiscal?: string | null
+          forma_pagamento?: string
+          id?: string
+          numero?: string
+          observacoes?: string | null
+          referencia?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recibos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       talhoes: {
         Row: {
           ano_plantio: number | null

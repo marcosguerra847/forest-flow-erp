@@ -81,6 +81,21 @@ function FinanceiroPage() {
   const [openBanco, setOpenBanco] = useState(false);
   const [editBanco, setEditBanco] = useState<Banco | null>(null);
   const [recibo, setRecibo] = useState<DadosRecibo | null>(null);
+  const { data: recibos = [] } = useQuery({
+    queryKey: ["recibos"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("recibos").select("*").order("criado_em", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+  const delRecibo = async (id: string) => {
+    const { error } = await supabase.from("recibos").delete().eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Recibo excluído");
+    qcRecibos.invalidateQueries({ queryKey: ["recibos"] });
+  };
+  const qcRecibos = useQueryClient();
 
   const [periodo, setPeriodo] = useState({ ini: firstOfMonth(), fim: today() });
 
@@ -575,11 +590,38 @@ function FinanceiroPage() {
             </div>
             <Button onClick={abrirReciboAvulso}><ReceiptText className="mr-1 h-4 w-4" /> Novo recibo</Button>
           </div>
+          {recibos.length > 0 && (
+            <div className="overflow-x-auto rounded-xl border border-border">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/50 text-left text-xs uppercase text-muted-foreground">
+                  <tr><th className="p-3">Número</th><th className="p-3">Data</th><th className="p-3">Cliente</th><th className="p-3">Referência</th><th className="p-3">Forma</th><th className="p-3 text-right">Valor</th><th className="p-3"></th></tr>
+                </thead>
+                <tbody>
+                  {recibos.map((r) => (
+                    <tr key={r.id} className="border-t border-border/50">
+                      <td className="p-3 font-medium">{r.numero}</td>
+                      <td className="p-3">{r.data_pagamento.split("-").reverse().join("/")}</td>
+                      <td className="p-3">{r.cliente_nome}</td>
+                      <td className="p-3">{r.referencia}</td>
+                      <td className="p-3">{r.forma_pagamento}</td>
+                      <td className="p-3 text-right">{fmt(Number(r.valor))}</td>
+                      <td className="p-3">
+                        <div className="flex justify-end gap-1">
+                          <Button size="icon" variant="ghost" title="Abrir / imprimir recibo" onClick={() => setRecibo({ ...r, valor: Number(r.valor) } as DadosRecibo)}><Printer className="h-3.5 w-3.5" /></Button>
+                          <Button size="icon" variant="ghost" title="Excluir recibo" onClick={() => { if (confirm(`Excluir recibo ${r.numero}?`)) void delRecibo(r.id); }}><Trash2 className="h-3.5 w-3.5" /></Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
           <div className="rounded-xl border border-dashed border-border p-8 text-center">
             <ReceiptText className="mx-auto mb-3 h-9 w-9 text-primary" />
             <h3 className="font-display text-base font-semibold">Recibo avulso, sem vínculo com contas</h3>
             <p className="mx-auto mt-2 max-w-xl text-sm text-muted-foreground">
-              Informe livremente o cliente, o valor, a referência e a forma de pagamento. O recibo sai em PDF com duas vias e não cria nenhuma conta ou movimentação no caixa.
+              Informe livremente o cliente, o valor, a referência e a forma de pagamento. O recibo sai em PDF com duas vias e não cria nenhuma conta ou movimentação no caixa. Todo recibo emitido fica guardado na lista acima.
             </p>
             <Button variant="outline" className="mt-5" onClick={abrirReciboAvulso}>
               <Printer className="mr-1 h-4 w-4" /> Gerar recibo avulso
@@ -589,7 +631,7 @@ function FinanceiroPage() {
       </Tabs>
 
       <Dialog open={!!recibo} onOpenChange={(open) => !open && setRecibo(null)}>
-        {recibo && <ReciboForm dados={recibo} />}
+        {recibo && <ReciboForm key={(recibo as DadosRecibo & { id?: string }).id ?? recibo.numero} dados={recibo} clientes={clientes} onSaved={() => qcRecibos.invalidateQueries({ queryKey: ["recibos"] })} />}
       </Dialog>
     </div>
   );
@@ -610,8 +652,17 @@ function DreRow({ label, value, tone, bold, big }: { label: string; value: numbe
 
 /* ================= FORMS ================= */
 
-function ReciboForm({ dados }: { dados: DadosRecibo }) {
+function ReciboForm({ dados, clientes, onSaved }: { dados: DadosRecibo & { id?: string; cliente_id?: string | null }; clientes: Cliente[]; onSaved: () => void }) {
   const [form, setForm] = useState<DadosRecibo>(dados);
+  const [reciboId, setReciboId] = useState<string | null>(dados.id ?? null);
+  const [clienteId, setClienteId] = useState<string>(dados.cliente_id ?? "");
+  const escolherCliente = (id: string) => {
+    setClienteId(id === "livre" ? "" : id);
+    const c = clientes.find((x) => x.id === id);
+    if (!c) return;
+    const endereco = [c.endereco, [c.cidade, c.uf].filter(Boolean).join("/")].filter(Boolean).join(" - ");
+    setForm((old) => ({ ...old, cliente_nome: c.nome, cliente_documento: c.documento ?? old.cliente_documento ?? null, cliente_endereco: endereco || old.cliente_endereco || null }));
+  };
   const [gerando, setGerando] = useState(false);
   const atualiza = (campo: keyof DadosRecibo, valor: string | number) =>
     setForm((old) => ({ ...old, [campo]: valor }));
@@ -627,6 +678,23 @@ function ReciboForm({ dados }: { dados: DadosRecibo }) {
     }
     setGerando(true);
     try {
+      const registro = {
+        numero: form.numero.trim(), cliente_id: clienteId || null, cliente_nome: form.cliente_nome.trim(),
+        cliente_documento: form.cliente_documento || null, cliente_endereco: form.cliente_endereco || null,
+        valor: Number(form.valor), data_pagamento: form.data_pagamento, referencia: form.referencia.trim(),
+        forma_pagamento: form.forma_pagamento.trim(), documento_fiscal: form.documento_fiscal || null,
+        observacoes: form.observacoes || null,
+      };
+      if (reciboId) {
+        const { error } = await supabase.from("recibos").update(registro).eq("id", reciboId);
+        if (error) throw error;
+      } else {
+        const { data, error } = await supabase.from("recibos").insert(registro).select("id").single();
+        if (error) throw error;
+        setReciboId(data.id);
+        toast.success("Recibo guardado no sistema");
+      }
+      onSaved();
       await gerarReciboPdf({
         ...form,
         numero: form.numero.trim(),
@@ -648,6 +716,16 @@ function ReciboForm({ dados }: { dados: DadosRecibo }) {
       <div className="grid grid-cols-2 gap-3">
         <div><Label>Número do recibo *</Label><Input value={form.numero} onChange={(e) => atualiza("numero", e.target.value)} /></div>
         <div><Label>Data do pagamento *</Label><Input type="date" value={form.data_pagamento} onChange={(e) => atualiza("data_pagamento", e.target.value)} /></div>
+        <div className="col-span-2">
+          <Label>Cliente cadastrado</Label>
+          <Select value={clienteId || "livre"} onValueChange={escolherCliente}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="livre">Digitar outro nome (sem cadastro)</SelectItem>
+              {clientes.map((c) => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
         <div className="col-span-2"><Label>Cliente / pagador *</Label><Input value={form.cliente_nome} onChange={(e) => atualiza("cliente_nome", e.target.value)} /></div>
         <div><Label>CPF/CNPJ</Label><Input value={form.cliente_documento ?? ""} onChange={(e) => atualiza("cliente_documento", e.target.value)} /></div>
         <div><Label>Valor recebido (R$) *</Label><Input type="number" min="0.01" step="0.01" value={form.valor} onChange={(e) => atualiza("valor", Number(e.target.value))} /></div>
