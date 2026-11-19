@@ -678,6 +678,8 @@ function ReciboForm({ dados, clientes, onSaved }: { dados: DadosRecibo & { id?: 
       toast.error("Informe uma data e um valor maior que zero");
       return;
     }
+    const janela = imprimir ? window.open("", "_blank") : null;
+    if (janela) janela.document.write("<p style='font-family:sans-serif'>Gerando recibo...</p>");
     setGerando(true);
     try {
       const registro = {
@@ -703,8 +705,9 @@ function ReciboForm({ dados, clientes, onSaved }: { dados: DadosRecibo & { id?: 
         cliente_nome: form.cliente_nome.trim(),
         referencia: form.referencia.trim(),
         forma_pagamento: form.forma_pagamento.trim(),
-      }, imprimir);
+      }, imprimir, janela);
     } catch (e) {
+      janela?.close();
       toast.error(`Não foi possível gerar o recibo: ${(e as Error).message}`);
     } finally {
       setGerando(false);

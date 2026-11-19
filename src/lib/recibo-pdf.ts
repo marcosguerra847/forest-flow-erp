@@ -73,7 +73,7 @@ function desenharVia(doc: jsPDF, dados: DadosRecibo, logo: string | null, y: num
   doc.text("Cliente / recebedor", W - 55, assinaturaY + 4, { align: "center" });
 }
 
-export async function gerarReciboPdf(dados: DadosRecibo, autoPrint = false) {
+export async function gerarReciboPdf(dados: DadosRecibo, autoPrint = false, janela: Window | null = null) {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const logo = await carregarLogo();
   desenharVia(doc, dados, logo, 8, "VIA DO CLIENTE");
@@ -83,23 +83,15 @@ export async function gerarReciboPdf(dados: DadosRecibo, autoPrint = false) {
   desenharVia(doc, dados, logo, 154, "VIA DA FAZENDA");
 
   if (autoPrint) {
+    // Opening the PDF in a tab pre-opened on click avoids Chrome blocking hidden-iframe printing and popups.
+    doc.autoPrint();
     const url = URL.createObjectURL(doc.output("blob"));
-    const frame = document.createElement("iframe");
-    frame.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0";
-    frame.src = url;
-    frame.onload = () => {
-      try {
-        frame.contentWindow?.focus();
-        frame.contentWindow?.print();
-      } catch {
-        window.open(url, "_blank");
-      }
-      setTimeout(() => {
-        frame.remove();
-        URL.revokeObjectURL(url);
-      }, 60000);
-    };
-    document.body.appendChild(frame);
+    if (janela && !janela.closed) janela.location.href = url;
+    else if (!window.open(url, "_blank")) {
+      const arquivo = dados.numero.replace(/[^a-zA-Z0-9_-]/g, "-");
+      doc.save(`${arquivo || "recibo"}.pdf`);
+    }
+    setTimeout(() => URL.revokeObjectURL(url), 120000);
   } else {
     const arquivo = dados.numero.replace(/[^a-zA-Z0-9_-]/g, "-");
     doc.save(`${arquivo || "recibo"}.pdf`);
