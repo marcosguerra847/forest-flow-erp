@@ -593,7 +593,9 @@ export type Database = {
           atualizado_em: string
           carga_id: string | null
           codigo: string
+          comprimento_m: number | null
           criado_em: string
+          diametro_cm: number | null
           especie: string | null
           id: string
           localizacao: string | null
@@ -606,7 +608,9 @@ export type Database = {
           atualizado_em?: string
           carga_id?: string | null
           codigo: string
+          comprimento_m?: number | null
           criado_em?: string
+          diametro_cm?: number | null
           especie?: string | null
           id?: string
           localizacao?: string | null
@@ -619,7 +623,9 @@ export type Database = {
           atualizado_em?: string
           carga_id?: string | null
           codigo?: string
+          comprimento_m?: number | null
           criado_em?: string
+          diametro_cm?: number | null
           especie?: string | null
           id?: string
           localizacao?: string | null
@@ -1184,13 +1190,23 @@ export type Database = {
           criado_em: string
           criado_por: string | null
           data: string
+          data_entrega: string | null
           descricao: string | null
           id: string
+          itens: Json
           observacoes: string | null
           pagamento: string | null
+          qtd_blocos: number
           qtd_itens: number
+          qtd_pecas: number
+          quantidade_venda: number
+          situacao_pagamento: string
           status: string
+          tipo_carga: string
+          unidade_venda: string
           valor_total: number
+          valor_unitario: number
+          volume_m3: number
         }
         Insert: {
           atualizado_em?: string
@@ -1199,13 +1215,23 @@ export type Database = {
           criado_em?: string
           criado_por?: string | null
           data?: string
+          data_entrega?: string | null
           descricao?: string | null
           id?: string
+          itens?: Json
           observacoes?: string | null
           pagamento?: string | null
+          qtd_blocos?: number
           qtd_itens?: number
+          qtd_pecas?: number
+          quantidade_venda?: number
+          situacao_pagamento?: string
           status?: string
+          tipo_carga?: string
+          unidade_venda?: string
           valor_total?: number
+          valor_unitario?: number
+          volume_m3?: number
         }
         Update: {
           atualizado_em?: string
@@ -1214,13 +1240,23 @@ export type Database = {
           criado_em?: string
           criado_por?: string | null
           data?: string
+          data_entrega?: string | null
           descricao?: string | null
           id?: string
+          itens?: Json
           observacoes?: string | null
           pagamento?: string | null
+          qtd_blocos?: number
           qtd_itens?: number
+          qtd_pecas?: number
+          quantidade_venda?: number
+          situacao_pagamento?: string
           status?: string
+          tipo_carga?: string
+          unidade_venda?: string
           valor_total?: number
+          valor_unitario?: number
+          volume_m3?: number
         }
         Relationships: [
           {

@@ -1,4 +1,7 @@
 # Tasks
+- [ ] Add circular volume, average per log and source plot to Lotes do Pátio.
+- [ ] Add manifest-style products, automatic totals and saved tracking to Clientes e pedidos.
+- [ ] Verify the updated lot and order flows and publish the requested update.
 - [x] Restrict farm data to approved roles, remove automatic signup privileges, secure public QR and verify access rules.
 - [x] Link log entries to their source plot and show recorded volume by plot.
 - [x] Allow shipped/unshipped selection for wood and chip manifests and validate saved quantities.

@@ -43,6 +43,13 @@
       "when": 1794265666918,
       "tag": "0005_restrict_farm_access_and_secure_tracking",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1795054019868,
+      "tag": "0006_lotes_medidas_pedidos_produtos",
+      "breakpoints": true
     }
   ]
 }

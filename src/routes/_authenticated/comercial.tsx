@@ -14,18 +14,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Users, ShoppingCart, DollarSign, FileText, Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { PedidoForm, type PedidoVenda as Pedido, statusPedido } from "@/components/PedidoForm";
 
 type Cliente = {
   id: string; nome: string; documento: string | null; telefone: string | null;
   email: string | null; endereco: string | null; cidade: string | null; uf: string | null;
   limite_credito: number; observacoes: string | null; ativo: boolean;
 };
-type Pedido = {
-  id: string; codigo: string; cliente_id: string; descricao: string | null;
-  qtd_itens: number; valor_total: number; pagamento: string | null;
-  data: string; status: string; observacoes: string | null;
-  clientes?: { nome: string } | null;
-};
+
 
 export const Route = createFileRoute("/_authenticated/comercial")({
   head: () => farmPageHead("Comercial", "Cadastro de clientes e controle de pedidos."),
@@ -91,7 +87,7 @@ function ComercialPage() {
             </Dialog>
             <Dialog open={openPedido} onOpenChange={(o) => { setOpenPedido(o); if (!o) setEditPed(null); }}>
               <DialogTrigger asChild><Button disabled={clientes.length === 0}><Plus className="mr-1 h-4 w-4" /> Pedido</Button></DialogTrigger>
-              <PedidoForm pedido={editPed} clientes={clientes} onSaved={() => { setOpenPedido(false); setEditPed(null); qc.invalidateQueries({ queryKey: ["pedidos"] }); }} />
+              {openPedido && <PedidoForm key={editPed?.id ?? "novo"} pedido={editPed} clientes={clientes} onSaved={() => { setOpenPedido(false); setEditPed(null); qc.invalidateQueries({ queryKey: ["pedidos"] }); }} />}
             </Dialog>
           </>
         }
@@ -116,16 +112,23 @@ function ComercialPage() {
             columns={[
               { key: "codigo", label: "Código" },
               { key: "cliente", label: "Cliente", render: (r) => r.clientes?.nome ?? "—" },
+              { key: "descricao", label: "Produtos" },
               { key: "qtd_itens", label: "Itens", align: "right" },
+              { key: "qtd_blocos", label: "Pacotes", align: "right" },
+              { key: "qtd_pecas", label: "Peças", align: "right" },
+              { key: "volume_m3", label: "Volume (m³)", align: "right", render: r => Number(r.volume_m3).toFixed(3) },
+              { key: "quantidade_venda", label: "Venda", render: r => `${Number(r.quantidade_venda).toLocaleString("pt-BR", { maximumFractionDigits: 3 })} ${r.unidade_venda === "ton" ? "t" : "m³"}` },
+              { key: "data_entrega", label: "Previsão de entrega", render: r => r.data_entrega ? new Date(`${r.data_entrega}T12:00:00`).toLocaleDateString("pt-BR") : "—" },
+              { key: "situacao_pagamento", label: "Situação pagto.", render: r => r.situacao_pagamento === "pago" ? "Pago" : r.situacao_pagamento === "permuta" ? "Permuta" : "Pendente" },
               { key: "valor_total", label: "Total (R$)", align: "right", render: (r) => Number(r.valor_total).toLocaleString("pt-BR", { maximumFractionDigits: 2 }) },
               { key: "pagamento", label: "Pagamento" },
               { key: "data", label: "Data" },
               { key: "status", label: "Status", render: (r) => (
-                <StatusBadge tone={r.status === "faturado" ? "success" : r.status === "cancelado" ? "default" : "info"}>{r.status}</StatusBadge>
+                <StatusBadge tone={r.status === "faturado" ? "success" : r.status === "cancelado" ? "default" : "info"}>{statusPedido[r.status] ?? r.status}</StatusBadge>
               ) },
               { key: "acoes", label: "", render: (r) => (
                 <div className="flex justify-end gap-1">
-                  <Button size="icon" variant="ghost" onClick={() => { setEditPed(r); setOpenPedido(true); }}><Pencil className="h-3.5 w-3.5" /></Button>
+                  <Button size="icon" variant="ghost" title="Ver / editar pedido" onClick={() => { setEditPed(r); setOpenPedido(true); }}><Pencil className="h-3.5 w-3.5" /></Button>
                   <Button size="icon" variant="ghost" onClick={() => { if (confirm(`Excluir pedido ${r.codigo}?`)) delPedido.mutate(r.id); }}><Trash2 className="h-3.5 w-3.5" /></Button>
                 </div>
               ) },
@@ -219,74 +222,3 @@ function ClienteForm({ cliente, onSaved }: { cliente: Cliente | null; onSaved: (
   );
 }
 
-function PedidoForm({ pedido, clientes, onSaved }: { pedido: Pedido | null; clientes: Cliente[]; onSaved: () => void }) {
-  const [form, setForm] = useState({
-    codigo: pedido?.codigo ?? `PED-${Date.now().toString().slice(-6)}`,
-    cliente_id: pedido?.cliente_id ?? clientes[0]?.id ?? "",
-    descricao: pedido?.descricao ?? "",
-    qtd_itens: pedido?.qtd_itens?.toString() ?? "1",
-    valor_total: pedido?.valor_total?.toString() ?? "",
-    pagamento: pedido?.pagamento ?? "À vista",
-    data: pedido?.data ?? new Date().toISOString().slice(0, 10),
-    status: pedido?.status ?? "aberto",
-    observacoes: pedido?.observacoes ?? "",
-  });
-  const [saving, setSaving] = useState(false);
-
-  const save = async () => {
-    setSaving(true);
-    const payload = {
-      codigo: form.codigo.trim(),
-      cliente_id: form.cliente_id,
-      descricao: form.descricao || null,
-      qtd_itens: Number(form.qtd_itens) || 0,
-      valor_total: Number(form.valor_total) || 0,
-      pagamento: form.pagamento || null,
-      data: form.data, status: form.status,
-      observacoes: form.observacoes || null,
-    };
-    const { error } = pedido
-      ? await supabase.from("pedidos").update(payload).eq("id", pedido.id)
-      : await supabase.from("pedidos").insert(payload);
-    setSaving(false);
-    if (error) { toast.error(error.message); return; }
-    toast.success(pedido ? "Pedido atualizado" : "Pedido criado");
-    onSaved();
-  };
-
-  return (
-    <DialogContent className="max-w-lg">
-      <DialogHeader><DialogTitle>{pedido ? "Editar pedido" : "Novo pedido"}</DialogTitle></DialogHeader>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-1.5"><Label>Código *</Label><Input value={form.codigo} onChange={(e) => setForm({ ...form, codigo: e.target.value })} /></div>
-        <div className="space-y-1.5"><Label>Data</Label><Input type="date" value={form.data} onChange={(e) => setForm({ ...form, data: e.target.value })} /></div>
-        <div className="sm:col-span-2 space-y-1.5">
-          <Label>Cliente *</Label>
-          <Select value={form.cliente_id} onValueChange={(v) => setForm({ ...form, cliente_id: v })}>
-            <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-            <SelectContent>{clientes.map(c => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}</SelectContent>
-          </Select>
-        </div>
-        <div className="sm:col-span-2 space-y-1.5"><Label>Descrição</Label><Input value={form.descricao} onChange={(e) => setForm({ ...form, descricao: e.target.value })} placeholder="Ex.: Pranchas 5x20 eucalipto" /></div>
-        <div className="space-y-1.5"><Label>Qtd itens</Label><Input type="number" value={form.qtd_itens} onChange={(e) => setForm({ ...form, qtd_itens: e.target.value })} /></div>
-        <div className="space-y-1.5"><Label>Valor total (R$)</Label><Input type="number" step="0.01" value={form.valor_total} onChange={(e) => setForm({ ...form, valor_total: e.target.value })} /></div>
-        <div className="space-y-1.5"><Label>Pagamento</Label><Input value={form.pagamento} onChange={(e) => setForm({ ...form, pagamento: e.target.value })} placeholder="À vista, 30/60..." /></div>
-        <div className="space-y-1.5">
-          <Label>Status</Label>
-          <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="aberto">Aberto</SelectItem>
-              <SelectItem value="em_producao">Em produção</SelectItem>
-              <SelectItem value="aguardando_pagamento">Aguardando pagamento</SelectItem>
-              <SelectItem value="faturado">Faturado</SelectItem>
-              <SelectItem value="cancelado">Cancelado</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="sm:col-span-2 space-y-1.5"><Label>Observações</Label><Textarea value={form.observacoes} onChange={(e) => setForm({ ...form, observacoes: e.target.value })} /></div>
-      </div>
-      <DialogFooter><Button onClick={save} disabled={saving || !form.codigo.trim() || !form.cliente_id}>{saving ? "Salvando..." : "Salvar"}</Button></DialogFooter>
-    </DialogContent>
-  );
-}
