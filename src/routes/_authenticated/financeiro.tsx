@@ -15,10 +15,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogT
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   FileText, Plus, Pencil, Trash2, Wallet, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight,
-  CheckCircle2, Download, Upload, Landmark, PieChart, Link as LinkIcon,
+  CheckCircle2, Download, Upload, Landmark, PieChart, Link as LinkIcon, ReceiptText, Printer,
 } from "lucide-react";
 import { toast } from "sonner";
 import { toCSV, downloadCSV } from "@/lib/csv";
+import { numeroRecibo, type DadosRecibo } from "@/lib/recibo";
+import { gerarReciboPdf } from "@/lib/recibo-pdf";
 
 type NF = {
   id: string; numero: string; serie: string | null; tipo: "entrada" | "saida";
@@ -50,7 +52,10 @@ type Mov = {
   centros_custo?: { nome: string; tipo: string } | null;
   contas_bancarias?: { banco: string } | null;
 };
-type Cliente = { id: string; nome: string };
+type Cliente = {
+  id: string; nome: string; documento?: string | null; telefone?: string | null;
+  email?: string | null; endereco?: string | null; cidade?: string | null; uf?: string | null;
+};
 type Carga = { id: string; codigo: string };
 type Pedido = { id: string; codigo: string };
 type Centro = { id: string; nome: string; tipo: string };
@@ -75,6 +80,7 @@ function FinanceiroPage() {
   const [editMov, setEditMov] = useState<Mov | null>(null);
   const [openBanco, setOpenBanco] = useState(false);
   const [editBanco, setEditBanco] = useState<Banco | null>(null);
+  const [recibo, setRecibo] = useState<DadosRecibo | null>(null);
 
   const [periodo, setPeriodo] = useState({ ini: firstOfMonth(), fim: today() });
 
@@ -109,7 +115,7 @@ function FinanceiroPage() {
   });
   const { data: clientes = [] } = useQuery({
     queryKey: ["clientes-lite"],
-    queryFn: async () => (await supabase.from("clientes").select("id,nome").order("nome")).data as Cliente[] ?? [],
+    queryFn: async () => (await supabase.from("clientes").select("id,nome,documento,telefone,email,endereco,cidade,uf").order("nome")).data as Cliente[] ?? [],
   });
   const { data: cargas = [] } = useQuery({
     queryKey: ["cargas-lite"],
@@ -289,12 +295,55 @@ function FinanceiroPage() {
     ]));
   };
 
+  const abrirReciboConta = (conta: Conta) => {
+    const mov = movs.find((m) => m.conta_id === conta.id && m.tipo === "entrada");
+    const cliente = clientes.find((c) => c.id === conta.cliente_id);
+    const nf = nfs.find((n) => n.id === conta.nf_id);
+    const data = conta.data_pagamento ?? mov?.data ?? today();
+    const endereco = cliente
+      ? [cliente.endereco, [cliente.cidade, cliente.uf].filter(Boolean).join("/")].filter(Boolean).join(" - ")
+      : "";
+    setRecibo({
+      numero: numeroRecibo(conta.id, data),
+      cliente_nome: cliente?.nome ?? conta.fornecedor ?? "",
+      cliente_documento: cliente?.documento ?? null,
+      cliente_endereco: endereco || null,
+      valor: Number(conta.valor),
+      data_pagamento: data,
+      referencia: conta.descricao,
+      forma_pagamento: mov?.forma_pagamento ?? "",
+      documento_fiscal: nf ? `NF ${nf.numero}${nf.serie ? ` / Série ${nf.serie}` : ""}` : null,
+      observacoes: mov?.observacoes ?? conta.observacoes,
+    });
+  };
+
+  const abrirReciboMov = (mov: Mov) => {
+    const conta = contas.find((c) => c.id === mov.conta_id);
+    const cliente = clientes.find((c) => c.id === conta?.cliente_id);
+    const nf = nfs.find((n) => n.id === conta?.nf_id);
+    const endereco = cliente
+      ? [cliente.endereco, [cliente.cidade, cliente.uf].filter(Boolean).join("/")].filter(Boolean).join(" - ")
+      : "";
+    setRecibo({
+      numero: numeroRecibo(mov.id, mov.data),
+      cliente_nome: cliente?.nome ?? conta?.fornecedor ?? "",
+      cliente_documento: cliente?.documento ?? null,
+      cliente_endereco: endereco || null,
+      valor: Number(mov.valor),
+      data_pagamento: mov.data,
+      referencia: conta?.descricao ?? mov.descricao.replace(/^Baixa:\s*/, ""),
+      forma_pagamento: mov.forma_pagamento ?? "",
+      documento_fiscal: nf ? `NF ${nf.numero}${nf.serie ? ` / Série ${nf.serie}` : ""}` : null,
+      observacoes: mov.observacoes ?? conta?.observacoes ?? null,
+    });
+  };
+
   return (
     <div className="space-y-8">
       <PageHeader
         eyebrow="Comercial"
         title="Financeiro da fazenda"
-        description="Notas fiscais, contas, fluxo de caixa, conciliação bancária e DRE."
+        description="Notas fiscais, contas, recibos, fluxo de caixa, conciliação bancária e DRE."
       />
 
       <div className="flex flex-wrap items-end gap-3 rounded-xl border border-border/60 bg-card/50 p-3">
@@ -346,6 +395,9 @@ function FinanceiroPage() {
                 <div className="flex justify-end gap-1">
                   {r.status === "aberto" && (
                     <Button size="icon" variant="ghost" title="Baixar" onClick={() => { if (confirm(`Baixar a conta "${r.descricao}"?`)) baixar.mutate(r); }}><CheckCircle2 className="h-3.5 w-3.5" /></Button>
+                  )}
+                  {r.tipo === "receber" && (
+                    <Button size="icon" variant="ghost" title="Gerar recibo" onClick={() => abrirReciboConta(r)}><ReceiptText className="h-3.5 w-3.5" /></Button>
                   )}
                   <Button size="icon" variant="ghost" onClick={() => { setEditConta(r); setOpenConta(true); }}><Pencil className="h-3.5 w-3.5" /></Button>
                   <Button size="icon" variant="ghost" onClick={() => { if (confirm(`Excluir "${r.descricao}"?`)) delConta.mutate(r.id); }}><Trash2 className="h-3.5 w-3.5" /></Button>
@@ -431,6 +483,9 @@ function FinanceiroPage() {
                     onClick={() => conciliar.mutate({ id: r.id, conciliar: !r.conciliado_em })}>
                     <LinkIcon className={`h-3.5 w-3.5 ${r.conciliado_em ? "text-primary" : ""}`} />
                   </Button>
+                  {r.tipo === "entrada" && (
+                    <Button size="icon" variant="ghost" title="Gerar recibo" onClick={() => abrirReciboMov(r)}><ReceiptText className="h-3.5 w-3.5" /></Button>
+                  )}
                   <Button size="icon" variant="ghost" onClick={() => { setEditMov(r); setOpenMov(true); }}><Pencil className="h-3.5 w-3.5" /></Button>
                   <Button size="icon" variant="ghost" onClick={() => { if (confirm("Excluir lançamento?")) delMov.mutate(r.id); }}><Trash2 className="h-3.5 w-3.5" /></Button>
                 </div>
@@ -495,6 +550,10 @@ function FinanceiroPage() {
           </p>
         </TabsContent>
       </Tabs>
+
+      <Dialog open={!!recibo} onOpenChange={(open) => !open && setRecibo(null)}>
+        {recibo && <ReciboForm dados={recibo} />}
+      </Dialog>
     </div>
   );
 }
@@ -513,6 +572,68 @@ function DreRow({ label, value, tone, bold, big }: { label: string; value: numbe
 }
 
 /* ================= FORMS ================= */
+
+function ReciboForm({ dados }: { dados: DadosRecibo }) {
+  const [form, setForm] = useState<DadosRecibo>(dados);
+  const [gerando, setGerando] = useState(false);
+  const atualiza = (campo: keyof DadosRecibo, valor: string | number) =>
+    setForm((old) => ({ ...old, [campo]: valor }));
+
+  const emitir = async (imprimir: boolean) => {
+    if (!form.numero.trim() || !form.cliente_nome.trim() || !form.referencia.trim() || !form.forma_pagamento.trim()) {
+      toast.error("Preencha número, cliente, referência e forma de pagamento");
+      return;
+    }
+    if (!form.data_pagamento || Number(form.valor) <= 0) {
+      toast.error("Informe uma data e um valor maior que zero");
+      return;
+    }
+    setGerando(true);
+    try {
+      await gerarReciboPdf({
+        ...form,
+        numero: form.numero.trim(),
+        cliente_nome: form.cliente_nome.trim(),
+        referencia: form.referencia.trim(),
+        forma_pagamento: form.forma_pagamento.trim(),
+      }, imprimir);
+    } catch (e) {
+      toast.error(`Não foi possível gerar o recibo: ${(e as Error).message}`);
+    } finally {
+      setGerando(false);
+    }
+  };
+
+  return (
+    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogHeader><DialogTitle>Recibo de pagamento</DialogTitle></DialogHeader>
+      <p className="text-sm text-muted-foreground">Revise os dados antes de emitir. O documento terá uma via para o cliente e outra para a fazenda.</p>
+      <div className="grid grid-cols-2 gap-3">
+        <div><Label>Número do recibo *</Label><Input value={form.numero} onChange={(e) => atualiza("numero", e.target.value)} /></div>
+        <div><Label>Data do pagamento *</Label><Input type="date" value={form.data_pagamento} onChange={(e) => atualiza("data_pagamento", e.target.value)} /></div>
+        <div className="col-span-2"><Label>Cliente / pagador *</Label><Input value={form.cliente_nome} onChange={(e) => atualiza("cliente_nome", e.target.value)} /></div>
+        <div><Label>CPF/CNPJ</Label><Input value={form.cliente_documento ?? ""} onChange={(e) => atualiza("cliente_documento", e.target.value)} /></div>
+        <div><Label>Valor recebido (R$) *</Label><Input type="number" min="0.01" step="0.01" value={form.valor} onChange={(e) => atualiza("valor", Number(e.target.value))} /></div>
+        <div className="col-span-2"><Label>Endereço</Label><Input value={form.cliente_endereco ?? ""} onChange={(e) => atualiza("cliente_endereco", e.target.value)} /></div>
+        <div className="col-span-2"><Label>Referência do pagamento *</Label><Input value={form.referencia} onChange={(e) => atualiza("referencia", e.target.value)} placeholder="Ex.: Venda de madeira — Pedido PED-2026-0001" /></div>
+        <div className="col-span-2">
+          <Label>Forma de pagamento *</Label>
+          <Input list="formas-recibo" value={form.forma_pagamento} onChange={(e) => atualiza("forma_pagamento", e.target.value)} placeholder="PIX, dinheiro, transferência..." />
+          <datalist id="formas-recibo">
+            <option value="PIX" /><option value="Dinheiro" /><option value="Transferência bancária" />
+            <option value="Cartão" /><option value="Boleto" /><option value="Permuta" /><option value="Outro" />
+          </datalist>
+        </div>
+        {form.documento_fiscal && <p className="col-span-2 rounded-md bg-muted p-3 text-sm">Documento vinculado: <b>{form.documento_fiscal}</b></p>}
+        <div className="col-span-2"><Label>Observações</Label><Textarea value={form.observacoes ?? ""} onChange={(e) => atualiza("observacoes", e.target.value)} /></div>
+      </div>
+      <DialogFooter>
+        <Button variant="outline" disabled={gerando} onClick={() => void emitir(false)}><Download className="mr-1 h-4 w-4" /> Baixar PDF</Button>
+        <Button disabled={gerando} onClick={() => void emitir(true)}><Printer className="mr-1 h-4 w-4" /> {gerando ? "Gerando..." : "Imprimir 2 vias"}</Button>
+      </DialogFooter>
+    </DialogContent>
+  );
+}
 
 function ContaForm({ conta, clientes, nfs, centros, bancos, onSaved }: { conta: Conta | null; clientes: Cliente[]; nfs: NF[]; centros: Centro[]; bancos: Banco[]; onSaved: () => void }) {
   const [form, setForm] = useState({
