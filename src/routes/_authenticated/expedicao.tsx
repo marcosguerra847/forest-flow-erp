@@ -159,6 +159,9 @@ function ExpedicaoPage() {
   const [de, setDe] = useState("");
   const [ate, setAte] = useState("");
   const [produtoFiltro, setProdutoFiltro] = useState("");
+  const [produtosEtiqueta, setProdutosEtiqueta] = useState<ItemRomaneioNota[]>([]);
+  const [produtoEtiqueta, setProdutoEtiqueta] = useState("todos");
+  const [carregandoEtiqueta, setCarregandoEtiqueta] = useState(false);
 
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ["pacotes"],
@@ -194,7 +197,35 @@ function ExpedicaoPage() {
     setAte(p.ate);
   };
 
-  const abrirPdf = async (p: Pacote, imprimir = false) => {
+  useEffect(() => {
+    let active = true;
+    setProdutoEtiqueta("todos");
+    setProdutosEtiqueta([]);
+
+    if (!qr || ["cavaco", "po_serra"].includes(qr.tipo_carga ?? "")) {
+      setCarregandoEtiqueta(false);
+      return () => { active = false; };
+    }
+
+    setCarregandoEtiqueta(true);
+    pacoteComItens(qr)
+      .then((completo) => {
+        if (active) setProdutosEtiqueta(completo.itens ?? []);
+      })
+      .catch((e) => {
+        if (active) toast.error(`Não foi possível carregar os produtos da etiqueta: ${(e as Error).message}`);
+      })
+      .finally(() => {
+        if (active) setCarregandoEtiqueta(false);
+      });
+
+    return () => { active = false; };
+  }, [qr]);
+
+  const indiceProdutoEtiqueta = produtoEtiqueta === "todos" ? null : Number(produtoEtiqueta);
+  const itemEtiqueta = indiceProdutoEtiqueta == null ? null : produtosEtiqueta[indiceProdutoEtiqueta] ?? null;
+
+  const abrirPdf = async (p: Pacote, imprimir = false, indiceProduto?: number) => {
     try {
       const base = await pacoteComItens(p);
       let cliente_info = null;
@@ -208,7 +239,8 @@ function ExpedicaoPage() {
           .maybeSingle();
         if (data && Object.values(data).some((v) => v)) cliente_info = data;
       }
-      await gerarNotaPacote({ ...base, cliente_info }, linkOperador(p), imprimir);
+      const produto = indiceProduto == null ? null : base.itens?.[indiceProduto] ?? null;
+      await gerarNotaPacote({ ...base, cliente_info }, linkOperador(p), imprimir, produto);
     } catch (e) {
       toast.error(
         `Não foi possível gerar a nota: ${(e as Error).message}`,
@@ -593,15 +625,43 @@ function ExpedicaoPage() {
 
           {qr && (
             <div className="flex flex-col items-center gap-3 py-2">
+              {!["cavaco", "po_serra"].includes(qr.tipo_carga ?? "") && (
+                <div className="w-full space-y-1.5 rounded-lg border border-border bg-muted/30 p-3">
+                  <Label htmlFor="produto-etiqueta">Produto da etiqueta</Label>
+                  <select
+                    id="produto-etiqueta"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    value={produtoEtiqueta}
+                    disabled={carregandoEtiqueta}
+                    onChange={(e) => setProdutoEtiqueta(e.target.value)}
+                  >
+                    <option value="todos">Todos os produtos (romaneio completo)</option>
+                    {produtosEtiqueta.map((item, index) => (
+                      <option key={item.id ?? `${item.descricao}-${index}`} value={index}>
+                        {item.descricao} — {item.qtd_blocos} pacotes
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-muted-foreground">
+                    {carregandoEtiqueta
+                      ? "Carregando os produtos do romaneio..."
+                      : itemEtiqueta
+                        ? "A etiqueta e a nota mostrarão somente o produto selecionado. O QR continua abrindo o romaneio completo."
+                        : "Para identificar um produto no estoque, escolha-o na lista antes de imprimir."}
+                  </p>
+                </div>
+              )}
+
               <QrDisplay
                 codigo={qr.codigo}
                 value={linkOperador(qr)}
                 size={220}
-                tituloEtiqueta="Romaneio para expedição"
+                label={itemEtiqueta ? `Produto desta etiqueta: ${itemEtiqueta.descricao}` : undefined}
+                tituloEtiqueta={itemEtiqueta ? "Etiqueta de produto do romaneio" : "Romaneio para expedição"}
                 details={[
                   {
-                    label: "Produtos",
-                    value: qr.descricao || "Romaneio de produtos",
+                    label: itemEtiqueta ? "Produto" : "Produtos",
+                    value: itemEtiqueta?.descricao || qr.descricao || "Romaneio de produtos",
                   },
                   {
                     label: "Cliente",
@@ -621,15 +681,15 @@ function ExpedicaoPage() {
                   },
                   {
                     label: "Pacotes",
-                    value: String(qr.qtd_blocos ?? 0),
+                    value: String(itemEtiqueta?.qtd_blocos ?? qr.qtd_blocos ?? 0),
                   },
                   {
                     label: "Peças",
-                    value: Number(qr.qtd_pecas ?? 0).toLocaleString("pt-BR"),
+                    value: Number(itemEtiqueta?.qtd_pecas ?? qr.qtd_pecas ?? 0).toLocaleString("pt-BR"),
                   },
                   {
                     label: "Volume",
-                    value: `${Number(qr.volume_m3 ?? 0).toLocaleString(
+                    value: `${Number(itemEtiqueta?.volume_m3 ?? qr.volume_m3 ?? 0).toLocaleString(
                       "pt-BR",
                       { maximumFractionDigits: 4 },
                     )} m³`,
@@ -637,7 +697,7 @@ function ExpedicaoPage() {
                   {
                     label: "Valor",
                     value: moeda(
-                      Number(qr.valor_previsto ?? qr.valor_total ?? 0),
+                      Number(itemEtiqueta?.valor_total ?? qr.valor_previsto ?? qr.valor_total ?? 0),
                     ),
                   },
                   {
@@ -650,22 +710,22 @@ function ExpedicaoPage() {
                           : "Pendente",
                   },
                 ]}
-                notaEtiqueta="Romaneio da carga"
+                notaEtiqueta={itemEtiqueta ? "Produto selecionado para identificação no estoque. O QR abre o romaneio completo." : "Romaneio da carga"}
               />
 
               <div className="flex flex-wrap justify-center gap-2">
-                <Button size="sm" onClick={() => void abrirPdf(qr)}>
+                <Button size="sm" onClick={() => void abrirPdf(qr, false, indiceProdutoEtiqueta ?? undefined)}>
                   <FileDown className="mr-1 h-3.5 w-3.5" />
-                  Baixar nota (PDF)
+                  {itemEtiqueta ? "Baixar nota do produto" : "Baixar nota (PDF)"}
                 </Button>
 
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => void abrirPdf(qr, true)}
+                  onClick={() => void abrirPdf(qr, true, indiceProdutoEtiqueta ?? undefined)}
                 >
                   <Printer className="mr-1 h-3.5 w-3.5" />
-                  Imprimir nota
+                  {itemEtiqueta ? "Imprimir nota do produto" : "Imprimir nota"}
                 </Button>
 
                 <Button

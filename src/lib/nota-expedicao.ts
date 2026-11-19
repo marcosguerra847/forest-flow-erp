@@ -4,6 +4,7 @@ import autoTable from "jspdf-autotable";
 import QRCode from "qrcode";
 import { calcM3Cilindrico } from "@/lib/volume-cilindrico";
 import logoAsset from "@/assets/logo-bela-vista.png.asset.json";
+import { selecionarProdutoRomaneio } from "@/lib/nota-produto";
 
 export type ItemRomaneioNota = {
   id?: string;
@@ -150,10 +151,12 @@ const formatarDataSaida = (valor: string) => {
 };
 
 export async function gerarNotaPacote(
-  p: PacoteNota,
+  pacote: PacoteNota,
   link: string,
-  autoPrint = false
+  autoPrint = false,
+  produtoSelecionado: ItemRomaneioNota | null = null,
 ) {
+  const p = selecionarProdutoRomaneio(pacote, produtoSelecionado);
   const doc = new jsPDF({
     unit: "mm",
     format: "a4",
