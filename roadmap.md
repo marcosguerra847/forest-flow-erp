@@ -1,7 +1,7 @@
 # Tasks
-- [ ] Add circular volume, average per log and source plot to Lotes do Pátio.
-- [ ] Add manifest-style products, automatic totals and saved tracking to Clientes e pedidos.
-- [ ] Verify the updated lot and order flows and publish the requested update.
+- [x] Add circular volume, average per log and source plot to Lotes do Pátio.
+- [x] Add manifest-style products, automatic totals and saved tracking to Clientes e pedidos.
+- [x] Verify the updated lot and order flows and request publication.
 - [x] Restrict farm data to approved roles, remove automatic signup privileges, secure public QR and verify access rules.
 - [x] Link log entries to their source plot and show recorded volume by plot.
 - [x] Allow shipped/unshipped selection for wood and chip manifests and validate saved quantities.
@@ -12,7 +12,7 @@
 - [x] In the romaneio form, suggest registered clients while still allowing any free-text client name.
 - [x] Add "Permuta" payment status to romaneios, excluded from the "Valor expedido" total.
 - [x] Keep the "Pacotes prontos" counter on block-carrying romaneios only, so it does not repeat "Prontos p/ envio".
-- [ ] Publish the app so the new romaneio link (farm domain) reaches the live site.
+- [ ] Confirm deployment completion on the farm domain (publication requested; awaiting hosting).
 - [x] Add round/cylindrical wood load type (circular-area volume) to romaneios.
 - [x] Rename the cylindrical load type to "Madeira de eucalipto cilíndrica / roliça", one description covering escoras, roliço, tratado and mourões.
 - [x] Botão Imprimir nota do romaneio abre a impressão na própria página (sem nova aba bloqueada)
