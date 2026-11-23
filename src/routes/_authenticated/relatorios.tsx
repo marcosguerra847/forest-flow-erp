@@ -1,6 +1,7 @@
 import { farmPageHead } from "@/lib/page-head";
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { agruparProducao, aproveitamento, dataProducao, type Dimensao, type Periodo, type RomaneioProducao } from "@/lib/producao-expedicao";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/PageHeader";
@@ -14,13 +15,14 @@ export const Route = createFileRoute("/_authenticated/relatorios")({
 });
 
 type RelKey =
-  | "rendimento" | "estoque" | "ocs" | "divergencias" | "produtos"
+  | "producao_expedicao" | "rendimento" | "estoque" | "ocs" | "divergencias" | "produtos"
   | "expedicoes" | "expedicao_clientes"
   | "contas" | "fluxo" | "dre" | "notas" | "faturamento";
 
 type Rel = { key: RelKey; titulo: string; descricao: string; icon: typeof Factory; grupo: "Operacionais" | "Financeiros" };
 
 const RELATORIOS: Rel[] = [
+  { key: "producao_expedicao", titulo: "Produção da serraria (expedições)", descricao: "m³ produzido, peças, subprodutos e aproveitamento por semana, mês, ano, produto ou cliente", icon: TrendingUp, grupo: "Operacionais" },
   { key: "rendimento", titulo: "Rendimento da serraria", descricao: "Volume entrada × produzido × perda por OP", icon: Factory, grupo: "Operacionais" },
   { key: "estoque", titulo: "Estoque do pátio", descricao: "Lotes disponíveis com volume e localização", icon: Boxes, grupo: "Operacionais" },
   { key: "ocs", titulo: "Ordens de Colheita", descricao: "Previsto vs colhido por OC", icon: Scissors, grupo: "Operacionais" },
@@ -91,7 +93,7 @@ function Relatorios() {
       ))}
 
 
-      {ativo && <RelatorioView key={ativo} tipo={ativo} />}
+      {ativo === "producao_expedicao" ? <ProducaoExpedicao /> : ativo && <RelatorioView key={ativo} tipo={ativo} />}
     </div>
   );
 }
@@ -363,6 +365,92 @@ function RelatorioView({ tipo }: { tipo: RelKey }) {
             render: (r) => String(r[k] ?? "—"),
           }))}
         />
+      )}
+    </section>
+  );
+}
+
+const num = (v: number, d = 2) => v.toLocaleString("pt-BR", { minimumFractionDigits: d, maximumFractionDigits: d });
+
+function rotuloChave(k: string, dim: Dimensao) {
+  if (dim !== "periodo") return k;
+  if (/^\d{4}-\d{2}$/.test(k)) { const [y, m] = k.split("-"); return new Date(Number(y), Number(m) - 1, 1).toLocaleDateString("pt-BR", { month: "long", year: "numeric" }); }
+  if (k.includes("-S")) { const [y, w] = k.split("-S"); return `Semana ${w} / ${y}`; }
+  return k;
+}
+
+function ProducaoExpedicao() {
+  const [periodo, setPeriodo] = useState<Periodo>("mes");
+  const [dim, setDim] = useState<Dimensao>("periodo");
+  const [de, setDe] = useState(`${new Date().getFullYear()}-01-01`);
+  const [ate, setAte] = useState("");
+  const { data = [], isLoading, error } = useQuery({
+    queryKey: ["relatorio", "producao_expedicao"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("pacotes_expedicao")
+        .select("tipo_carga,descricao,cliente_nome,volume_m3,qtd_pecas,qtd_blocos,unidade_venda,quantidade_venda,valor_total,valor_previsto,data_saida_carga,expedido_em,criado_em");
+      if (error) throw error;
+      return (data ?? []) as RomaneioProducao[];
+    },
+  });
+  const filtrados = useMemo(() => data.filter((r) => { const d = dataProducao(r); return (!de || d >= de) && (!ate || d <= ate); }), [data, de, ate]);
+  const linhas = useMemo(() => agruparProducao(filtrados, dim, periodo), [filtrados, dim, periodo]);
+  const tot = linhas.reduce((a, l) => ({ romaneios: a.romaneios + l.romaneios, m3Serrado: a.m3Serrado + l.m3Serrado, m3Sub: a.m3Sub + l.m3Sub, tonSub: a.tonSub + l.tonSub, pecas: a.pecas + l.pecas, pacotes: a.pacotes + l.pacotes, valor: a.valor + l.valor }), { romaneios: 0, m3Serrado: 0, m3Sub: 0, tonSub: 0, pecas: 0, pacotes: 0, valor: 0 });
+  const maxM3 = Math.max(1, ...linhas.map((l) => l.m3Serrado));
+  const nPeriodos = new Set(filtrados.map((r) => agruparProducao([r], "periodo", periodo)[0]?.chave)).size || 1;
+  const apr = aproveitamento(tot);
+  const rotDim = { periodo: "Período", produto: "Produto", cliente: "Cliente", tipo: "Tipo de carga" }[dim];
+  const rotPer = { semana: "semana", mes: "mês", ano: "ano" }[periodo];
+  const csvRows = linhas.map((l) => ({
+    [rotDim]: rotuloChave(l.chave, dim), Romaneios: l.romaneios, "Serrado (m³)": num(l.m3Serrado, 3), Pacotes: l.pacotes, "Peças": l.pecas,
+    "Subprodutos (m³)": num(l.m3Sub, 3), "Subprodutos (ton)": num(l.tonSub), "Aproveitamento %": aproveitamento(l)?.toFixed(1) ?? "—",
+    "Valor (R$)": brl(l.valor), "R$/m³ serrado": l.m3Serrado > 0 ? brl(l.valor / l.m3Serrado) : "—",
+  }));
+  const sel = "h-9 rounded-md border border-input bg-background px-2 text-sm";
+  const Kpi = ({ t, v, s }: { t: string; v: string; s?: string }) => (
+    <div className="rounded-lg border border-border/60 bg-background p-4"><p className="text-[11px] uppercase tracking-widest text-muted-foreground">{t}</p><p className="mt-1 font-display text-xl font-semibold tabular-nums">{v}</p>{s && <p className="text-xs text-muted-foreground">{s}</p>}</div>
+  );
+  return (
+    <section className="space-y-5 rounded-xl border border-border/60 bg-card p-5">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="flex items-center gap-2 font-display text-lg font-semibold"><TrendingUp className="h-4 w-4" /> Produção da serraria (pelas expedições)</h2>
+          <p className="text-xs text-muted-foreground">Cada romaneio conta como produção realizada. Data usada: saída da carga (ou expedição / registro quando faltar).</p>
+        </div>
+        <Button size="sm" disabled={csvRows.length === 0} onClick={() => downloadCSV(`producao-serraria-${dim}-${new Date().toISOString().slice(0, 10)}`, csvRows)}><Download className="mr-1 h-4 w-4" /> Exportar CSV</Button>
+      </div>
+      <div className="flex flex-wrap items-end gap-3 rounded-lg bg-secondary/40 p-3">
+        <label className="text-xs">Agrupar por<br /><select className={sel} value={dim} onChange={(e) => setDim(e.target.value as Dimensao)}><option value="periodo">Período</option><option value="produto">Produto</option><option value="cliente">Cliente</option><option value="tipo">Tipo de carga</option></select></label>
+        <label className="text-xs">Período<br /><select className={sel} value={periodo} onChange={(e) => setPeriodo(e.target.value as Periodo)}><option value="semana">Semanal</option><option value="mes">Mensal</option><option value="ano">Anual</option></select></label>
+        <label className="text-xs">De<br /><input type="date" className={sel} value={de} onChange={(e) => setDe(e.target.value)} /></label>
+        <label className="text-xs">Até<br /><input type="date" className={sel} value={ate} onChange={(e) => setAte(e.target.value)} /></label>
+        <Button size="sm" variant="outline" onClick={() => { setDe(""); setAte(""); }}>Tudo</Button>
+        <span className="ml-auto text-xs text-muted-foreground">{filtrados.length} de {data.length} romaneios</span>
+      </div>
+      {isLoading ? <div className="text-sm text-muted-foreground">Carregando...</div> : error ? <div className="text-sm text-destructive">Erro ao carregar: {(error as Error).message}</div> : (
+        <>
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <Kpi t="Madeira produzida" v={`${num(tot.m3Serrado, 3)} m³`} s={`média ${num(tot.m3Serrado / nPeriodos)} m³ por ${rotPer}`} />
+            <Kpi t="Pacotes / peças" v={`${tot.pacotes.toLocaleString("pt-BR")} / ${tot.pecas.toLocaleString("pt-BR")}`} s={`${tot.romaneios} romaneios`} />
+            <Kpi t="Subprodutos" v={`${num(tot.m3Sub)} m³`} s={`${num(tot.tonSub)} ton (cavaco e pó de serra)`} />
+            <Kpi t="Aproveitamento" v={apr == null ? "—" : `${apr.toFixed(1)}%`} s="madeira ÷ (madeira + subprodutos em m³)" />
+            <Kpi t="Valor produzido" v={`R$ ${brl(tot.valor)}`} s={tot.m3Serrado > 0 ? `R$ ${brl(tot.valor / tot.m3Serrado)} por m³ serrado` : undefined} />
+          </div>
+          {linhas.length === 0 ? <div className="rounded-md border border-dashed border-border p-8 text-center text-sm text-muted-foreground">Nenhum romaneio no período escolhido.</div> : (
+            <DataTable rows={linhas} columns={[
+              { key: "chave", label: rotDim, render: (l) => <span className="capitalize">{rotuloChave(l.chave, dim)}</span> },
+              { key: "barra", label: "Madeira (m³)", render: (l) => (<div className="flex min-w-40 items-center gap-2"><div className="h-2 flex-1 rounded-full bg-secondary"><div className="h-2 rounded-full bg-primary" style={{ width: `${(l.m3Serrado / maxM3) * 100}%` }} /></div><span className="w-20 text-right tabular-nums">{num(l.m3Serrado, 3)}</span></div>) },
+              { key: "romaneios", label: "Romaneios", align: "right" },
+              { key: "pacotes", label: "Pacotes", align: "right", render: (l) => l.pacotes.toLocaleString("pt-BR") },
+              { key: "pecas", label: "Peças", align: "right", render: (l) => l.pecas.toLocaleString("pt-BR") },
+              { key: "m3Sub", label: "Subprod. (m³)", align: "right", render: (l) => num(l.m3Sub) },
+              { key: "tonSub", label: "Subprod. (ton)", align: "right", render: (l) => num(l.tonSub) },
+              { key: "apr", label: "Aproveit. %", align: "right", render: (l) => { const a = aproveitamento(l); return a == null ? "—" : `${a.toFixed(1)}%`; } },
+              { key: "valor", label: "Valor (R$)", align: "right", render: (l) => brl(l.valor) },
+              { key: "pm3", label: "R$/m³", align: "right", render: (l) => l.m3Serrado > 0 ? brl(l.valor / l.m3Serrado) : "—" },
+            ]} />
+          )}
+        </>
       )}
     </section>
   );
