@@ -26,12 +26,12 @@ test("a etiqueta de um produto usa somente quantidades e valores desse produto",
   assert.equal(nota.cliente_nome, "Cliente Teste");
 });
 
-test("a descrição da etiqueta inclui comprimento e as medidas em centímetros", () => {
-  assert.equal(descricaoProdutoEtiqueta(itens[0], false), "Ripa de eucalipto — 2,00 m × 2 × 5 cm");
+test("a descrição da etiqueta inclui comprimento e as medidas em metros", () => {
+  assert.equal(descricaoProdutoEtiqueta(itens[0], false), "Ripa de eucalipto — 2,00 × 0,02 × 0,05 m");
 });
 
-test("a descrição cilíndrica inclui comprimento e diâmetro em centímetros", () => {
-  assert.equal(descricaoProdutoEtiqueta(itens[1], true), "Escora de eucalipto — 2,50 m × Ø 10 cm");
+test("a descrição cilíndrica inclui comprimento e diâmetro em metros", () => {
+  assert.equal(descricaoProdutoEtiqueta(itens[1], true), "Escora de eucalipto — 2,50 × Ø 0,10 m");
 });
 
 test("sem seleção a nota conserva todos os produtos e totais do romaneio", () => {

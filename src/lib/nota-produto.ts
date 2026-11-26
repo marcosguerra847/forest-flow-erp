@@ -1,7 +1,7 @@
 import type { ItemRomaneioNota, PacoteNota } from "./nota-expedicao";
 import { medidasProduto } from "./medidas-romaneio.ts";
 
-/** Medidas do produto na etiqueta, em metros e centímetros. */
+/** Medidas do produto na etiqueta, todas em metros. */
 export function dimensoesProdutoEtiqueta(
   produto: ItemRomaneioNota,
   cilindrica: boolean,

@@ -35,7 +35,7 @@ export function RomaneioPublico({ pacote: p, link }: { pacote: PacoteNota; link:
     <div className="overflow-x-auto">
       <table className="w-full text-left text-sm">
         <thead className="border-b border-border text-xs text-muted-foreground"><tr>
-          {(cavaco ? ["Produto", "Quantidade", "Preço unitário", "Valor total"] : ["Produto", p.tipo_carga === "cilindrica" ? "C (m) × Ø (cm)" : "C (m) × E × L (cm)", "Pacotes", "Peças/pacote", "Peças", "m³", "Preço/m³", "Valor total"]).map(label => <th className="whitespace-nowrap px-2 py-3" key={label}>{label}</th>)}
+          {(cavaco ? ["Produto", "Quantidade", "Preço unitário", "Valor total"] : ["Produto", p.tipo_carga === "cilindrica" ? "C × Ø (m)" : "C × E × L (m)", "Pacotes", "Peças/pacote", "Peças", "m³", "Preço/m³", "Valor total"]).map(label => <th className="whitespace-nowrap px-2 py-3" key={label}>{label}</th>)}
         </tr></thead>
         <tbody>{cavaco ? <tr className="border-b border-border">
           <td className="px-2 py-3">{p.descricao}</td><td className="whitespace-nowrap px-2 py-3">{numero(p.quantidade_venda)} {p.unidade_venda === "ton" ? "t" : "m³"}</td><td className="whitespace-nowrap px-2 py-3">{moeda(p.valor_unitario)}</td><td className="whitespace-nowrap px-2 py-3">{moeda(p.valor_total ?? p.valor_previsto)}</td>

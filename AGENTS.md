@@ -10,4 +10,4 @@
 
 - Orders store their product inputs and totals together; browser-safe pedido-calculo computes rectangular, cylindrical and bulk totals, while legacy orders retain manual totals until explicitly converted.
 - Patio lot entries store average diameter and length directly in lotes_patio and use the shared circular-volume and cumulative-plot helpers, so the production lot selector reads the same saved volumes.
-- Romaneio product measures are shown to the client in centimetres (whole numbers when whole, e.g. 0.10 m -> 10) through the shared browser-safe helper src/lib/medidas-romaneio.ts, used by the PDF note, the public QR page and the label; stored inputs stay in metres.
+- Keep manifest measurement formatting in the browser-safe helper src/lib/medidas-romaneio.ts shared by PDF, public QR and labels, without modifying stored inputs or volume calculations.
