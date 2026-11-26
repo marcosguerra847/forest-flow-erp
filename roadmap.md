@@ -20,3 +20,4 @@
 - [x] Mostrar as dimensões junto à descrição do produto selecionado na etiqueta.
 - [x] Emitir recibos financeiros em PDF e impressão, com dados do pagamento e vias para cliente e fazenda.
 - [x] Adicionar a aba Recibos no Financeiro para emitir recibos avulsos, sem depender de contas ou lançamentos.
+- [x] Mostrar as medidas do romaneio em centímetros (0,10 m vira 10) na nota em PDF, na etiqueta e na página pública.

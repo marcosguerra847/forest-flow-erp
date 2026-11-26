@@ -1,19 +1,23 @@
 import type { ItemRomaneioNota, PacoteNota } from "./nota-expedicao";
+import { medidasProduto } from "./medidas-romaneio.ts";
 
-const numeroMedida = (valor: number, casas = 4) =>
-  Number(valor).toLocaleString("pt-BR", { maximumFractionDigits: casas });
-
-export function dimensoesProdutoEtiqueta(produto: ItemRomaneioNota, cilindrica: boolean) {
-  const comprimento = Number(produto.comprimento_m).toLocaleString("pt-BR", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-  return cilindrica
-    ? `${comprimento} × Ø ${numeroMedida(produto.espessura_m)} m`
-    : `${comprimento} × ${numeroMedida(produto.espessura_m)} × ${numeroMedida(produto.largura_m)} m`;
+/** Medidas do produto na etiqueta, em metros e centímetros. */
+export function dimensoesProdutoEtiqueta(
+  produto: ItemRomaneioNota,
+  cilindrica: boolean,
+) {
+  return medidasProduto(
+    produto.comprimento_m,
+    produto.espessura_m,
+    produto.largura_m,
+    cilindrica,
+  );
 }
 
-export function descricaoProdutoEtiqueta(produto: ItemRomaneioNota, cilindrica: boolean) {
+export function descricaoProdutoEtiqueta(
+  produto: ItemRomaneioNota,
+  cilindrica: boolean,
+) {
   return `${produto.descricao} — ${dimensoesProdutoEtiqueta(produto, cilindrica)}`;
 }
 

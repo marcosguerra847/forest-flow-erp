@@ -5,6 +5,7 @@ import QRCode from "qrcode";
 import { calcM3Cilindrico } from "@/lib/volume-cilindrico";
 import logoAsset from "@/assets/logo-bela-vista.png.asset.json";
 import { selecionarProdutoRomaneio } from "@/lib/nota-produto";
+import { medidasProduto, tituloMedidas } from "@/lib/medidas-romaneio";
 
 export type ItemRomaneioNota = {
   id?: string;
@@ -97,22 +98,6 @@ const n = (
     : Number(v).toLocaleString("pt-BR", {
         minimumFractionDigits: d,
         maximumFractionDigits: d,
-      });
-
-const medida = (v: number | null | undefined) =>
-  v == null
-    ? "—"
-    : Number(v).toLocaleString("pt-BR", {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 4,
-      });
-
-const comprimento = (v: number | null | undefined) =>
-  v == null
-    ? "—"
-    : Number(v).toLocaleString("pt-BR", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
       });
 
 const brl = (v: number | null | undefined) =>
@@ -296,7 +281,7 @@ export async function gerarNotaPacote(
       startY: 63,
       head: [[
         "Produto",
-        isCil ? "Medidas C x Ø (m)" : "Medidas C x E x L (m)",
+        tituloMedidas(isCil),
         "Pacotes",
         "Peças/pacote",
         "Total peças",
@@ -319,11 +304,13 @@ export async function gerarNotaPacote(
 
         return [
           i.descricao,
-          isCil
-            ? `${comprimento(i.comprimento_m)} x Ø ${medida(i.espessura_m)}`
-            : `${comprimento(i.comprimento_m)} x ${medida(
-            i.espessura_m
-          )} x ${medida(i.largura_m)}`,
+          medidasProduto(
+            i.comprimento_m,
+            i.espessura_m,
+            i.largura_m,
+            isCil,
+            "x",
+          ),
           n(i.qtd_blocos, 0),
           n(i.pecas_por_pacote, 0),
           n(i.qtd_pecas, 0),
@@ -380,7 +367,7 @@ export async function gerarNotaPacote(
       startY: 63,
       head: [[
         "Produto",
-        isCil ? "Medidas C x Ø (m)" : "Medidas C x E x L (m)",
+        tituloMedidas(isCil),
         "Pacotes",
         "Peças/pacote",
         "Total peças",
@@ -391,7 +378,7 @@ export async function gerarNotaPacote(
       body: [[
         p.descricao,
         temMedidas
-          ? (isCil ? `${comprimento(comp)} x Ø ${medida(esp)}` : `${comprimento(comp)} x ${medida(esp)} x ${medida(larg)}`)
+          ? medidasProduto(comp, esp, larg, isCil, "x")
           : "—",
         n(p.qtd_blocos, 0),
         n(p.pecas_por_pacote, 0),
