@@ -2,19 +2,20 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { calcularPedido, numeroPedido, produtoPedidoVazio, type ProdutoPedido } from "@/lib/pedido-calculo";
+import { situacoesPedido } from "@/lib/pedido-documento";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Download } from "lucide-react";
 import { toast } from "sonner";
 
 export type PedidoVenda = Database["public"]["Tables"]["pedidos"]["Row"] & { clientes?: { nome: string } | null };
-type ClientePedido = { id: string; nome: string; documento: string | null; telefone: string | null; endereco: string | null; cidade: string | null; uf: string | null };
+type ClientePedido = { id: string; nome: string; documento: string | null; telefone: string | null; email?: string | null; endereco: string | null; cidade: string | null; uf: string | null };
 export const moedaPedido = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-export const statusPedido: Record<string, string> = { aberto: "Aberto", em_producao: "Em produção", aguardando_pagamento: "Aguardando pagamento", faturado: "Faturado", cancelado: "Cancelado" };
+export const statusPedido = situacoesPedido;
 
 function itensSalvos(pedido: PedidoVenda | null): ProdutoPedido[] {
   if (!Array.isArray(pedido?.itens) || pedido.itens.length === 0) return [{ ...produtoPedidoVazio(), descricao: pedido?.descricao ?? "" }];
@@ -45,7 +46,7 @@ export function PedidoForm({ pedido, clientes, onSaved }: { pedido: PedidoVenda 
   const set = (campo: keyof typeof form, v: string) => setForm(f => ({ ...f, [campo]: v }));
   const atualizar = (ix: number, campo: keyof ProdutoPedido, valor: string) => setItens(a => a.map((i, n) => n === ix ? { ...i, [campo]: valor } : i));
 
-  const save = async () => {
+  const save = async (baixarPdf = false) => {
     if (!form.cliente_id || !form.codigo.trim() || !form.data) return toast.error("Informe cliente, código e data");
     if (!legado) {
       if (granel) {
@@ -73,6 +74,14 @@ export function PedidoForm({ pedido, clientes, onSaved }: { pedido: PedidoVenda 
       const { error } = pedido ? await supabase.from("pedidos").update(payload).eq("id", pedido.id) : await supabase.from("pedidos").insert(payload);
       if (error) throw error;
       toast.success(pedido ? "Pedido atualizado" : "Pedido criado");
+      if (baixarPdf) {
+        try {
+          const { gerarPedidoPdf } = await import("@/lib/pedido-pdf");
+          await gerarPedidoPdf(payload, cliente ?? null);
+        } catch {
+          toast.error("Pedido salvo, mas não foi possível gerar o PDF. Tente baixar pela lista de pedidos.");
+        }
+      }
       onSaved();
     } catch (e) { toast.error((e as Error).message); } finally { setSaving(false); }
   };
@@ -111,6 +120,6 @@ export function PedidoForm({ pedido, clientes, onSaved }: { pedido: PedidoVenda 
       <div className="space-y-1.5"><Label htmlFor="pedido-pagamento">Situação de pagamento</Label><Select value={form.situacao_pagamento} onValueChange={v => set("situacao_pagamento", v)}><SelectTrigger id="pedido-pagamento"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="pendente">Pendente</SelectItem><SelectItem value="pago">Pago</SelectItem><SelectItem value="permuta">Permuta</SelectItem></SelectContent></Select></div>
       <div className="space-y-1.5 sm:col-span-2"><Label htmlFor="pedido-obs">Observações</Label><Textarea id="pedido-obs" value={form.observacoes} onChange={e => set("observacoes", e.target.value)} /></div>
     </div>
-    <DialogFooter><Button onClick={save} disabled={saving}>{saving ? "Salvando..." : "Salvar pedido"}</Button></DialogFooter>
+    <DialogFooter className="gap-2"><Button variant="outline" onClick={() => save(true)} disabled={saving}><Download className="mr-2 h-4 w-4" />Salvar e baixar PDF</Button><Button onClick={() => save()} disabled={saving}>{saving ? "Salvando..." : "Salvar pedido"}</Button></DialogFooter>
   </DialogContent>;
 }

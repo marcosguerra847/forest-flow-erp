@@ -9,5 +9,6 @@
 - Cylindrical wood volume (pi*(d/2)^2*L*pieces) lives in src/lib/volume-cilindrico.ts, shared by form, PDF and tests; diameter is stored in the thickness field and mirrored to width.
 
 - Orders store their product inputs and totals together; browser-safe pedido-calculo computes rectangular, cylindrical and bulk totals, while legacy orders retain manual totals until explicitly converted.
+- Order PDFs use pedido-documento and the shared order calculation and measurement helpers; saved totals remain authoritative so exporting never modifies orders or converts legacy records.
 - Patio lot entries store average diameter and length directly in lotes_patio and use the shared circular-volume and cumulative-plot helpers, so the production lot selector reads the same saved volumes.
 - Keep manifest measurement formatting in the browser-safe helper src/lib/medidas-romaneio.ts shared by PDF, public QR and labels, without modifying stored inputs or volume calculations.

@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
-import { Users, ShoppingCart, DollarSign, FileText, Plus, Pencil, Trash2 } from "lucide-react";
+import { Users, ShoppingCart, DollarSign, FileText, Plus, Pencil, Trash2, Download, Printer } from "lucide-react";
 import { toast } from "sonner";
 import { PedidoForm, type PedidoVenda as Pedido, statusPedido } from "@/components/PedidoForm";
 
@@ -34,6 +34,7 @@ function ComercialPage() {
   const [editCli, setEditCli] = useState<Cliente | null>(null);
   const [openPedido, setOpenPedido] = useState(false);
   const [editPed, setEditPed] = useState<Pedido | null>(null);
+  const [gerandoPdf, setGerandoPdf] = useState<string | null>(null);
 
   const { data: clientes = [] } = useQuery({
     queryKey: ["clientes"],
@@ -72,6 +73,21 @@ function ComercialPage() {
 
   const totalPedidos = pedidos.reduce((s, p) => s + Number(p.valor_total || 0), 0);
   const abertos = pedidos.filter(p => p.status !== "faturado" && p.status !== "cancelado").length;
+
+  const emitirPedido = async (pedido: Pedido, imprimir = false) => {
+    const janela = imprimir ? window.open("", "_blank") : null;
+    if (janela) janela.document.title = "Pedido — Fazenda Bela Vista";
+    setGerandoPdf(pedido.id);
+    try {
+      const { gerarPedidoPdf } = await import("@/lib/pedido-pdf");
+      const cliente = clientes.find(c => c.id === pedido.cliente_id) ?? (pedido.clientes ? { nome: pedido.clientes.nome } : null);
+      await gerarPedidoPdf(pedido, cliente, imprimir, janela);
+      if (imprimir && !janela) toast.info("O navegador bloqueou a nova aba; o PDF foi baixado para você imprimir.");
+    } catch {
+      janela?.close();
+      toast.error("Não foi possível gerar o PDF do pedido. Tente novamente.");
+    } finally { setGerandoPdf(null); }
+  };
 
   return (
     <div className="space-y-8">
@@ -129,6 +145,8 @@ function ComercialPage() {
               { key: "acoes", label: "", render: (r) => (
                 <div className="flex justify-end gap-1">
                   <Button size="icon" variant="ghost" title="Ver / editar pedido" onClick={() => { setEditPed(r); setOpenPedido(true); }}><Pencil className="h-3.5 w-3.5" /></Button>
+                  <Button size="icon" variant="ghost" title="Baixar PDF do pedido" aria-label={`Baixar PDF do pedido ${r.codigo}`} disabled={gerandoPdf !== null} onClick={() => emitirPedido(r)}><Download className="h-3.5 w-3.5" /></Button>
+                  <Button size="icon" variant="ghost" title="Imprimir pedido" aria-label={`Imprimir pedido ${r.codigo}`} disabled={gerandoPdf !== null} onClick={() => emitirPedido(r, true)}><Printer className="h-3.5 w-3.5" /></Button>
                   <Button size="icon" variant="ghost" onClick={() => { if (confirm(`Excluir pedido ${r.codigo}?`)) delPedido.mutate(r.id); }}><Trash2 className="h-3.5 w-3.5" /></Button>
                 </div>
               ) },

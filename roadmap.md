@@ -1,4 +1,5 @@
 # Tasks
+- [x] Gerar PDF e imprimir pedidos com dados da fazenda, cliente, produtos e pagamento, mantendo a edição e verificando o fluxo.
 - [x] Add circular volume, average per log and source plot to Lotes do Pátio.
 - [x] Add manifest-style products, automatic totals and saved tracking to Clientes e pedidos.
 - [x] Verify the updated lot and order flows and request publication.
